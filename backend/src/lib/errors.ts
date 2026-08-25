@@ -6,6 +6,9 @@ export const ErrorCode = {
   invalid_request: 400,
   unauthorized: 401,
   forbidden: 403,
+  // A separate 403 code so the interface can show the plan-limit message in
+  // the user's language instead of a generic "not allowed" (Decision 003).
+  quota_exceeded: 403,
   not_found: 404,
   conflict: 409,
   rate_limited: 429,

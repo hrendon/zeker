@@ -301,93 +301,163 @@ one. A deleted organization stops appearing and stops being reachable.
 
 ## Location Endpoints
 
+A location is a physical site of the organization — a building, a campus, a
+gated entrance. How many an organization may have comes from its plan
+(`limits.max_locations`), which is **1** on the free plan (Decision 003).
+
+All routes are nested under an organization and inherit its membership check:
+a caller who is not a member gets **404** for every one of them.
+
+**Not stored:** no `security_personnel` field naming a staff member, and no
+`floor` / `building`. Nothing in the MVP reads them, and storing a named
+employee we have no use for is what the data-minimization policy exists to
+prevent. A location that needs to say which building it is in can say so in its
+name. Interiors (Decision 003) are the real answer to "which part of the site".
+
+---
+
 ### POST /orgs/{orgId}/locations
 
-Add access point/location.
+Adds a location. **Administrators only.**
+
+The plan check and the write happen in one database transaction, so two
+requests arriving at the same moment cannot both take the last free slot.
 
 **Request:**
 ```json
 {
-  "name": "Main Entrance",
-  "description": "Front door",
+  "name": "Entrada Principal",
+  "description": "Puerta de la calle",
   "type": "entrance"
 }
 ```
 
+`type` is one of `entrance`, `reception`, `classroom`, `zone`, `other`
+(default `other`). `description` and `type` are optional. Unknown fields are
+rejected.
+
 **Response (201):**
 ```json
 {
-  "id": "loc_entrance_1",
+  "id": "loc_abc123",
   "org_id": "org_abc123",
-  "name": "Main Entrance",
+  "name": "Entrada Principal",
+  "description": "Puerta de la calle",
   "type": "entrance",
-  "created_at": "2026-08-18T10:00:00Z"
+  "enabled": true,
+  "created_by": "user_xyz789",
+  "created_at": "2026-08-25T10:00:00.000Z",
+  "updated_at": "2026-08-25T10:00:00.000Z",
+  "usage": { "locations": 1 },
+  "request_id": "req_abc123xyz"
 }
 ```
+
+**Errors:**
+- `400 invalid_request` — missing name, unknown type, or an unknown field
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `403 quota_exceeded` — the plan's location limit is already reached. Its own
+  code, so the interface can show the plan message in the user's language:
+
+  ```json
+  {
+    "error": "quota_exceeded",
+    "message": "This organization has reached its limit of 1 locations. Upgrade the plan to add more.",
+    "details": { "resource": "locations", "limit": 1 },
+    "request_id": "req_abc123xyz"
+  }
+  ```
+
+  The interface shows the Spanish wording, e.g. *"Ya tiene 1 sede. Mejore su
+  plan para agregar más."* Nothing is written when this happens.
+- `404 not_found` — the caller is not a member of the organization
 
 ---
 
 ### GET /orgs/{orgId}/locations
 
-List all locations for an org.
+Lists the organization's locations, ordered by name. **Any member**, including
+security personnel — they need to know where they are validating entries.
 
 **Response (200):**
 ```json
 {
   "locations": [
     {
-      "id": "loc_entrance_1",
-      "name": "Main Entrance",
+      "id": "loc_abc123",
+      "org_id": "org_abc123",
+      "name": "Entrada Principal",
+      "description": "Puerta de la calle",
       "type": "entrance",
-      "enabled": true
-    },
-    {
-      "id": "loc_reception_1",
-      "name": "Reception",
-      "type": "reception",
-      "enabled": true
+      "enabled": true,
+      "created_by": "user_xyz789",
+      "created_at": "2026-08-25T10:00:00.000Z",
+      "updated_at": "2026-08-25T10:00:00.000Z"
     }
-  ]
+  ],
+  "usage": { "locations": 1, "max_locations": 1 },
+  "request_id": "req_abc123xyz"
 }
 ```
+
+`usage` is what the interface's quota indicator reads.
+
+---
+
+### GET /orgs/{orgId}/locations/{locationId}
+
+One location. **Any member.**
+
+**Errors:**
+- `401 unauthorized`
+- `404 not_found` — no such location, or the caller is not a member
 
 ---
 
 ### PUT /orgs/{orgId}/locations/{locationId}
 
-Update location.
+Changes a location. **Administrators only.** Send at least one field.
 
-**Request:**
-```json
-{
-  "name": "Updated Entrance Name"
-}
-```
+Accepted fields: `name`, `description`, `type`, `enabled`.
 
-**Response (200):**
-```json
-{
-  "id": "loc_entrance_1",
-  "name": "Updated Entrance Name",
-  "updated_at": "2026-08-18T12:00:00Z"
-}
-```
+`enabled: false` takes a location out of use without deleting it, which keeps
+its entry history and does not free a plan slot.
+
+**Response (200):** the updated location, plus `request_id`.
+
+**Errors:**
+- `400 invalid_request` — empty body, or a field that cannot be changed
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — no such location, or the caller is not a member
 
 ---
 
 ### DELETE /orgs/{orgId}/locations/{locationId}
 
-Delete location.
+Deletes a location and frees its plan slot. **Administrators only.**
+
+Unlike an organization, this is a real delete: a location carries no audit
+trail of its own, and the plan allows so few of them that a deleted one has to
+give its slot back at once.
 
 **Response (200):**
 ```json
 {
-  "message": "Location deleted"
+  "id": "loc_abc123",
+  "deleted": true,
+  "request_id": "req_abc123xyz"
 }
 ```
 
 **Errors:**
-- `409` — Location has active authorizations
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — no such location, or the caller is not a member
+- `409 conflict` — the location still has interiors, or an authorization still
+  points at it. Deleting it then would leave permits aimed at a place that no
+  longer exists.
 
 ---
 
@@ -645,6 +715,8 @@ All errors follow this format:
 - `invalid_request` — Malformed request
 - `unauthorized` — Not authenticated
 - `forbidden` — Authenticated but not authorized
+- `quota_exceeded` — The organization's plan limit is reached (also HTTP 403).
+  Carries `details: { resource, limit }` so the interface can name the limit.
 - `not_found` — Resource not found
 - `conflict` — Business rule violation (e.g., dates invalid)
 - `internal_server_error` — Server error

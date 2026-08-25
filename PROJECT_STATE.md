@@ -3,7 +3,7 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 (backend typecheck clean, 49/49 tests pass, live Firestore reachable, deny-all rules deployed, /auth and /orgs routes live)
+**Last verified:** 2026-08-25 (backend typecheck clean, 73/73 tests pass, production build clean, live Firestore reachable, deny-all rules deployed, /auth /orgs /locations routes live)
 
 ---
 
@@ -19,11 +19,11 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 ```
 Completed:       Infrastructure + backend skeleton + database locked down
-                 + sign-in + organizations (49 tests pass)
+                 + sign-in + organizations + locations (73 tests pass)
 In Progress:     Week 1 — Backend feature endpoints
 Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
 Critical Risk:   None open — the open-database risk was closed on 2026-08-25
-Next:            Locations, then interiors + the 10-interior limit
+Next:            Interiors + the 10-interior limit, then authorizations
 ```
 
 **Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
@@ -39,6 +39,28 @@ and recorded. Database access closed.
 - ⚠️ Found while doing it: the original setup script could never have worked —
   it called a `gcloud` command that has no rules option. The rules are now a
   real file in the repository, deployed with the Firebase CLI.
+
+**Locations built (2026-08-25).** The first half of what you actually sell now
+works, limits included.
+- Add a site, list them, rename one, take one out of use, delete one.
+- **The plan limit is enforced properly.** The free plan allows 1 location. The
+  check and the save happen together in one operation, so two requests arriving
+  at the same instant cannot both take the last free place. Refusal returns its
+  own message type, so the screens can show your Spanish wording rather than a
+  generic "not allowed".
+- Deleting frees the slot again. Taking a site out of use keeps it and its
+  history, and keeps using its slot — those are two different actions on
+  purpose.
+- Deleting is refused while the site still has interiors or an active permit.
+- Security staff can see the list of sites (they need it to check entries), but
+  only administrators can change anything.
+- Five more tests prove another customer cannot see, create, change or delete
+  anything here.
+- ⚠️ Found and fixed while building: test-only code was being copied into the
+  package we deploy to production, and it referred to a tool that is not
+  installed there. Now excluded from the build.
+- Verified: 73/73 tests pass, typecheck clean, production build clean, all five
+  routes answer correctly on a live server.
 
 **Organizations built (2026-08-25).** Customers are now separate from each
 other, and that separation is proven by tests.
@@ -134,6 +156,15 @@ works end to end on the server.
 - Dockerfile for Cloud Run: two-stage, non-root, no compiler or source in the image
 - Verified: `npm run typecheck` clean · `npm test` 12/12 pass · live 200 from Firestore
 
+✅ **Locations** (2026-08-25)
+- `POST/GET /orgs/{orgId}/locations`, `GET/PUT/DELETE .../{locationId}`
+- Plan limit enforced inside a transaction; refusal is `quota_exceeded` (403)
+- Delete frees the slot; `enabled: false` retires a location without freeing it
+- Delete refused while interiors or active authorizations still reference it
+- Any member can list; only admins can create, change or delete
+- No staff name, floor or building stored
+- Verified: 73/73 tests pass · typecheck clean · production build clean
+
 ✅ **Organizations** (2026-08-25)
 - `POST /orgs`, `GET /orgs`, `GET/PUT/DELETE /orgs/{orgId}`
 - Membership check on every org-scoped route; non-members get 404, not 403
@@ -180,7 +211,7 @@ works end to end on the server.
 - [x] Firestore rules in the repository, clients denied, deployed (Decision 004)
 - [x] Auth endpoints — `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
 - [x] Org endpoints + multi-org support + membership check + 6 isolation tests
-- [ ] Location CRUD + plan limits (Decision 003)
+- [x] Location endpoints + plan limit enforced in a transaction (Decision 003)
 - [ ] Interior CRUD + global 10-interior quota, enforced in a transaction (403)
 - [ ] Authorization creation + QR/numeric code generation
 - [ ] Validation endpoint (scan QR, check validity, log event)

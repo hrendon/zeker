@@ -139,6 +139,16 @@ Physical access points (entrances, reception areas, specific zones).
 }
 ```
 
+> **What is actually implemented (2026-08-25)** — `backend/src/lib/locations.ts`.
+>
+> - **No `metadata.security_personnel`.** It named a staff member as the person
+>   typically staffing the location. Nothing in the MVP reads it, and storing a
+>   named employee we have no use for is exactly what data minimization is for.
+> - **No `metadata.floor` / `metadata.building`.** Unused. A location can say
+>   which building it is in through its name; interiors carry the real detail.
+> - `enabled: false` takes a location out of use without deleting it, keeping
+>   its entry history and its plan slot.
+
 **Constraints:**
 - Cannot delete location if active authorizations reference it
 - Cannot delete a location that still has interiors
