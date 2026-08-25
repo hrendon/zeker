@@ -118,16 +118,27 @@ reads `counts`, compares against `limits`, and either writes the new document
 and increments the counter, or fails. This prevents two simultaneous requests
 from both passing the check (the bypass the Architect flagged on 2026-08-19).
 
-On refusal the API returns **403 Forbidden** with a plain-language Spanish
-message, per the Backend Developer position recorded in Decision 001:
+On refusal the API returns **403 Forbidden** with the error code
+`quota_exceeded` and the details needed to name the limit:
 
 ```json
 {
   "error": "quota_exceeded",
-  "message": "Ya tiene 10 interiores. Mejore su plan para agregar más.",
+  "message": "This organization has reached its limit of 10 interiors. Upgrade the plan to add more.",
+  "details": { "resource": "interiors", "limit": 10 },
   "request_id": "req_..."
 }
 ```
+
+**Correction made during implementation (2026-08-25):** this decision first put
+the Spanish sentence from Decision 001 in the API response body. It does not
+belong there. The API returns a machine-readable code plus a developer-facing
+message; the interface turns `quota_exceeded` into the customer-facing Spanish
+wording — *"Ya tiene 10 interiores. Mejore su plan para agregar más."* Putting
+translated text in the API would mean the backend owning the product's language,
+which breaks the moment a second language is added and leaves the rest of the
+API's messages inconsistent with it. `details` carries the resource and the
+limit so the interface can build the sentence without hardcoding numbers.
 
 No warning threshold is implemented — the Founder specified hard blocking at the
 limit, with no warnings.
@@ -179,6 +190,26 @@ exists would require a migration.
 ## Cost Impact
 
 **Low — approximately 1 day** of design plus build.
+
+---
+
+## Implementation notes (2026-08-25)
+
+Built as decided, with three clarifications made while building:
+
+- **No `responsable` address, phone or email.** The decision listed only a name
+  and an optional user link, and that is what was built. Contacting a
+  responsable goes through their user account.
+- **`location_id` is immutable after creation.** The decision did not say.
+  Allowing an interior to move between locations would carry its existing
+  permits to a different building, which is never what someone means. Creating
+  a new interior is the correct way to express that.
+- **Uniqueness of `number` is enforced inside the same transaction as the quota
+  check**, not as a separate step, so two simultaneous requests cannot both
+  claim the same apartment number.
+
+Delivered in `backend/src/lib/interiors.ts`, `backend/src/lib/quota.ts` and
+`backend/src/routes/interiors.ts`, with 29 tests.
 
 ---
 

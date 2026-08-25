@@ -1,0 +1,82 @@
+import { toIso } from './users.js'
+import { orgRef } from './orgs.js'
+
+/**
+ * Interiors — the units inside a location: an apartment, a warehouse bay, a
+ * zone. Each has a number and a person in charge (the *responsable*), which is
+ * exactly what the approved offer sells (Decision 003).
+ *
+ * Stored **flat under the organization**, not nested inside the location, with
+ * a `location_id` field. The plan limit counts interiors across the whole
+ * organization, not per location (Founder clarification, 2026-08-18), so a flat
+ * collection makes that one counter and one query. Listing the interiors of a
+ * single location is still a plain equality filter.
+ *
+ * The `responsable_user_id` link is what lets a resident sign in and issue
+ * permits for their own interior (US-003). It is null until that person has an
+ * account in the organization; the name is always present so security personnel
+ * can see who is in charge even before then.
+ *
+ * Not stored: no address, no phone, no email for the responsable. The
+ * organization already knows where it is, and contacting a responsable goes
+ * through their user account.
+ */
+
+export interface InteriorDocument {
+  id: string
+  org_id: string
+  location_id: string
+  /** Apartment number, bodega number, zone code. Unique within its location. */
+  number: string
+  /** Optional label, e.g. "Apartamento 302". */
+  name: string
+  responsable_name: string
+  /** Null until the responsable has an account in this organization. */
+  responsable_user_id: string | null
+  enabled: boolean
+  created_by: string
+  created_at?: unknown
+  updated_at?: unknown
+}
+
+export function interiorsCollection(orgId: string) {
+  return orgRef(orgId).collection('interiors')
+}
+
+export function interiorRef(orgId: string, interiorId: string) {
+  return interiorsCollection(orgId).doc(interiorId)
+}
+
+export function newInteriorId(orgId: string): string {
+  return `int_${interiorsCollection(orgId).doc().id}`
+}
+
+export interface InteriorResponse {
+  id: string
+  org_id: string
+  location_id: string
+  number: string
+  name: string
+  responsable_name: string
+  responsable_user_id: string | null
+  enabled: boolean
+  created_by: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export function toInteriorResponse(stored: Partial<InteriorDocument>): InteriorResponse {
+  return {
+    id: String(stored.id ?? ''),
+    org_id: String(stored.org_id ?? ''),
+    location_id: String(stored.location_id ?? ''),
+    number: String(stored.number ?? ''),
+    name: String(stored.name ?? ''),
+    responsable_name: String(stored.responsable_name ?? ''),
+    responsable_user_id: stored.responsable_user_id ?? null,
+    enabled: stored.enabled !== false,
+    created_by: String(stored.created_by ?? ''),
+    created_at: toIso(stored.created_at),
+    updated_at: toIso(stored.updated_at),
+  }
+}

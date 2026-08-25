@@ -3,7 +3,7 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 (backend typecheck clean, 73/73 tests pass, production build clean, live Firestore reachable, deny-all rules deployed, /auth /orgs /locations routes live)
+**Last verified:** 2026-08-25 (backend typecheck clean, 102/102 tests pass, production build clean, live Firestore reachable, deny-all rules deployed, /auth /orgs /locations /interiors routes live)
 
 ---
 
@@ -18,12 +18,13 @@ Single source of truth for current progress. Updated at every checkpoint.
 🟢 **Infrastructure Complete — Ready for MVP Build** (Camino B: Build first, validate after)
 
 ```
-Completed:       Infrastructure + backend skeleton + database locked down
-                 + sign-in + organizations + locations (73 tests pass)
+Completed:       Setup half of the product is done on the server:
+                 sign-in, organizations, locations, interiors + limits
+                 (102 tests pass)
 In Progress:     Week 1 — Backend feature endpoints
 Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
 Critical Risk:   None open — the open-database risk was closed on 2026-08-25
-Next:            Interiors + the 10-interior limit, then authorizations
+Next:            Entry permits (QR), then validating a scan at the door
 ```
 
 **Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
@@ -39,6 +40,29 @@ and recorded. Database access closed.
 - ⚠️ Found while doing it: the original setup script could never have worked —
   it called a `gcloud` command that has no rules option. The rules are now a
   real file in the repository, deployed with the Firebase CLI.
+
+**Interiors built (2026-08-25). The setup half of the product is now complete
+on the server, and the offer you approved is buildable and built.**
+- Add an apartment, warehouse bay or zone inside a site, each with its number
+  and the person in charge. List them, rename, reassign, remove.
+- **The 10-interior free limit works, counted the way you specified** — across
+  everything the customer has, not per site. The eleventh is refused with a
+  message the screens can show in Spanish, and nothing is saved.
+- Two people cannot both claim apartment 302 in the same building, even if they
+  press save at the exact same moment. The same number is still allowed in a
+  different building.
+- An interior can be linked to a resident's account, which is what will let
+  that resident issue entry permits for their own apartment. The person must
+  already belong to the organization.
+- An interior cannot be quietly moved to another building — that would drag its
+  existing permits along with it.
+- Deleting is refused while a permit for it is still active, and frees the slot
+  when it succeeds.
+- Every create, change and delete is written to the audit trail, as security
+  required.
+- Five more tests prove another customer cannot see or touch any of it.
+- Verified: 102/102 tests pass, typecheck clean, production build clean, all
+  five routes answer on a live server.
 
 **Locations built (2026-08-25).** The first half of what you actually sell now
 works, limits included.
@@ -156,6 +180,15 @@ works end to end on the server.
 - Dockerfile for Cloud Run: two-stage, non-root, no compiler or source in the image
 - Verified: `npm run typecheck` clean · `npm test` 12/12 pass · live 200 from Firestore
 
+✅ **Interiors + plan quotas** (2026-08-25)
+- `POST/GET /orgs/{orgId}/interiors`, `GET/PUT/DELETE .../{interiorId}`
+- 10-interior limit counted org-wide, not per location, enforced in a transaction
+- Number unique per location, checked in the same transaction
+- Optional link to a resident's account (must be a member) for US-003
+- `location_id` immutable; delete refused while a permit is active; delete frees the slot
+- Audit trail entry on every create, change and delete
+- Verified: 102/102 tests pass · typecheck clean · production build clean
+
 ✅ **Locations** (2026-08-25)
 - `POST/GET /orgs/{orgId}/locations`, `GET/PUT/DELETE .../{locationId}`
 - Plan limit enforced inside a transaction; refusal is `quota_exceeded` (403)
@@ -212,7 +245,7 @@ works end to end on the server.
 - [x] Auth endpoints — `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
 - [x] Org endpoints + multi-org support + membership check + 6 isolation tests
 - [x] Location endpoints + plan limit enforced in a transaction (Decision 003)
-- [ ] Interior CRUD + global 10-interior quota, enforced in a transaction (403)
+- [x] Interior endpoints + global 10-interior quota enforced in a transaction (403)
 - [ ] Authorization creation + QR/numeric code generation
 - [ ] Validation endpoint (scan QR, check validity, log event)
 - [ ] Unit + integration tests for all critical flows
@@ -355,9 +388,9 @@ works end to end on the server.
   returns an error code plus an English sentence. The intended approach is for
   the frontend to turn the code into Spanish text for the user. Needs one
   deliberate pass when the frontend is built, so the two do not drift.
-- 🟡 **Requirements read as if already built** — every acceptance criterion in
-  `requirements.md` is written as a ticked box `[x]`. They are definitions of
-  what must be true, not work that is finished. Easy to misread as progress.
+- 🟢 **Requirements checkbox meaning clarified** (2026-08-25) — a note at the
+  top of `requirements.md` now says a ticked box means "required criterion",
+  not "built". Build progress lives in this file.
 - ✅ ~~Database open to any signed-in user~~ — closed 2026-08-25 (Decision 004).
 - ✅ ~~Design documents contradict each other~~ — the three conflicts were
   resolved by Decisions 002, 003 and 004 on 2026-08-25.

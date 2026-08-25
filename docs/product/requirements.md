@@ -2,6 +2,12 @@
 
 User stories and acceptance criteria for MVP implementation.
 
+> **Reading the checkboxes.** A ticked box means "this is a required criterion",
+> not "this is built". Build progress lives in `PROJECT_STATE.md`. US-011 uses
+> unticked boxes because it was written after this convention was noticed; the
+> rest are being left as they are rather than re-marked, to avoid implying a
+> change of meaning that did not happen.
+
 ## US-001: Admin Creates Organization
 
 **As:** School director / building administrator
@@ -27,10 +33,45 @@ User stories and acceptance criteria for MVP implementation.
 ### Acceptance Criteria
 
 - [x] Admin can add location: name, description
+- [x] Number of locations is limited by the organization's plan (1 on the free
+      plan, per Decision 003) — creating beyond it is blocked
+- [x] Interiors inside a location are managed separately — see US-011
 - [x] Admin can list all locations for their org
 - [x] Admin can edit location (name, description)
 - [x] Admin can delete location (only if no active authorizations reference it)
 - [x] Location has ID for QR encoding
+
+---
+
+## US-011: Admin Manages Interiors
+
+**As:** Building administrator / school director
+**I want to:** Register the units inside a location — apartments, warehouse
+bays, zones — each with its number and the person in charge
+**So that:** Each resident or responsable can issue entry permits for their own
+unit, and security knows who a visitor is coming to see
+
+Added by Decision 003. The free-tier offer approved in Decision 001 is sold in
+these units, so the product could not deliver what it sells without them.
+
+### Acceptance Criteria
+
+- [ ] Admin can add an interior: location, number, name (optional), person in charge
+- [ ] The number must be unique inside its location; the same number may repeat
+      in a different location
+- [ ] An interior can be linked to a user account, so that person can issue
+      permits for it. That person must already belong to the organization
+- [ ] Admin can list interiors, filter them by location, and see the number used
+      against the plan limit
+- [ ] Admin can rename an interior and change who is in charge
+- [ ] Admin can delete an interior, which frees a slot against the plan
+- [ ] Deleting is refused while a permit for that interior is still active
+- [ ] An interior cannot be moved to a different location
+- [ ] Creating beyond the plan limit is blocked with a clear Spanish message,
+      counting **all** interiors in the organization, not per location
+- [ ] Every create, change and delete is written to the audit trail
+
+**Status (2026-08-25):** implemented on the server, no interface yet.
 
 ---
 
@@ -46,6 +87,7 @@ User stories and acceptance criteria for MVP implementation.
   - Authorized person: name
   - Authorized person: phone number (optional)
   - Location: select from org's locations
+  - Interior: which unit the visitor is coming to (Decision 003)
   - Valid from: date + time
   - Valid to: date + time
   - Purpose: text (e.g., "pickup", "visitor")
@@ -219,4 +261,4 @@ User stories and acceptance criteria for MVP implementation.
 ---
 
 **Owner:** Product Owner
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-25

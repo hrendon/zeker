@@ -461,6 +461,154 @@ give its slot back at once.
 
 ---
 
+## Interior Endpoints
+
+An interior is a unit inside a location: an apartment, a warehouse bay, a zone.
+It has a number and a person in charge (the *responsable*) — exactly what the
+approved offer sells (Decision 003).
+
+**The limit is organization-wide, not per location.** The free plan allows
+**10 interiors in total** across every location. The plan check, the check that
+the number is not already taken, and the write all happen in one database
+transaction.
+
+All routes are nested under an organization and inherit its membership check.
+
+---
+
+### POST /orgs/{orgId}/interiors
+
+Adds an interior. **Administrators only.**
+
+**Request:**
+```json
+{
+  "location_id": "loc_abc123",
+  "number": "302",
+  "name": "Apartamento 302",
+  "responsable_name": "María García",
+  "responsable_user_id": "user_xyz789"
+}
+```
+
+- `location_id` and `number` are required. `number` must be unused in that
+  location — the same number may repeat in a different location.
+- `responsable_name` is required, so security personnel can always see who is
+  in charge, even before that person has an account.
+- `responsable_user_id` is optional. It links the interior to a user account so
+  that person can issue permits for their own interior. They must already be a
+  member of the organization.
+- `name` is an optional label. Unknown fields are rejected.
+
+**Response (201):**
+```json
+{
+  "id": "int_abc123",
+  "org_id": "org_abc123",
+  "location_id": "loc_abc123",
+  "number": "302",
+  "name": "Apartamento 302",
+  "responsable_name": "María García",
+  "responsable_user_id": "user_xyz789",
+  "enabled": true,
+  "created_by": "user_admin",
+  "created_at": "2026-08-25T10:00:00.000Z",
+  "updated_at": "2026-08-25T10:00:00.000Z",
+  "usage": { "interiors": 1 },
+  "request_id": "req_abc123xyz"
+}
+```
+
+**Errors:**
+- `400 invalid_request` — missing field, unknown field, a location that does
+  not exist in this organization, or a responsable who is not a member of it
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `403 quota_exceeded` — the plan's interior limit is reached, counted across
+  the whole organization. `details: { resource: "interiors", limit: 10 }`.
+  The interface shows *"Ya tiene 10 interiores. Mejore su plan para agregar
+  más."* Nothing is written.
+- `404 not_found` — the caller is not a member of the organization
+- `409 conflict` — that number is already used in that location
+
+Every creation, change and deletion is written to the audit trail
+(Decision 001, Security Engineer position).
+
+---
+
+### GET /orgs/{orgId}/interiors
+
+Lists the organization's interiors, ordered by number (so 101 comes before
+1201). **Any member** — security personnel need to know which interior a
+visitor is going to.
+
+Optional `?location_id=loc_abc123` narrows the list to one location. `usage`
+still reports the organization-wide total, because that is what the plan limits.
+
+**Response (200):**
+```json
+{
+  "interiors": [ { "id": "int_abc123", "number": "302", "...": "..." } ],
+  "usage": { "interiors": 4, "max_interiors": 10 },
+  "request_id": "req_abc123xyz"
+}
+```
+
+---
+
+### GET /orgs/{orgId}/interiors/{interiorId}
+
+One interior. **Any member.**
+
+**Errors:**
+- `401 unauthorized`
+- `404 not_found` — no such interior, or the caller is not a member
+
+---
+
+### PUT /orgs/{orgId}/interiors/{interiorId}
+
+Changes an interior. **Administrators only.** Send at least one field.
+
+Accepted fields: `number`, `name`, `responsable_name`, `responsable_user_id`
+(send `null` to detach the account while keeping the name), `enabled`.
+
+`location_id` cannot be changed. Moving apartment 302 into another building is
+really a different interior, and moving it silently would carry its existing
+permits along with it.
+
+**Errors:**
+- `400 invalid_request` — empty body, a field that cannot be changed, or a
+  responsable who is not a member of the organization
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — no such interior, or the caller is not a member
+- `409 conflict` — the new number is already used in the same location
+
+---
+
+### DELETE /orgs/{orgId}/interiors/{interiorId}
+
+Removes an interior and frees its slot against the plan. **Administrators only.**
+
+**Response (200):**
+```json
+{
+  "id": "int_abc123",
+  "deleted": true,
+  "request_id": "req_abc123xyz"
+}
+```
+
+**Errors:**
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — no such interior, or the caller is not a member
+- `409 conflict` — an authorization for this interior is still active. Revoke
+  it first, so a permit can never point at an interior that no longer exists.
+
+---
+
 ## Authorization Endpoints
 
 ### POST /orgs/{orgId}/authorizations

@@ -159,6 +159,56 @@ Physical access points (entrances, reception areas, specific zones).
 
 ---
 
+### `orgs/{orgId}/interiors/{interiorId}`
+
+Units inside a location: an apartment, a warehouse bay, a zone (Decision 003).
+
+Stored **flat under the organization**, not nested inside the location, with a
+`location_id` field. The plan limit counts interiors across the whole
+organization, not per location (Founder clarification, 2026-08-18), so a flat
+collection makes that a single counter and a single query. Listing the
+interiors of one location stays a plain equality filter.
+
+```firestore
+{
+  "id": "int_a1b2c3",
+  "org_id": "org_abc123",
+  "location_id": "loc_entrance_1",     // required
+  "number": "302",                     // required; unique within its location
+  "name": "Apartamento 302",           // optional label
+  "responsable_name": "María García",  // required — shown to security personnel
+  "responsable_user_id": "user_xyz",   // null until that person has an account
+  "enabled": true,
+  "created_by": "user1",
+  "created_at": 2026-08-25T10:00:00Z,
+  "updated_at": 2026-08-25T10:00:00Z
+}
+```
+
+**Constraints:**
+- `number` unique within its `location_id` — enforced inside the same
+  transaction as the quota check, so two simultaneous requests cannot both
+  claim apartment 302
+- `location_id` cannot be changed after creation: moving an interior to another
+  building would carry its permits with it
+- `responsable_user_id` must be a member of the organization
+- Cannot delete while an authorization for it is still active
+- Total interiors limited by `orgs/{orgId}.limits.max_interiors` (10 on the
+  free plan), counted in `orgs/{orgId}.counts.interiors`
+
+**Not stored:** no address, phone or email for the responsable. The
+organization already knows where it is, and contacting a responsable goes
+through their user account.
+
+**Queries used:**
+- `location_id + number` (uniqueness check, per-location listing)
+- `location_id` (list one location's interiors)
+
+Both are equality-only, so Firestore's automatic single-field indexes serve
+them; no composite index is required.
+
+---
+
 ### `orgs/{orgId}/authorizations/{authId}`
 
 Access permit (core entity).

@@ -259,8 +259,11 @@ export class FakeQuery {
 export class FakeTransaction {
   constructor(private readonly store: FakeFirestore) {}
 
-  async get(ref: FakeDoc) {
-    return ref.snapshot()
+  /** Firestore transactions can read a single document or run a query. */
+  async get(target: FakeDoc): Promise<ReturnType<FakeDoc['snapshot']>>
+  async get(target: FakeQuery): Promise<Awaited<ReturnType<FakeQuery['get']>>>
+  async get(target: FakeDoc | FakeQuery): Promise<unknown> {
+    return target instanceof FakeQuery ? target.get() : target.snapshot()
   }
 
   set(ref: FakeDoc, data: Doc, options?: { merge?: boolean }): void {

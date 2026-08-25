@@ -17,12 +17,14 @@ import {
 } from '../lib/orgs.js'
 import type { OrgDocument } from '../lib/orgs.js'
 import { locationsRouter } from './locations.js'
+import { interiorsRouter } from './interiors.js'
 
 export const orgsRouter: Router = Router()
 
 // Everything nested under an organization mounts here, so it inherits the
 // membership checks that keep one customer out of another's data.
 orgsRouter.use('/:orgId/locations', locationsRouter)
+orgsRouter.use('/:orgId/interiors', interiorsRouter)
 
 const CreateOrgSchema = z
   .object({
