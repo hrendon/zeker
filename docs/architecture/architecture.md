@@ -186,13 +186,25 @@ const selectedOrgId = "org2";
 
 ## Authentication & Authorization
 
-### Login Flow
+### Backend → GCP Authentication (ADC)
 
-1. User enters email + password
-2. Firebase Auth validates
-3. Token returned, stored in localStorage
+Backend uses **Application Default Credentials (ADC)** to authenticate to GCP services:
+- **Firestore:** Automatic via Firebase Admin SDK + ADC
+- **Cloud KMS:** Automatic via @google-cloud/kms client + ADC
+- **Cloud Logging:** Automatic via Google Cloud logging client + ADC
+
+No manual credential management needed. ADC discovers credentials from:
+- Local dev: `gcloud auth application-default login` (user credentials)
+- Cloud Run: Service account attached to the instance (automatic)
+- CI/CD: GCP service account (if running in GCP)
+
+### User → Backend Authentication (Firebase)
+
+1. User enters email + password on frontend
+2. Firebase Auth validates via client SDK
+3. JWT token returned, stored in localStorage
 4. Subsequent API calls: `Authorization: Bearer {token}`
-5. Backend verifies token via Firebase Admin SDK
+5. Backend verifies token via Firebase Admin SDK (authenticated via ADC)
 
 ### Roles (MVP)
 
@@ -232,21 +244,43 @@ Implementation:
 
 ### Backend (Node + Cloud Run)
 
+**Authentication:** Application Default Credentials (ADC)
+- No service account JSON keys needed (org policy blocks creation, and it's a security best practice to avoid them)
+- Local development: `gcloud auth application-default login` (one-time)
+- Cloud Run: automatic via service account attached to the instance
+
 ```bash
-# Docker image (automatic via Cloud Run)
+# Local development setup (one-time)
+gcloud auth application-default login
+# This saves credentials to C:\Users\<User>\AppData\Roaming\gcloud\application_default_credentials.json
+# All backend code automatically uses these credentials via ADC
+
+# Cloud Run deployment
 gcloud run deploy zeker-api \
   --source . \
   --region us-central1 \
   --memory 512Mi \
   --cpu 1 \
-  --set-env-vars FIRESTORE_PROJECT_ID=zeker-prod
+  --service-account zeker-backend@zeker-505918.iam.gserviceaccount.com \
+  --set-env-vars \
+    FIRESTORE_PROJECT_ID=zeker-505918,\
+    KMS_LOCATION=us-central1,\
+    KMS_KEY_RING=zeker-keys,\
+    KMS_KEY_NAME=zeker-encryption-key
 
-# Environment variables:
-FIRESTORE_PROJECT_ID=...
-FIREBASE_PRIVATE_KEY=...  (from SA)
-GOOGLE_APPLICATION_CREDENTIALS=...
-GCP_KMS_KEY_ID=...
+# Backend environment variables (no secrets here, ADC handles GCP auth)
+FIRESTORE_PROJECT_ID=zeker-505918
+KMS_LOCATION=us-central1
+KMS_KEY_RING=zeker-keys
+KMS_KEY_NAME=zeker-encryption-key
+NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=zeker-505918.firebaseapp.com
 ```
+
+**Important:** The `zeker-backend` service account must have these IAM roles:
+- `roles/datastore.user` — Firestore read/write
+- `roles/cloudkms.cryptoKeyEncrypterDecrypter` — Cloud KMS encrypt/decrypt
+- These are set up by `scripts/setup-gcp.ps1` during infrastructure initialization
 
 ### Frontend (Next.js + Vercel)
 
@@ -326,4 +360,4 @@ GET    /orgs/{id}/events      — Access events
 
 **Owner:** Software Architect
 **Last updated:** 2026-08-18
-**Decisions recorded in:** `decisions/002-gcp-cloud-stack.md`
+**Decisions recorded in:** `decisions/` — see `001-freemium-gcp-stack.md` (stack & pricing), `002-client-side-firebase-auth.md` (sign-in), `003-interiors-and-plan-quotas.md` (interiors & limits), `004-backend-only-firestore-access.md` (database access)

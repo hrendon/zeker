@@ -2,7 +2,6 @@
 .env
 .env.local
 .env.*.local
-gcp-service-account-key.json
 
 # Node.js
 node_modules/
@@ -41,9 +40,15 @@ build/
 .cache/
 temp/
 
-# GCP
+# GCP — credential files must never be committed.
+# Authentication uses Application Default Credentials (no key file), but any
+# key file that ends up in the working tree is blocked here regardless.
 google-cloud-key.json
 service-account.json
+gcp-service-account-key.json
+*-service-account*.json
+*serviceaccount*.json
+application_default_credentials.json
 *.json.example
 
 # Firebase

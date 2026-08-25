@@ -282,7 +282,20 @@ Log of notifications sent to user.
 
 ## Security Rules (Firestore)
 
+> ⚠️ **NOT IN FORCE.** The rules below are a *reference design*, kept for the day
+> browsers might need to read Firestore directly. They are not deployed.
+>
+> **The rules actually in force are in `firestore.rules` at the repository root:
+> clients are denied all access to Firestore.** Every read and write goes through
+> the Zeker backend, which uses the Firebase Admin SDK and enforces organization
+> membership per request. See `docs/decisions/004-backend-only-firestore-access.md`.
+>
+> This means multi-tenant isolation is enforced **in backend code**, not by these
+> rules. Every org-scoped endpoint must check membership, and that check must be
+> covered by tests.
+
 ```javascript
+// REFERENCE DESIGN — NOT DEPLOYED. See firestore.rules for what is live.
 match /databases/{database}/documents {
   // Default deny
   match /{document=**} {

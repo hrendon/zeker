@@ -1,39 +1,36 @@
 #!/bin/bash
 # setup-firestore-rules.sh
-# Aplica Firestore Security Rules
+# Despliega las Firestore Security Rules del repositorio.
+#
+# Las reglas viven en firestore.rules, versionadas en git (Decisión 004).
+# Este script NO genera ni borra reglas: solo despliega el archivo que está
+# en el repositorio, para que lo desplegado siempre sea revisable y reversible.
 
 set -e
 
 PROJECT_ID="zeker-505918"
-
-echo "=== Configurando Firestore Security Rules ==="
-
-# Crear archivo temporal de reglas
 RULES_FILE="firestore.rules"
 
-cat > "$RULES_FILE" << 'EOF'
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // MVP: cualquier usuario autenticado puede leer/escribir
-    // ANTES DE PRODUCCIÓN: cambiar a reglas granulares de data-minimization.md
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-EOF
+echo "=== Desplegando Firestore Security Rules ==="
 
-echo "Creando archivo de reglas..."
+if [ ! -f "$RULES_FILE" ]; then
+  echo "ERROR: no se encontró $RULES_FILE en $(pwd)."
+  echo "Ejecuta este script desde la raíz del repositorio."
+  exit 1
+fi
 
-echo "Aplicando reglas a Firestore..."
-gcloud firestore databases update --rules=$RULES_FILE
+echo "Reglas a desplegar:"
+echo "---"
+cat "$RULES_FILE"
+echo "---"
 
-echo "Limpiando archivo temporal..."
-rm -f "$RULES_FILE"
+gcloud firestore databases update \
+  --project="$PROJECT_ID" \
+  --rules="$RULES_FILE"
 
 echo ""
 echo "=== COMPLETADO ==="
-echo "✓ Firestore security rules aplicadas"
+echo "✓ Reglas desplegadas desde $RULES_FILE"
 echo ""
-echo "Siguiente paso: ejecuta get-firebase-config.sh"
+echo "Recuerda: el acceso directo desde el navegador está cerrado."
+echo "Todo pasa por el backend (Decisión 004)."

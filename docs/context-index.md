@@ -13,10 +13,12 @@ Map of authoritative sources for project knowledge.
 | Data model | `architecture/data-model.md` | Firestore collections, schema, constraints | Software Architect |
 | APIs | `architecture/api.md` | Endpoints, request/response, authentication | Software Architect |
 | Design (UX/UI) | `architecture/design.md` | Wireframes, three experiences, PWA specs | UI/UX Designer |
+| Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code | Backend Developer |
 | **Security** | | | |
 | Data minimization | `security/data-minimization.md` | What we store, what we never store, minimization rules | Security Engineer |
 | Threat model | `security/threat-model.md` | Threats, mitigations, assumptions | Security Engineer |
 | Privacy policy | `security/privacy.md` | LSPDP/GDPR compliance, consent, retention | Security Engineer |
+| Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
 | **Decisions** | | | |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
 | **Roles** | | | |

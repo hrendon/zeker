@@ -2,8 +2,8 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-18
-**Last verified:** 2026-08-18 (initialization, not yet running)
+**Last updated:** 2026-08-25
+**Last verified:** 2026-08-25 (backend typecheck clean, 12/12 tests pass, live Firestore reachable, deny-all rules deployed)
 
 ---
 
@@ -15,16 +15,44 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 ## Current Status
 
-🟢 **Ready for Infrastructure Setup** (Camino B: Build first, validate after)
+🟢 **Infrastructure Complete — Ready for MVP Build** (Camino B: Build first, validate after)
 
 ```
-Completed:       4/10 phases (+ Product/Architecture refined)
-Blocked:         0
-Proposed:        0 (D-001 approved)
-Needs approval:  0
-Next:            Week 1 — Infrastructure setup begins
-Risk:            Market validation pending (Phase 2)
+Completed:       Infrastructure + backend skeleton + database locked down
+In Progress:     Week 1 — Backend feature endpoints
+Blocked:         0 · Pending decisions queue is empty
+Critical Risk:   None open — the open-database risk was closed on 2026-08-25
+Next:            Org endpoints, then interiors + quota, then authorizations
 ```
+
+**Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
+and recorded. Database access closed.
+- ✅ D-002 approved → sign-in happens in the browser with Firebase; our server
+  never handles a password. Recorded as Decision 002.
+- ✅ D-003 approved → "interiors" become a real level under a location, and plan
+  limits move onto the organization. Recorded as Decision 003.
+- ✅ D-004 approved and **already built and deployed** → browsers can no longer
+  reach the database at all. Recorded as Decision 004.
+- ✅ Verified after the change: the backend still reads the live database
+  (`/health/ready` → 200), typecheck clean, 12/12 tests pass.
+- ⚠️ Found while doing it: the original setup script could never have worked —
+  it called a `gcloud` command that has no rules option. The rules are now a
+  real file in the repository, deployed with the Firebase CLI.
+
+**Previous Update (2026-08-21):** Backend skeleton built and verified.
+- ✅ Express + TypeScript app running, compiles clean, 12 tests passing
+- ✅ Firestore reached live through ADC (`/health/ready` returns 200)
+- ✅ Firebase token verification, uniform error shape, rate limits, request tracing
+- ✅ Cloud Run container definition ready (non-root, no source in image)
+- ✅ Security fix: service-account key filenames can no longer be committed
+- ⚠️ Three design contradictions found — raised as D-002, D-003, D-004
+
+**Previous Update (2026-08-19):** Multi-role dispatch validation completed.
+- ✅ Backend Developer: Ready to scaffold (48-hour launch plan)
+- ✅ Frontend Developer: Ready to scaffold (component library outlined)
+- ✅ Architect: Infrastructure 6/6 complete (rules update flagged Week 2)
+- ✅ Product Owner: Prioritization clear (Backend first, 7 critical stories)
+- ✅ Security Engineer: ADC approach confirmed secure
 
 ---
 
@@ -51,26 +79,71 @@ Risk:            Market validation pending (Phase 2)
 - Retention: 90 days events, 1 year auth records
 - Compliance target: Ley 1581/2016 (Colombia)
 
+✅ **Backend Skeleton** (2026-08-21)
+- Express 5 + TypeScript app, strict compile, ESM build to `backend/dist/`
+- Configuration validated at startup — the app refuses to run half-configured
+- Firebase Admin SDK wired through Application Default Credentials (no key file)
+- `requireAuth`: verifies Firebase ID tokens, rejects revoked sessions immediately
+- Single error handler producing the documented `{ error, message, request_id }` shape
+- Request tracing (`X-Request-Id`), structured logs shaped for Google Cloud Logging
+- Rate limits per `api.md` (5/min auth, 100/min validate, 60/min general)
+- `GET /health` and `GET /health/ready` (real Firestore round trip)
+- Dockerfile for Cloud Run: two-stage, non-root, no compiler or source in the image
+- Verified: `npm run typecheck` clean · `npm test` 12/12 pass · live 200 from Firestore
+
 ✅ **Documentation**
+- `docs/architecture/developer-guide.md` — how to run, test, and deploy
 - `docs/product/brief.md` — what we build
 - `docs/product/requirements.md` — 10 user stories
 - `docs/architecture/architecture.md` — full technical spec
 - `docs/architecture/data-model.md` — Firestore schema
 - `docs/security/data-minimization.md` — security policy
 - `docs/decisions/001-freemium-gcp-stack.md` — why GCP
+- `docs/decisions/002-client-side-firebase-auth.md` — how users sign in
+- `docs/decisions/003-interiors-and-plan-quotas.md` — interiors and plan limits
+- `docs/decisions/004-backend-only-firestore-access.md` — who can reach the database
+- `firestore.rules` — the database rules actually deployed
 - `docs/roles/role-registry.md` — who owns what
 
 ---
 
 ## In Progress
 
-🔨 **Week 1: Infrastructure Setup**
-- [ ] GCP project created + billing alerts ($50/month cap)
-- [ ] Firestore database + security rules drafted
-- [ ] Firebase Auth configured
-- [ ] Cloud KMS key created (for encryption at rest)
-- [ ] Vercel project connected to Git repo
-- [ ] Base directory structure created (backend + frontend)
+🔨 **Week 1-2: MVP Development**
+
+**Backend (Days 1-7):**
+- [x] Express app scaffolded + TypeScript configured
+- [x] Firebase Admin SDK + Firestore client initialized
+- [x] Request pipeline: auth middleware, error contract, rate limits, tracing
+- [x] Health + readiness endpoints, Cloud Run container definition
+- [x] Firestore rules in the repository, clients denied, deployed (Decision 004)
+- [ ] Auth endpoints (`POST /api/auth/session`, `GET /api/auth/me`, `POST /api/auth/logout`)
+- [ ] Org CRUD endpoints + multi-org support + membership check on every route
+- [ ] Location CRUD + plan limits (Decision 003)
+- [ ] Interior CRUD + global 10-interior quota, enforced in a transaction (403)
+- [ ] Authorization creation + QR/numeric code generation
+- [ ] Validation endpoint (scan QR, check validity, log event)
+- [ ] Unit + integration tests for all critical flows
+- [ ] Cloud Run deployment pipeline ready
+
+**Frontend (Days 1-3 scaffold, 5-14 build):**
+- [ ] Next.js 14 + React 18 scaffolded
+- [ ] Firebase Auth SDK configured
+- [ ] Zustand state management (auth, org, ui stores)
+- [ ] Signup/signin pages connected to backend
+- [ ] Admin dashboard: org switcher, location CRUD
+- [ ] Responsable experience: create auth, display QR
+- [ ] Security experience: QR scan + validation result
+- [ ] Entry history view
+- [ ] PWA setup (manifest, service worker, offline read-only)
+- [ ] E2E tests for critical flows
+
+**Critical Blocker (Week 2 pre-launch gate):**
+- [x] Firestore security rules locked down — clients denied entirely (Decision 004,
+      deployed and verified 2026-08-25). The granular per-role design is retained
+      in `data-model.md` as a reference, not deployed.
+- [ ] Multi-org isolation verified in backend code (User A cannot access User B data)
+      — now the *only* thing keeping customers apart, so this test is mandatory
 
 ---
 
@@ -78,17 +151,20 @@ Risk:            Market validation pending (Phase 2)
 
 ### Phase 1: MVP Development (Weeks 1-4)
 
-1. **Approval Gate** 🟡
-   - [ ] Founder approves freemium model
-   - [ ] Founder approves GCP stack
-   - [ ] Founder confirms Colombia as initial market
+1. **Approval Gate** ✅ APPROVED (2026-08-19)
+   - ✅ Founder approves freemium model
+   - ✅ Founder approves GCP stack
+   - ✅ Founder confirms Colombia as initial market
+   - ✅ Decision D-001 approved
 
-2. **Infrastructure Setup** (1-2 days)
-   - [ ] GCP project created + billing alert at $50/month
-   - [ ] Firestore database configured
-   - [ ] Firebase Auth enabled
-   - [ ] Cloud KMS key created
-   - [ ] Vercel connected to repo
+2. **Infrastructure Setup** ✅ COMPLETE (2026-08-19)
+   - ✅ GCP project created (zeker-505918) + billing alert
+   - ✅ Firestore database configured (us-central1)
+   - ✅ Firebase Auth enabled
+   - ✅ Cloud KMS key created (90-day rotation)
+   - ✅ Service accounts + IAM roles assigned
+   - ✅ ADC (Application Default Credentials) documented
+   - ⚠️ Vercel connection: TODO (Week 1, non-blocking for local dev)
 
 3. **Backend MVP** (7-10 days)
    - [ ] Node/Express app scaffolded
@@ -161,6 +237,30 @@ Risk:            Market validation pending (Phase 2)
 
 ## Known Issues
 
+- 🔴 **Nothing is saved in version history** — the backend code, the frontend
+  folder and the newer documents have never been committed. Only the very first
+  commit exists. If this machine fails, the work is lost. Fix: one commit.
+- 🟡 **Isolation between organizations now depends entirely on backend code** —
+  a consequence of closing the database (Decision 004). Every endpoint that
+  touches an organization must check membership, and a test must prove that user
+  A cannot reach user B's data. Not yet written, because those endpoints do not
+  exist yet.
+- 🟡 **Encryption plan is not buildable as written** — the architecture says the
+  browser encrypts phone numbers before sending them. The browser cannot hold the
+  Cloud KMS key. Encryption has to happen on the server. To resolve before the
+  authorization endpoints are built.
+- 🟡 **Dependency versions are not locked** — `package-lock.json` is excluded
+  from version control and the container image installs with `npm install`
+  instead of `npm ci`. Two builds of the same code can therefore pull different
+  library versions. Small fix, but it affects what actually ships to production.
+- 🟡 **Requirements read as if already built** — every acceptance criterion in
+  `requirements.md` is written as a ticked box `[x]`. They are definitions of
+  what must be true, not work that is finished. Easy to misread as progress.
+- ✅ ~~Database open to any signed-in user~~ — closed 2026-08-25 (Decision 004).
+- ✅ ~~Design documents contradict each other~~ — the three conflicts were
+  resolved by Decisions 002, 003 and 004 on 2026-08-25.
+- ✅ ~~Two stale references~~ — both fixed 2026-08-25: `architecture.md` now
+  points at the real decision files, and `firestore.rules` now exists.
 - ⚠️ **Not yet validated with customers** — All assumptions, no market feedback
 - ⚠️ **Privacy policy not yet written** — Needed before launch (high priority)
 - ⚠️ **Terms & Conditions not yet written** — Needed before launch
@@ -171,7 +271,48 @@ Risk:            Market validation pending (Phase 2)
 
 ---
 
+## Pending Decisions
+
+Everything waiting on the Founder. One card each. Answering these is all that is
+needed — an answered card becomes a record in `docs/decisions/` and leaves this queue.
+
+**The queue is empty. Nothing is blocked on you.**
+
+---
+
 ## Approved Decisions
+
+### D-004: Close the database to browsers ✅ APPROVED (2026-08-25) — BUILT
+
+Browsers can no longer reach the database at all. Only the Zeker backend can,
+and it already handled every operation. Deployed and verified the same day.
+Full record: `docs/decisions/004-backend-only-firestore-access.md`.
+
+**Consequence to carry forward:** keeping organizations separate is now purely a
+job for backend code. Every endpoint must check that the caller belongs to the
+organization, and a test must prove one customer cannot reach another's data.
+
+---
+
+### D-003: Interiors are real, limits belong to the plan ✅ APPROVED (2026-08-25)
+
+An interior (apartment, warehouse bay, zone) becomes a real thing in the system,
+sitting inside a location, with a number and a person in charge — exactly what
+the approved offer sells. The old "up to 100 locations" cap is replaced by
+limits attached to the customer's plan: free = 1 location, 10 interiors in
+total. Hitting the limit blocks creation with a plain Spanish message.
+Full record: `docs/decisions/003-interiors-and-plan-quotas.md`.
+
+---
+
+### D-002: Sign-in happens in the browser ✅ APPROVED (2026-08-25)
+
+The browser signs in with Firebase directly. Our server never receives, handles,
+or stores a password — it only checks the signed proof of identity it is given.
+The three password-handling endpoints in the API design are removed.
+Full record: `docs/decisions/002-client-side-firebase-auth.md`.
+
+---
 
 ### D-001: Freemium Model (Resource-Limited) + GCP Stack ✅ APPROVED (2026-08-19)
 
@@ -230,6 +371,9 @@ Blocker:        Data model + MVP scope locked until this approved
 ### Active Decisions
 
 - **GCP Cloud Stack** — Firestore, Cloud Run, Firebase Auth, KMS
+- **Sign-in in the browser** — Firebase Auth Web SDK; our API never sees a password (Decision 002)
+- **Interiors under locations** — plan-based limits on the org document; free = 1 location / 10 interiors total (Decision 003)
+- **Backend-only database access** — clients denied all Firestore access; isolation enforced in backend code (Decision 004)
 - **Freemium Model (Resource-Limited)** — 1 location + 10 interiors free; paid plans unlock more locations/interiors
 - **MVP Scope: Locations Only** — Entry authorization (QR validation). Schools deferred to Phase 2.
 - **Web + PWA** — No mobile native (Phase 2+)
@@ -300,7 +444,7 @@ Blocker:        Data model + MVP scope locked until this approved
 | No market demand | 🔴 Critical | Validate with 5-10 schools ASAP (week 5) | ⏳ Mitigating |
 | Compliance violation | 🔴 Critical | Privacy lawyer review before launch | ⏳ Planning |
 | Data breach | 🔴 Critical | Encryption in place, audit logs enabled | ✅ Mitigated |
-| Multi-org isolation bug | 🟡 High | Security rules + unit tests | ⏳ Testing |
+| Multi-org isolation bug | 🔴 Critical | Clients cannot reach the database at all; backend checks org membership per request; isolation test required before launch | ⏳ Test not yet written |
 | Firestore costs exceed budget | 🟡 High | Set alerts at 80% quota, scale pricing if needed | ✅ Monitored |
 | Vercel deployment fails | 🟡 High | Have rollback plan, GitHub branches | ⏳ Prepared |
 | Slow QR validation | 🟡 Medium | Optimize queries, cache results | ⏳ TBD in code |
@@ -353,5 +497,5 @@ When you restart, check:
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-18
-**Approval:** ⏳ Pending Founder D-001
+**Last updated:** 2026-08-25
+**Approval:** ✅ Nothing pending — D-002, D-003 and D-004 answered 2026-08-25
