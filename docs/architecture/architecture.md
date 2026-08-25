@@ -29,7 +29,7 @@ Framework:      Express.js
 Language:       TypeScript (optional but recommended)
 Database:       Google Firestore (NoSQL)
 Auth:           Firebase Auth
-Encryption:     crypto-js (client) + GCP KMS (server secrets)
+Encryption:     GCP KMS (server side only — see Encryption Strategy below)
 Hosting:        GCP Cloud Run
 Environment:    .env files (Firebase config, secrets)
 ```
@@ -78,9 +78,10 @@ Monitoring:         Google Cloud Trace + Firestore analytics
         │  (Node.js + Express)       │
         │                            │
         │  Routes:                   │
-        │  - /auth (signin/signup)   │
+        │  - /auth (session/me/out)  │
         │  - /orgs (CRUD)            │
         │  - /locations (CRUD)       │
+        │  - /interiors (CRUD)       │
         │  - /authorizations (CRUD)  │
         │  - /validate (scan check)  │
         │  - /events (logs)          │
@@ -117,8 +118,10 @@ Every collection scoped by `orgId`:
   /admin_users: array
   
 /users/{userId}
-  /email: string (encrypted)
-  /orgs: array of orgId (maps user to orgs they admin)
+  /first_name, /last_name: string
+  /orgs: array of { org_id, role } — the single source of membership
+  (no email stored: Firebase Auth holds it and sends it verified
+   with every request — see data-model.md)
   
 /authorizations/{authId}
   /orgId: string (partition key)
@@ -145,42 +148,17 @@ Every collection scoped by `orgId`:
 
 **Security Rules (Firestore):**
 
-```
-match /db/{document=**} {
-  allow read, write: if request.auth != null
-    && request.auth.uid in resource.data.viewers;
-  
-  match /orgs/{orgId} {
-    allow read: if request.auth.uid in resource.data.admin_users;
-    allow write: if request.auth.uid in resource.data.admin_users;
-    
-    match /locations/{locationId} {
-      allow read, write: if request.auth.uid in get(/databases/$(database)/documents/orgs/$(orgId)).data.admin_users;
-    }
-    
-    match /authorizations/{authId} {
-      allow read: if request.auth.uid in get(/databases/$(database)/documents/orgs/$(orgId)).data.admin_users;
-      allow create, update, delete: if request.auth.uid == resource.data.created_by;
-    }
-    
-    match /accessEvents/{eventId} {
-      allow read: if request.auth.uid in get(/databases/$(database)/documents/orgs/$(orgId)).data.admin_users;
-      allow create: if request.auth != null; // Security can log, anyone can read events
-    }
-  }
-}
-```
-
-**User can be admin of multiple orgs:**
-
-```javascript
-// Frontend: fetch user's orgs
-const userDoc = await firestore.collection('users').doc(userId).get();
-const orgIds = userDoc.data().orgs; // ["org1", "org2", "org3"]
-
-// Switch org: all subsequent queries scoped to selected orgId
-const selectedOrgId = "org2";
-```
+> ⚠️ **Superseded by Decision 004 (2026-08-25).** The per-role rules sketched
+> here are **not deployed**. Clients are denied all direct access to Firestore;
+> the backend, using the Admin SDK, is the only path to the data. The rules in
+> force are in `firestore.rules` at the repository root.
+>
+> This means multi-tenant isolation is enforced **in backend code**, by
+> `requireOrgMember` / `requireOrgAdmin` on every org-scoped route, and is
+> covered by tests. There is no second safety net behind it.
+>
+> A reference design for granular per-role rules is retained in
+> `data-model.md`, should browsers ever need direct access.
 
 ---
 
@@ -200,11 +178,23 @@ No manual credential management needed. ADC discovers credentials from:
 
 ### User → Backend Authentication (Firebase)
 
-1. User enters email + password on frontend
-2. Firebase Auth validates via client SDK
-3. JWT token returned, stored in localStorage
-4. Subsequent API calls: `Authorization: Bearer {token}`
-5. Backend verifies token via Firebase Admin SDK (authenticated via ADC)
+Decided in Decision 002: **the browser signs in with Firebase directly. This
+API never receives a password.**
+
+1. User enters email + password in the browser
+2. The Firebase Auth Web SDK validates them — the credentials go to Firebase,
+   never to our server
+3. Firebase returns an ID token; the SDK holds and refreshes it
+4. The frontend calls `POST /auth/session` once, which creates the user's
+   profile on first sign-in and refreshes `last_login` afterwards
+5. Every API call carries `Authorization: Bearer {ID token}`
+6. `requireAuth` verifies the token via the Firebase Admin SDK with
+   `checkRevoked=true`, so a revoked session stops working immediately
+7. `POST /auth/logout` revokes the refresh tokens server-side
+
+There is no `/auth/signup`, `/auth/signin` or `/auth/refresh` on this API.
+Password strength, reset, email verification and brute-force protection are all
+Firebase's, outside our trust boundary.
 
 ### Roles (MVP)
 
@@ -213,7 +203,10 @@ No manual credential management needed. ADC discovers credentials from:
 - **Security:** Can only scan/validate, read-only access to authorizations
 - **Owner:** Can delete org, change billing (not in MVP)
 
-Role stored in Firestore user doc or Firebase custom claims.
+The role is **per organization**, stored in `users/{uid}.orgs[]` as
+`{ org_id, role }`. There is no single global role: one person can administer
+one organization and be a resident in another, which a global role cannot
+express. This is also the only record of membership — see `data-model.md`.
 
 ---
 
@@ -221,16 +214,28 @@ Role stored in Firestore user doc or Firebase custom claims.
 
 ### At Rest
 
-```
-Sensitive fields (in Firestore):
-- authorized_person_phone: AES-256 via GCP KMS
-- user_email: Firestore native encryption (default)
+> ⚠️ **This plan is not buildable as written, and is not implemented.** It said
+> the frontend encrypts before sending. A browser cannot hold the Cloud KMS key
+> — giving it one would hand the key to every user. Encryption has to happen on
+> the server, after the request arrives over TLS. This is an open item, to be
+> resolved before the authorization endpoints store a visitor's phone number.
 
-Implementation:
-- Frontend: encrypt before sending to backend
-- Backend: decrypt when needed, re-encrypt on store
-- Keys: stored in GCP Secret Manager, rotated quarterly
-```
+**What is true today (2026-08-25):** nothing is application-encrypted, because
+nothing that would need it is stored yet.
+
+- **User email and phone are not stored at all.** Firebase Auth is the system of
+  record for the email and sends it, verified, with every request. This removed
+  the need for encryption on the account side entirely.
+- **Organization address and phone are not stored.** For a residential customer,
+  the building address plus an interior number plus a permit would reveal where
+  a named person lives.
+- Firestore encrypts everything at rest by default (Google-managed keys). That
+  protects against physical media access, not against application-level access.
+
+**Still to decide, before permits are built:** the visitor's phone number in an
+authorization is optional and personal. The options are to encrypt it
+server-side with Cloud KMS as originally intended, or not to collect it at all.
+The KMS key already exists (`zeker-encryption-key`, 90-day rotation).
 
 ### In Transit
 
@@ -311,10 +316,10 @@ gcloud firestore backups create \
 See `api.md` for full spec.
 
 ```
-POST   /auth/signup           — Create user
-POST   /auth/signin           — Login
-POST   /auth/refresh          — Refresh token
-DELETE /auth/logout           — Logout
+POST   /auth/session          — Create/refresh profile after Firebase sign-in
+GET    /auth/me               — Current profile + org memberships
+POST   /auth/logout           — Revoke the session server-side
+       (sign-up, sign-in and refresh happen in the browser at Firebase)
 
 POST   /orgs                  — Create org
 GET    /orgs                  — List my orgs
@@ -322,10 +327,17 @@ GET    /orgs/{id}             — Get org details
 PUT    /orgs/{id}             — Update org
 DELETE /orgs/{id}             — Delete org
 
-POST   /orgs/{id}/locations   — Add location
+POST   /orgs/{id}/locations   — Add location (plan limit enforced)
 GET    /orgs/{id}/locations   — List locations
+GET    /orgs/{id}/locations/{lid}  — Get one
 PUT    /orgs/{id}/locations/{lid}  — Update
 DELETE /orgs/{id}/locations/{lid}  — Delete
+
+POST   /orgs/{id}/interiors   — Add interior (plan limit enforced)
+GET    /orgs/{id}/interiors   — List interiors (?location_id= to filter)
+GET    /orgs/{id}/interiors/{iid}  — Get one
+PUT    /orgs/{id}/interiors/{iid}  — Update
+DELETE /orgs/{id}/interiors/{iid}  — Delete
 
 POST   /orgs/{id}/authorizations    — Create auth
 GET    /orgs/{id}/authorizations    — List auths
@@ -359,5 +371,5 @@ GET    /orgs/{id}/events      — Access events
 ---
 
 **Owner:** Software Architect
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-25
 **Decisions recorded in:** `decisions/` — see `001-freemium-gcp-stack.md` (stack & pricing), `002-client-side-firebase-auth.md` (sign-in), `003-interiors-and-plan-quotas.md` (interiors & limits), `004-backend-only-firestore-access.md` (database access)

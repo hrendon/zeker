@@ -3,7 +3,7 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 (backend typecheck clean, 102/102 tests pass, production build clean, live Firestore reachable, deny-all rules deployed, /auth /orgs /locations /interiors routes live)
+**Last verified:** 2026-08-25 — full audit at session close. Backend typecheck clean, 102/102 tests pass, production build clean, live Firestore reachable, deny-all rules deployed and confirmed live, every route answered on a running server, documents checked against the code and corrected.
 
 ---
 
@@ -40,6 +40,23 @@ and recorded. Database access closed.
 - ⚠️ Found while doing it: the original setup script could never have worked —
   it called a `gcloud` command that has no rules option. The rules are now a
   real file in the repository, deployed with the Firebase CLI.
+
+**Session closed 2026-08-25.** Five units built, six commits, three decisions
+recorded and one raised. Documents were audited against the code at close and
+corrected — see "Documentation corrected" below.
+
+**Documentation corrected at session close (2026-08-25).** The technical
+documents had drifted from what was actually built. Fixed rather than noted:
+- `architecture.md` still described sign-in with a password reaching our server,
+  browser-side encryption that cannot work, per-role database rules that are not
+  deployed, and an endpoint list missing half the product. All corrected, with
+  the superseded parts marked as superseded rather than deleted.
+- `context-index.md` pointed at four documents that do not exist. They are now
+  marked missing, with a note of when each is actually needed.
+- `developer-guide.md` now states the isolation rule as a build step, so the
+  next person cannot add an endpoint that skips it by accident.
+- `role-registry.md` still listed decisions as pending that you approved a week
+  ago, plus today's three.
 
 **Interiors built (2026-08-25). The setup half of the product is now complete
 on the server, and the offer you approved is buildable and built.**
@@ -364,14 +381,19 @@ works end to end on the server.
 
 ## Known Issues
 
-- 🔴 **Nothing is saved in version history** — the backend code, the frontend
-  folder and the newer documents have never been committed. Only the very first
-  commit exists. If this machine fails, the work is lost. Fix: one commit.
-- 🟡 **Isolation between organizations now depends entirely on backend code** —
-  a consequence of closing the database (Decision 004). Every endpoint that
-  touches an organization must check membership, and a test must prove that user
-  A cannot reach user B's data. Not yet written, because those endpoints do not
-  exist yet.
+- ✅ ~~Nothing is saved in version history~~ — fixed 2026-08-25. Six commits now
+  cover all the code and documents.
+- 🟡 **Isolation between organizations depends entirely on backend code** — a
+  consequence of closing the database (Decision 004). It is built and covered by
+  16 tests across organizations, locations and interiors. **It stays on this
+  list because it is a standing rule, not a finished task:** every new
+  org-scoped route must mount the membership check and ship with a test proving
+  another customer gets 404. Forgetting it once exposes every customer.
+- 🟡 **Four documents are named but were never written** — a roadmap, the UX
+  design, the threat model and the privacy policy. The first two are not urgent.
+  **The privacy policy is legally required before launch** (Ley 1581/2016) and
+  the threat model should exist before real customer data arrives. The document
+  map now marks all four as missing rather than pointing at empty paths.
 - 🟡 **Encryption plan is not buildable as written** — the architecture says the
   browser encrypts phone numbers before sending them. The browser cannot hold the
   Cloud KMS key. Encryption has to happen on the server. To resolve before the
@@ -668,9 +690,53 @@ When you restart, check:
 
 - [ ] Read this file first (current state)
 - [ ] Check `docs/context-index.md` (know where to find docs)
-- [ ] Check Pending decisions above (any approvals needed?)
-- [ ] Read the next task from "Next" section
+- [ ] Check Pending decisions above — D-005 is waiting, not blocking
+- [ ] Read "Where to pick up" below
 - [ ] Update this file when work is done
+
+---
+
+## Where to pick up
+
+**The setup half of the product is finished on the server. The working half is
+not started, and there is still no interface at all.**
+
+Two sensible next moves, in the order they were last discussed:
+
+**1. Entry permits (the heart of the product).** Create a permit for a visitor,
+generate the QR and the fallback numeric code, revoke it. Then validating a
+scan at the door and recording the entry.
+
+Before starting, three things need answering — the first is a real decision:
+
+- **The visitor's phone number is optional and personal.** The original plan was
+  to encrypt it, but the encryption design as written cannot work (see Known
+  Issues). Either encrypt it on the server with the Cloud KMS key that already
+  exists, or do not collect it at all. Not collecting it is simpler, cheaper and
+  safer; collecting it enables notifying the visitor later. **Founder's call.**
+- A permit belongs to exactly one interior (Decision 003). There is no
+  building-wide permit in the MVP. That assumption is recorded and accepted.
+- Who may create a permit: the interior's responsable, and an admin. Security
+  personnel may not.
+
+**2. A sign-in screen first**, so all of this becomes visible in a browser.
+Roughly half a day. Five units are built and none can be seen. Recommended
+before going much further, because seeing it working surfaces product problems
+that testing does not.
+
+**What a new session needs to know that is not obvious from the code:**
+
+- Since Decision 004, **backend code is the only thing keeping customers
+  separate.** Every org-scoped route mounts `requireOrgMember` or
+  `requireOrgAdmin` and ships with a test proving another customer gets 404.
+- The built code deliberately **stores less** than `data-model.md` originally
+  specified — no user email or phone, no organization address or phone, no staff
+  names on locations. Every one of those is marked in `data-model.md` under
+  "What is actually implemented", with the reason.
+- Anything the plan limits is created through `createCounted()` in
+  `backend/src/lib/quota.ts`, never by writing the document directly.
+- The API returns error **codes**; the Spanish wording the customer reads belongs
+  in the interface.
 
 ---
 

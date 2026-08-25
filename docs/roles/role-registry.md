@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-25
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -19,10 +19,15 @@ These roles are held by humans and carry final decision authority. AI never simu
 **Authority:** Freemium strategy, market segment choice, investment decisions
 **Consulted on:** Product direction changes, pivot decisions, capital allocation
 
+**Decisions taken:**
+- ✅ Freemium model + GCP stack + Colombia as first market (2026-08-19, Decision 001)
+- ✅ Sign-in happens in the browser; the API never sees a password (2026-08-25, Decision 002)
+- ✅ Interiors as a real level; plan-based limits (2026-08-25, Decision 003)
+- ✅ Clients denied direct database access (2026-08-25, Decision 004)
+
 **Pending 🟡 approvals:**
-- Freemium vs. immediate paid model
-- GCP stack commitment
-- Colombia as initial market
+- D-005 — how many free organizations one person may create. Not blocking
+  today; blocks launching paid plans. See `PROJECT_STATE.md`.
 
 ---
 
@@ -351,5 +356,5 @@ These roles will activate when relevant.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-25
 **Related:** `mantis/roles.md` §5 (Role Activation Protocol)

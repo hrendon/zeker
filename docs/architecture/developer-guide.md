@@ -100,25 +100,48 @@ request id  →  security headers  →  CORS  →  JSON body  →  logging
   logged in full and reported to the caller as a plain 500 — internal details
   never leave the server in production.
 
+* **requireOrgMember / requireOrgAdmin** (`src/middleware/orgAccess.ts`) —
+  proves the caller belongs to the organization named in the URL. Since
+  Decision 004 closed direct database access, **this is the only thing keeping
+  one customer's data away from another's.** A non-member gets 404, not 403, so
+  a stranger cannot discover which organizations exist.
+
 ### Adding an endpoint
 
-1. Create a router in `backend/src/routes/`.
-2. Mount it in `backend/src/routes/index.ts`.
+1. Create a router in `backend/src/routes/`. Nest org-scoped routers under
+   `orgsRouter` with `Router({ mergeParams: true })`.
+2. Mount it in `backend/src/routes/index.ts` (or under `orgs.ts` if nested).
 3. Put `requireAuth` on any route that is not public.
-4. Throw the helpers from `src/lib/errors.ts` (`notFound()`, `forbidden()`, …)
+4. **On anything org-scoped, also put `requireOrgMember` or `requireOrgAdmin`.**
+   Forgetting it is not a small bug — it exposes every customer's data to every
+   other customer. There is no second safety net.
+5. Throw the helpers from `src/lib/errors.ts` (`notFound()`, `forbidden()`, …)
    instead of writing status codes by hand — that is what keeps every error
    response identical.
-5. Add tests next to the code as `*.test.ts`.
+6. For anything the plan limits, create it through `createCounted()` in
+   `src/lib/quota.ts` rather than writing the document directly, so the check
+   and the write stay in one transaction.
+7. Add tests next to the code as `*.test.ts`, **including a test that another
+   organization's member gets 404.**
 
 ---
 
 ## Testing
 
 Vitest plus supertest. Tests live beside the code they cover
-(`src/**/*.test.ts`) and are excluded from the build.
+(`src/**/*.test.ts`) and are excluded from the build, along with the shared
+helpers in `src/test/`.
 
 Tests never contact Google Cloud: `src/lib/firebase.js` is replaced with a
 double. That keeps the suite fast, free, and runnable with no credentials.
+
+`src/test/fakeFirestore.ts` is an in-memory stand-in for Firestore covering
+documents, subcollections, equality queries, batches, transactions, and the
+`increment` / `arrayUnion` / `serverTimestamp` field values. Use it rather than
+hand-rolling a mock per test file. It keys documents by their full path
+(`orgs/org_a/interiors/int_1`), so `store.seed(path, data)` sets up state and
+`store.docs.get(path)` checks the result. `store.writes` is every write made,
+which is how a test proves that a refused request wrote nothing.
 
 ---
 
@@ -145,12 +168,38 @@ Google Cloud Logging expects, so levels and messages display correctly.
 
 ---
 
+## Database rules
+
+The rules in force are `firestore.rules` at the repository root, tracked in git.
+They deny clients all access to Firestore (Decision 004) — the backend is the
+only path to the data.
+
+```bash
+firebase deploy --only firestore:rules --project zeker-505918
+```
+
+`scripts/setup-firestore-rules.*` deploy that same tracked file. Note that
+`gcloud firestore databases update` has **no** `--rules` option, despite what
+the original setup script assumed; use the Firebase CLI.
+
+---
+
 ## Frontend
 
-Not scaffolded yet. This section will be filled in when that work starts.
+Not scaffolded yet — `frontend/` holds only environment files. When that work
+starts:
+
+* Sign-up, sign-in, password reset and token refresh use the Firebase Auth Web
+  SDK directly. This API has no such endpoints (Decision 002).
+* The frontend cannot use the Firestore Web SDK for data — it talks only to
+  this API.
+* After a successful Firebase sign-in, call `POST /auth/session` once, then
+  `GET /auth/me` to learn which organizations the person belongs to.
+* Error responses carry a machine-readable `error` code. The Spanish wording
+  the customer reads belongs in the interface, not in the API.
 
 ---
 
 **Owner:** Backend Developer / Full-Stack Developer
-**Last updated:** 2026-08-21
+**Last updated:** 2026-08-25
 **Related:** `architecture.md`, `api.md`, `../security/data-minimization.md`
