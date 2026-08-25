@@ -15,8 +15,8 @@ could be built:
 - `docs/architecture/architecture.md` describes the browser authenticating
   against Firebase Auth directly and sending the backend a Firebase ID token,
   which the backend verifies.
-- `docs/architecture/api.md` defined `POST /api/auth/signup` and
-  `POST /api/auth/login` endpoints on our own backend, receiving the user's raw
+- `docs/architecture/api.md` defined `POST /auth/signup` and
+  `POST /auth/login` endpoints on our own backend, receiving the user's raw
   email and password.
 
 The backend skeleton built on 2026-08-21 already implements the first model:
@@ -70,12 +70,12 @@ only verifies Firebase ID tokens. No endpoint of ours ever accepts a password.**
 
 | Endpoint | Change |
 |----------|--------|
-| `POST /api/auth/signup` | **Removed.** Account creation happens in the Firebase SDK. |
-| `POST /api/auth/login` | **Removed.** Sign-in happens in the Firebase SDK. |
-| `POST /api/auth/refresh` | **Removed.** The Firebase SDK refreshes tokens. |
-| `POST /api/auth/session` | **Added.** First call after a successful Firebase sign-in. Creates or updates the `users/{uid}` profile document and returns it. Idempotent. |
-| `GET /api/auth/me` | **Kept.** Returns the current user profile and their organization memberships. |
-| `POST /api/auth/logout` | **Kept, redefined.** Revokes the user's Firebase refresh tokens server-side so the session cannot be resumed. The browser also clears its local session. |
+| `POST /auth/signup` | **Removed.** Account creation happens in the Firebase SDK. |
+| `POST /auth/login` | **Removed.** Sign-in happens in the Firebase SDK. |
+| `POST /auth/refresh` | **Removed.** The Firebase SDK refreshes tokens. |
+| `POST /auth/session` | **Added.** First call after a successful Firebase sign-in. Creates or updates the `users/{uid}` profile document and returns it. Idempotent. |
+| `GET /auth/me` | **Kept.** Returns the current user profile and their organization memberships. |
+| `POST /auth/logout` | **Kept, redefined.** Revokes the user's Firebase refresh tokens server-side so the session cannot be resumed. The browser also clears its local session. |
 
 ### Consequences for the frontend
 
@@ -92,9 +92,17 @@ only verifies Firebase ID tokens. No endpoint of ours ever accepts a password.**
 - Server-side session revocation stays possible through
   `revokeRefreshTokens(uid)`, which `requireAuth` already honors by checking the
   token issue time.
-- Firebase Auth's own abuse protections apply to sign-in attempts. Our
-  `5 requests/minute` auth rate limit now applies to `/api/auth/session` and
-  `/api/auth/logout` rather than to sign-in itself.
+- Firebase Auth's own abuse protections apply to sign-in attempts.
+
+**Correction made during implementation (2026-08-25):** this decision first
+said the existing `5 requests/minute per IP` auth limit would be moved onto
+`/auth/session` and `/auth/logout`. It was not, and should not be. That limit
+existed to slow down password guessing; no route on this API accepts a password
+any more, and all three routes already require a valid Firebase token, so they
+cannot be used to guess anything. Applying it would also have been harmful in
+practice: several staff of one customer typically share one office IP and would
+lock each other out each morning. The `/auth/*` routes use the general
+60/minute limit. `api.md` records this.
 
 ---
 

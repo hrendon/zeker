@@ -72,6 +72,26 @@ User account data (minimal PII).
 - User can be admin of multiple orgs
 - No storage of: ID document, photo, biometric data, salary, address, etc.
 
+> **What is actually implemented (2026-08-25)** — `backend/src/lib/users.ts`.
+> Two fields above are deliberately **not written**, both narrowing what we keep:
+>
+> - **No `email_plaintext`, `email_hash` or `phone_encrypted`.** These need
+>   encryption with Cloud KMS, which is still an open design problem (the
+>   architecture describes the browser doing the encrypting, which is not
+>   possible — see PROJECT_STATE.md, Known Issues). Firebase Auth is already the
+>   system of record for the email, and it arrives inside the verified token on
+>   every request, so storing a second copy would keep personal data we do not
+>   need. Looking a user up by email uses Firebase's own `getUserByEmail()`.
+>   These fields get added only when a requirement actually needs them.
+>
+> - **No top-level `role`.** One person can administer several organizations —
+>   a project non-negotiable — so a single global role cannot be correct. The
+>   role is per organization, in `orgs[]`. The top-level field contradicted the
+>   `orgs[]` field in the same document.
+>
+> `verified` is also not stored: the email-verified flag comes from the Firebase
+> token and is returned to the frontend as `email_verified`.
+
 ---
 
 ### `orgs/{orgId}/locations/{locationId}`

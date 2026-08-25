@@ -30,8 +30,10 @@ function build(limit: number, keyGenerator: (req: Request) => string) {
   })
 }
 
-/** 5 requests per minute per IP — sign-up, sign-in, password reset. */
-export const authRateLimit = build(5, (req) => ipKeyGenerator(req.ip ?? 'unknown'))
+// There is deliberately no stricter limit for /auth/*. Sign-up, sign-in and
+// password reset happen at Firebase, not here (Decision 002), so no route on
+// this API can be used to guess a password. A 5-per-minute-per-IP limit would
+// also lock out colleagues sharing one office IP address.
 
 /** 100 requests per minute per user — the entry-validation endpoint. */
 export const validateRateLimit = build(100, keyByUserOrIp)

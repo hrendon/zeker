@@ -3,7 +3,7 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 (backend typecheck clean, 12/12 tests pass, live Firestore reachable, deny-all rules deployed)
+**Last verified:** 2026-08-25 (backend typecheck clean, 27/27 tests pass, live Firestore reachable, deny-all rules deployed, /auth routes live)
 
 ---
 
@@ -19,10 +19,11 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 ```
 Completed:       Infrastructure + backend skeleton + database locked down
+                 + sign-in endpoints (27 tests pass)
 In Progress:     Week 1 — Backend feature endpoints
 Blocked:         0 · Pending decisions queue is empty
 Critical Risk:   None open — the open-database risk was closed on 2026-08-25
-Next:            Org endpoints, then interiors + quota, then authorizations
+Next:            Organizations, then locations + interiors + quota
 ```
 
 **Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
@@ -38,6 +39,25 @@ and recorded. Database access closed.
 - ⚠️ Found while doing it: the original setup script could never have worked —
   it called a `gcloud` command that has no rules option. The rules are now a
   real file in the repository, deployed with the Firebase CLI.
+
+**Sign-in endpoints built (2026-08-25).** The account side of the product now
+works end to end on the server.
+- `POST /auth/session` — called once after the browser signs in. Creates the
+  person's profile the first time, refreshes it after. Safe to call repeatedly.
+- `GET /auth/me` — who am I, and which organizations do I belong to. This is
+  what decides whether the app shows the admin, responsable or security screens.
+- `POST /auth/logout` — ends the session on the server, so a stolen session
+  cannot be resumed.
+- We store **less personal data than the original design asked for**: no email
+  address and no phone number in our database. Firebase already holds the email
+  and sends it with every request. This also sidesteps the unresolved
+  encryption problem, and a test now proves the email is never written.
+- Verified: 27/27 tests pass, typecheck clean, and the three routes answered
+  correctly on a live server (a fake token is rejected by real Firebase).
+- Correction: the plan said these routes would get a strict 5-per-minute limit.
+  They did not, on purpose — several staff of one customer share one office
+  internet address and would have locked each other out each morning. There is
+  no password to guess on this API any more, so the strict limit had no job.
 
 **Previous Update (2026-08-21):** Backend skeleton built and verified.
 - ✅ Express + TypeScript app running, compiles clean, 12 tests passing
@@ -91,6 +111,14 @@ and recorded. Database access closed.
 - Dockerfile for Cloud Run: two-stage, non-root, no compiler or source in the image
 - Verified: `npm run typecheck` clean · `npm test` 12/12 pass · live 200 from Firestore
 
+✅ **Sign-in endpoints** (2026-08-25)
+- `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
+- The API never accepts a password; sign-in happens in the browser at Firebase
+- User profile stores no email and no phone — Firebase holds the email, and it
+  arrives verified with every request
+- Role is per organization, not global (one person can run several orgs)
+- Verified: 27/27 tests pass · typecheck clean · live routes answer correctly
+
 ✅ **Documentation**
 - `docs/architecture/developer-guide.md` — how to run, test, and deploy
 - `docs/product/brief.md` — what we build
@@ -117,7 +145,7 @@ and recorded. Database access closed.
 - [x] Request pipeline: auth middleware, error contract, rate limits, tracing
 - [x] Health + readiness endpoints, Cloud Run container definition
 - [x] Firestore rules in the repository, clients denied, deployed (Decision 004)
-- [ ] Auth endpoints (`POST /api/auth/session`, `GET /api/auth/me`, `POST /api/auth/logout`)
+- [x] Auth endpoints — `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
 - [ ] Org CRUD endpoints + multi-org support + membership check on every route
 - [ ] Location CRUD + plan limits (Decision 003)
 - [ ] Interior CRUD + global 10-interior quota, enforced in a transaction (403)
@@ -253,6 +281,14 @@ and recorded. Database access closed.
   from version control and the container image installs with `npm install`
   instead of `npm ci`. Two builds of the same code can therefore pull different
   library versions. Small fix, but it affects what actually ships to production.
+- 🟡 **Rate limits are counted per internet address, not per person** — the
+  general 60-per-minute limit runs before the app knows who the caller is, so
+  everyone in one office shares one budget. Fine for now; will need attention if
+  a customer has many staff on one connection.
+- 🟡 **Error messages are in English, the product is in Spanish** — the API
+  returns an error code plus an English sentence. The intended approach is for
+  the frontend to turn the code into Spanish text for the user. Needs one
+  deliberate pass when the frontend is built, so the two do not drift.
 - 🟡 **Requirements read as if already built** — every acceptance criterion in
   `requirements.md` is written as a ticked box `[x]`. They are definitions of
   what must be true, not work that is finished. Easy to misread as progress.

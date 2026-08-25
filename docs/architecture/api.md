@@ -11,103 +11,117 @@ REST API endpoints for backend-frontend communication.
 
 ## Authentication Endpoints
 
-### POST /auth/signup
+**Sign-up, sign-in, password reset and token refresh do not exist on this API.**
+They happen in the browser, against Firebase Auth directly, using the Firebase
+Web SDK. This server never receives a password — only the signed Firebase ID
+token that proves Firebase accepted one.
 
-Register a new user.
+See `docs/decisions/002-client-side-firebase-auth.md`.
 
-**Request:**
+The endpoints below all run *after* Firebase has authenticated the user, and
+all require `Authorization: Bearer {Firebase ID token}`.
+
+---
+
+### POST /auth/session
+
+The first call the frontend makes after Firebase reports a successful sign-in.
+Creates the user's profile on first sign-in, refreshes `last_login` afterwards.
+Idempotent — safe to call on every sign-in.
+
+**Request** (both fields optional; send them at sign-up, omit them later):
 ```json
 {
-  "email": "juan@example.com",
-  "password": "secure_password",
   "first_name": "Juan",
   "last_name": "García"
 }
 ```
 
-**Response (201):**
+If no name is supplied and the profile does not exist yet, the display name from
+the Firebase token is used (Google sign-in supplies one). Unknown fields are
+rejected rather than stored.
+
+**Response (201 on first sign-in, 200 afterwards):**
 ```json
 {
   "user_id": "user_xyz789",
   "email": "juan@example.com",
+  "email_verified": true,
   "first_name": "Juan",
-  "created_at": "2026-08-18T10:00:00Z"
+  "last_name": "García",
+  "orgs": [],
+  "created_at": "2026-08-25T10:00:00.000Z",
+  "last_login": "2026-08-25T10:00:00.000Z",
+  "request_id": "req_abc123xyz"
 }
 ```
 
 **Errors:**
-- `400` — Email already exists
-- `400` — Password too weak
-- `400` — Missing required fields
+- `400 invalid_request` — a name is empty, too long, or an unknown field was sent
+- `401 unauthorized` — missing, malformed, expired or revoked token
+
+**Note on `email`:** the address is read from the verified Firebase token and is
+**not stored in our database**. Firebase Auth is the system of record for it.
 
 ---
 
-### POST /auth/signin
+### GET /auth/me
 
-Login with email + password.
-
-**Request:**
-```json
-{
-  "email": "juan@example.com",
-  "password": "secure_password"
-}
-```
+The current user's profile and the organizations they belong to. The frontend
+uses this to choose which experience to show (admin, responsable, security) and
+to fill the organization switcher.
 
 **Response (200):**
 ```json
 {
   "user_id": "user_xyz789",
-  "id_token": "eyJhbGciOiJIUzI1NiIs...",
-  "refresh_token": "refresh_token_xyz...",
-  "expires_in": 3600
+  "email": "juan@example.com",
+  "email_verified": true,
+  "first_name": "Juan",
+  "last_name": "García",
+  "orgs": [
+    { "org_id": "org_abc123", "role": "admin" },
+    { "org_id": "org_def456", "role": "responsable" }
+  ],
+  "created_at": "2026-08-25T10:00:00.000Z",
+  "last_login": "2026-08-25T14:30:00.000Z",
+  "profile_exists": true,
+  "request_id": "req_abc123xyz"
 }
 ```
+
+`profile_exists: false` means the Firebase account is valid but has no profile
+here yet — the frontend should call `POST /auth/session` before continuing.
 
 **Errors:**
-- `401` — Invalid credentials
-- `404` — User not found
-
----
-
-### POST /auth/refresh
-
-Refresh JWT token.
-
-**Request:**
-```json
-{
-  "refresh_token": "refresh_token_xyz..."
-}
-```
-
-**Response (200):**
-```json
-{
-  "id_token": "eyJhbGciOiJIUzI1NiIs...",
-  "expires_in": 3600
-}
-```
+- `401 unauthorized` — missing, malformed, expired or revoked token
 
 ---
 
 ### POST /auth/logout
 
-Logout (invalidate refresh token).
+Revokes the user's Firebase refresh tokens, so the session cannot be resumed
+even by someone holding a copy of them. Because tokens are verified with
+`checkRevoked=true`, existing ID tokens stop being accepted immediately instead
+of staying valid until they expire.
 
-**Request:**
-```json
-{
-  "refresh_token": "refresh_token_xyz..."
-}
-```
+The browser must also clear its own Firebase session. This endpoint closes the
+server side of it.
+
+**Request:** no body.
 
 **Response (200):**
 ```json
 {
-  "message": "Logged out successfully"
+  "revoked": true,
+  "request_id": "req_abc123xyz"
 }
 ```
+
+**Errors:**
+- `401 unauthorized` — missing, malformed, expired or revoked token
+- `500 internal_server_error` — the session could not be revoked. The caller
+  must treat this as *not logged out*, not as success.
 
 ---
 
@@ -595,9 +609,17 @@ All errors follow this format:
 
 ## Rate Limiting
 
-- **Auth endpoints:** 5 requests per minute per IP
 - **Validation endpoint:** 100 requests per minute per user (burst allowed)
-- **Other endpoints:** 60 requests per minute per user
+- **Everything else, including `/auth/*`:** 60 requests per minute
+
+The stricter "5 per minute per IP" limit was written for password endpoints.
+Those no longer exist here — sign-in happens at Firebase, which applies its own
+abuse protection (Decision 002). Every `/auth/*` route on this API already
+requires a valid Firebase token, so it cannot be used to guess credentials.
+
+A 5-per-minute-per-IP limit would also be actively harmful: several staff
+members of one customer typically share a single office IP address, and would
+lock each other out at the start of the working day.
 
 Response headers:
 ```
