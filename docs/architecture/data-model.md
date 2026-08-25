@@ -30,9 +30,33 @@ Organization (tenant) data.
 
 **Subcollections:**
 - `locations/` — access points within this org
+- `interiors/` — units inside a location (Decision 003); flat, with a `location_id`
 - `authorizations/` — permits issued by this org
 - `access_events/` — entry/exit logs
-- `users/` — user permissions for this org (separate doc)
+
+> **What is actually implemented (2026-08-25)** — `backend/src/lib/orgs.ts`.
+>
+> - **No `admin_users` array, and no `users/` subcollection.** Membership lives
+>   in exactly one place: `users/{uid}.orgs[]`. Two copies of "who belongs here"
+>   drift apart, and nothing in the MVP lists an organization's members — there
+>   is no invite or member-management user story yet. Adding one later is an
+>   additive change. Access checks read the caller's own profile, which is one
+>   document read and cannot be stale relative to itself.
+>
+> - **No `metadata.address` and no `metadata.phone`.** The data-minimization
+>   policy forbids a detailed address. For a `residence` customer, the building
+>   address plus an interior number plus an authorization would reconstruct
+>   exactly where a named person lives. `city` and `country` are stored as
+>   top-level fields — enough for language and segmentation, which is all the
+>   MVP uses. The organization phone is not stored because nothing needs it,
+>   and for a small customer it is usually the administrator's own mobile.
+>
+> - **Added (Decision 003):** `plan`, `limits { max_locations, max_interiors }`
+>   and `counts { locations, interiors }`. These replace the old "max 100
+>   locations" cap and are never settable by the customer.
+>
+> - `status` is `active` or `deleted`. Deletion is soft, so the audit trail
+>   underneath survives its retention period.
 
 ---
 
@@ -117,7 +141,11 @@ Physical access points (entrances, reception areas, specific zones).
 
 **Constraints:**
 - Cannot delete location if active authorizations reference it
-- Each org can have max 100 locations (MVP limit)
+- Cannot delete a location that still has interiors
+- ~~Each org can have max 100 locations (MVP limit)~~ — replaced by Decision 003.
+  The limit comes from the organization's plan (`orgs/{orgId}.limits.max_locations`),
+  which is 1 on the free plan. Enforced in a transaction against
+  `orgs/{orgId}.counts.locations`.
 
 ---
 

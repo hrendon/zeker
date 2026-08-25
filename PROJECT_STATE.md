@@ -3,7 +3,7 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 (backend typecheck clean, 27/27 tests pass, live Firestore reachable, deny-all rules deployed, /auth routes live)
+**Last verified:** 2026-08-25 (backend typecheck clean, 49/49 tests pass, live Firestore reachable, deny-all rules deployed, /auth and /orgs routes live)
 
 ---
 
@@ -19,11 +19,11 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 ```
 Completed:       Infrastructure + backend skeleton + database locked down
-                 + sign-in endpoints (27 tests pass)
+                 + sign-in + organizations (49 tests pass)
 In Progress:     Week 1 — Backend feature endpoints
-Blocked:         0 · Pending decisions queue is empty
+Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
 Critical Risk:   None open — the open-database risk was closed on 2026-08-25
-Next:            Organizations, then locations + interiors + quota
+Next:            Locations, then interiors + the 10-interior limit
 ```
 
 **Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
@@ -39,6 +39,29 @@ and recorded. Database access closed.
 - ⚠️ Found while doing it: the original setup script could never have worked —
   it called a `gcloud` command that has no rules option. The rules are now a
   real file in the repository, deployed with the Firebase CLI.
+
+**Organizations built (2026-08-25).** Customers are now separate from each
+other, and that separation is proven by tests.
+- Create an organization, list the ones you belong to, view one, change its
+  details, delete it. Creating one makes you its administrator automatically.
+- **Six tests prove one customer cannot reach another's data** — cannot read
+  it, cannot change it, cannot delete it. This was the mandatory test before
+  launch. It now exists and runs on every change.
+- Someone who is not a member is told the organization does not exist, rather
+  than that they lack permission. Otherwise a stranger could discover which
+  customers we have simply by guessing.
+- A customer cannot raise their own plan limits — the request is refused.
+- Deleting is reversible bookkeeping, not erasure: entry records are an audit
+  trail we are required to keep. Deletion is also refused while any permit is
+  still active, so an organization cannot vanish out from under a permit that
+  would still open a door.
+- We store less again: no street address and no organization phone number. For
+  a residential building, the address plus an apartment number plus a permit
+  would reveal exactly where a named person lives. City and country are enough.
+- ⚠️ Found while building: someone could create unlimited free organizations,
+  each with its own free allowance. Raised as D-005 — your call, not mine.
+- Verified: 49/49 tests pass, typecheck clean, all five routes answer correctly
+  on a live server.
 
 **Sign-in endpoints built (2026-08-25).** The account side of the product now
 works end to end on the server.
@@ -111,6 +134,16 @@ works end to end on the server.
 - Dockerfile for Cloud Run: two-stage, non-root, no compiler or source in the image
 - Verified: `npm run typecheck` clean · `npm test` 12/12 pass · live 200 from Firestore
 
+✅ **Organizations** (2026-08-25)
+- `POST /orgs`, `GET /orgs`, `GET/PUT/DELETE /orgs/{orgId}`
+- Membership check on every org-scoped route; non-members get 404, not 403
+- Six tests prove one customer cannot reach another's data
+- Plan limits attached at creation (free = 1 location, 10 interiors)
+- Customers cannot change their own plan, limits or usage counters
+- Soft delete, refused while any authorization is still active
+- No street address and no organization phone stored
+- Verified: 49/49 tests pass · typecheck clean · live routes answer correctly
+
 ✅ **Sign-in endpoints** (2026-08-25)
 - `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
 - The API never accepts a password; sign-in happens in the browser at Firebase
@@ -146,7 +179,7 @@ works end to end on the server.
 - [x] Health + readiness endpoints, Cloud Run container definition
 - [x] Firestore rules in the repository, clients denied, deployed (Decision 004)
 - [x] Auth endpoints — `POST /auth/session`, `GET /auth/me`, `POST /auth/logout` (Decision 002)
-- [ ] Org CRUD endpoints + multi-org support + membership check on every route
+- [x] Org endpoints + multi-org support + membership check + 6 isolation tests
 - [ ] Location CRUD + plan limits (Decision 003)
 - [ ] Interior CRUD + global 10-interior quota, enforced in a transaction (403)
 - [ ] Authorization creation + QR/numeric code generation
@@ -170,8 +203,10 @@ works end to end on the server.
 - [x] Firestore security rules locked down — clients denied entirely (Decision 004,
       deployed and verified 2026-08-25). The granular per-role design is retained
       in `data-model.md` as a reference, not deployed.
-- [ ] Multi-org isolation verified in backend code (User A cannot access User B data)
-      — now the *only* thing keeping customers apart, so this test is mandatory
+- [x] Multi-org isolation verified in backend code (2026-08-25). Six tests prove
+      user A cannot read, change or delete user B's organization. Every new
+      org-scoped route must mount the same membership check — there is no
+      second safety net behind it.
 
 ---
 
@@ -312,7 +347,50 @@ works end to end on the server.
 Everything waiting on the Founder. One card each. Answering these is all that is
 needed — an answered card becomes a record in `docs/decisions/` and leaves this queue.
 
-**The queue is empty. Nothing is blocked on you.**
+### D-005 — Nothing stops one person opening many free organizations
+
+```
+Decision:       Should one person be limited in how many free organizations
+                they can create?
+
+Why it matters: The free plan gives each organization 1 location and 10
+                interiors. Nothing stops the same person creating ten free
+                organizations and getting ten times the free allowance. The
+                paid plans then sell something the free plan already gives
+                away. No customer exists yet, so nothing is being abused
+                today — but the hole is open the moment we launch.
+
+                This was never decided because the approved plan describes
+                limits inside one organization, and separately requires that
+                one person can manage several organizations. Both are true;
+                nobody joined them up.
+
+Option A:       One free organization per person. Additional organizations
+                require a paid plan, or an invitation from someone else who
+                already has one.
+                → Closes the hole. About half a day. It does slightly narrow
+                  what a new user can do on their own.
+
+Option B:       Leave it open for now, revisit after talking to customers.
+                → Costs nothing today and keeps signup frictionless while we
+                  are trying to get anyone at all to use it. The hole stays.
+
+Option C:       Move the allowance to the person rather than the organization:
+                10 interiors in total across everything they manage.
+                → Most faithful to "10 interiors free", but it is the biggest
+                  change, and it complicates every limit check. ~2 days.
+
+Recommendation: B for now, A before the first paid customer. While the goal is
+                to find out whether anyone wants this at all, friction at
+                signup costs more than the theoretical abuse. But this must be
+                answered before money changes hands, or the paid plans have
+                nothing to sell.
+
+Cost impact:    B = none today · A ≈ half a day · C ≈ 2 days
+Reversibility:  High for A and B · Medium for C (changes how limits are counted)
+Waiting since:  2026-08-25
+Blocks:         Nothing today. Blocks launching paid plans.
+```
 
 ---
 
@@ -480,7 +558,7 @@ Blocker:        Data model + MVP scope locked until this approved
 | No market demand | 🔴 Critical | Validate with 5-10 schools ASAP (week 5) | ⏳ Mitigating |
 | Compliance violation | 🔴 Critical | Privacy lawyer review before launch | ⏳ Planning |
 | Data breach | 🔴 Critical | Encryption in place, audit logs enabled | ✅ Mitigated |
-| Multi-org isolation bug | 🔴 Critical | Clients cannot reach the database at all; backend checks org membership per request; isolation test required before launch | ⏳ Test not yet written |
+| Multi-org isolation bug | 🔴 Critical | Clients cannot reach the database at all; backend checks org membership per request; 6 isolation tests run on every change | ✅ Tested (2026-08-25) |
 | Firestore costs exceed budget | 🟡 High | Set alerts at 80% quota, scale pricing if needed | ✅ Monitored |
 | Vercel deployment fails | 🟡 High | Have rollback plan, GitHub branches | ⏳ Prepared |
 | Slow QR validation | 🟡 Medium | Optimize queries, cache results | ⏳ TBD in code |
@@ -534,4 +612,4 @@ When you restart, check:
 
 **Owner:** All roles collectively
 **Last updated:** 2026-08-25
-**Approval:** ✅ Nothing pending — D-002, D-003 and D-004 answered 2026-08-25
+**Approval:** ⏳ One card waiting — D-005 (free organizations per person). Not blocking today.

@@ -127,18 +127,48 @@ server side of it.
 
 ## Organization Endpoints
 
+An organization is one customer (a school, a residential building, an office).
+All of these routes require a Firebase ID token.
+
+**Who can see what.** Membership is stored in one place: the `orgs[]` list on
+the user's own profile. A caller who is not a member of an organization gets
+**404**, not 403 — telling a stranger that an organization exists is itself a
+small leak. A member who simply lacks the required role gets **403**, because
+they already know it exists.
+
+**Not in the MVP:** there is no `admin_users` list on the organization and no
+way to invite or manage other members. No user story requires it yet, and a
+second copy of "who belongs here" would drift out of step with the first. When
+member management is built, it is an additive change.
+
+**Not stored:** no street address and no organization phone number. The
+data-minimization policy forbids a detailed address, and for a residential
+customer the building address plus an interior number plus an authorization
+would reveal exactly where a named person lives. `city` and `country` are kept.
+
+---
+
 ### POST /orgs
 
-Create a new organization.
+Creates an organization and makes the caller its administrator. The
+organization and the caller's membership are written together, so an
+organization can never exist that nobody can reach.
 
 **Request:**
 ```json
 {
   "name": "Colegio Bilingüe X",
   "type": "school",
-  "description": "Private bilingual school"
+  "description": "Private bilingual school",
+  "city": "Bogotá",
+  "country": "CO"
 }
 ```
+
+`type` is one of `school`, `residence`, `office`, `other`. `country` is a
+two-letter code. `description`, `city` and `country` are optional. Unknown
+fields are rejected — in particular `plan`, `limits` and `counts`, which are
+how the freemium model is enforced and are never set by the customer.
 
 **Response (201):**
 ```json
@@ -146,20 +176,33 @@ Create a new organization.
   "id": "org_abc123",
   "name": "Colegio Bilingüe X",
   "type": "school",
+  "description": "Private bilingual school",
+  "plan": "free",
+  "limits": { "max_locations": 1, "max_interiors": 10 },
+  "counts": { "locations": 0, "interiors": 0 },
+  "city": "Bogotá",
+  "country": "CO",
   "created_by": "user_xyz789",
-  "created_at": "2026-08-18T10:00:00Z"
+  "created_at": "2026-08-25T10:00:00.000Z",
+  "updated_at": "2026-08-25T10:00:00.000Z",
+  "role": "admin",
+  "request_id": "req_abc123xyz"
 }
 ```
 
+`limits` come from the plan (Decision 003). Free is 1 location and 10 interiors
+in total across the organization.
+
 **Errors:**
-- `401` — Not authenticated
-- `400` — Missing required fields
+- `400 invalid_request` — missing name, unknown type, or an unknown field
+- `401 unauthorized`
 
 ---
 
 ### GET /orgs
 
-List all organizations for authenticated user.
+The organizations the caller belongs to — what fills the organization switcher.
+There is no way to list organizations you are not a member of.
 
 **Response (200):**
 ```json
@@ -169,89 +212,90 @@ List all organizations for authenticated user.
       "id": "org_abc123",
       "name": "Colegio Bilingüe X",
       "type": "school",
-      "admin_users": ["user_xyz789", "user_abc456"],
-      "created_at": "2026-08-18T10:00:00Z"
-    },
-    {
-      "id": "org_def456",
-      "name": "Unidad Residencial Y",
-      "type": "residence",
-      "admin_users": ["user_xyz789"],
-      "created_at": "2026-08-18T11:00:00Z"
+      "plan": "free",
+      "limits": { "max_locations": 1, "max_interiors": 10 },
+      "counts": { "locations": 1, "interiors": 4 },
+      "city": "Bogotá",
+      "country": "CO",
+      "created_by": "user_xyz789",
+      "created_at": "2026-08-25T10:00:00.000Z",
+      "updated_at": "2026-08-25T10:00:00.000Z",
+      "role": "admin"
     }
-  ]
+  ],
+  "request_id": "req_abc123xyz"
 }
 ```
+
+`role` is the caller's own role in that organization. Deleted organizations are
+not listed.
 
 ---
 
 ### GET /orgs/{orgId}
 
-Get organization details.
+Details of one organization the caller belongs to.
 
-**Response (200):**
-```json
-{
-  "id": "org_abc123",
-  "name": "Colegio Bilingüe X",
-  "type": "school",
-  "description": "Private bilingual school in Bogotá",
-  "admin_users": ["user_xyz789", "user_abc456"],
-  "created_by": "user_xyz789",
-  "created_at": "2026-08-18T10:00:00Z",
-  "metadata": {
-    "phone": "+571234567890",
-    "address": "Calle 1 #2-3",
-    "city": "Bogotá"
-  }
-}
-```
+**Response (200):** the same object as one entry of `GET /orgs`, plus
+`request_id`.
 
 **Errors:**
-- `403` — User not admin of this org
-- `404` — Org not found
+- `401 unauthorized`
+- `404 not_found` — no such organization, it is deleted, or the caller is not a
+  member of it. These are deliberately indistinguishable.
 
 ---
 
 ### PUT /orgs/{orgId}
 
-Update organization details.
+Changes the organization's own details. Administrators only.
 
-**Request:**
+**Request** (send at least one field):
 ```json
 {
-  "name": "Colegio Bilingüe X (Updated)",
-  "metadata": {
-    "phone": "+571234567890"
-  }
+  "name": "Colegio Bilingüe X (2026)",
+  "city": "Medellín"
 }
 ```
 
-**Response (200):**
-```json
-{
-  "id": "org_abc123",
-  "name": "Colegio Bilingüe X (Updated)",
-  "updated_at": "2026-08-18T12:00:00Z"
-}
-```
+Accepted fields: `name`, `type`, `description`, `city`, `country`.
+`plan`, `limits` and `counts` are rejected — a customer raising their own
+limits would defeat the freemium model.
+
+**Response (200):** the updated organization, plus `request_id`.
+
+**Errors:**
+- `400 invalid_request` — empty body, or a field that cannot be changed
+- `401 unauthorized`
+- `403 forbidden` — the caller is a member but not an administrator
+- `404 not_found` — no such organization, or the caller is not a member
 
 ---
 
 ### DELETE /orgs/{orgId}
 
-Delete organization (soft delete).
+Marks the organization deleted. Administrators only.
+
+This is a soft delete on purpose: entry records are an audit trail with a
+retention period, and erasing them on request would defeat the point of having
+one. A deleted organization stops appearing and stops being reachable.
 
 **Response (200):**
 ```json
 {
-  "message": "Organization deleted"
+  "id": "org_abc123",
+  "deleted": true,
+  "request_id": "req_abc123xyz"
 }
 ```
 
 **Errors:**
-- `403` — User not admin
-- `409` — Org has active authorizations (must revoke first)
+- `401 unauthorized`
+- `403 forbidden` — the caller is a member but not an administrator
+- `404 not_found` — no such organization, already deleted, or not a member
+- `409 conflict` — authorizations are still active. They must be revoked first,
+  so an organization cannot be deleted out from under a permit that would
+  otherwise still open a door.
 
 ---
 
