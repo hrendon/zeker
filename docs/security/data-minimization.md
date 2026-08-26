@@ -68,15 +68,26 @@ Security policy on what personal data we collect, store, and why.
 ### Tier 2: Secondary (Contact & Context)
 
 **Optional Contact Information:**
-- Phone number (authorized person)
-  - Why: Emergency contact, optional, only if parent provides it
-  - Storage: **ENCRYPTED** (AES-256, GCP KMS)
-  - Retention: Until authorization expires + 30 days
 
-- Phone number (user)
-  - Why: Support/emergency, optional
-  - Storage: **ENCRYPTED** (AES-256, GCP KMS)
-  - Retention: While account active + 1 year
+> ❌ **Superseded — no phone number is stored anywhere in the MVP.**
+> - The user's phone was dropped when sign-in moved to Firebase (Decision 002).
+> - The organization's phone was dropped as unnecessary (Decision 003).
+> - The visitor's phone on a permit was dropped deliberately (Decision 005): the
+>   visitor is not our user, never consented, and nothing in the product sends
+>   them anything.
+>
+> The original plan is kept below, struck through, because it explains why the
+> Cloud KMS key exists and what it would be for if any of these is revisited.
+
+- ~~Phone number (authorized person)~~ — not collected (Decision 005)
+  - ~~Why: Emergency contact, optional, only if parent provides it~~
+  - ~~Storage: **ENCRYPTED** (AES-256, GCP KMS)~~
+  - ~~Retention: Until authorization expires + 30 days~~
+
+- ~~Phone number (user)~~ — not collected (Decision 002)
+  - ~~Why: Support/emergency, optional~~
+  - ~~Storage: **ENCRYPTED** (AES-256, GCP KMS)~~
+  - ~~Retention: While account active + 1 year~~
 
 **Relationship/Role Metadata:**
 - Relationship (e.g., "grandmother", "nanny", "parent")
@@ -153,19 +164,29 @@ Security policy on what personal data we collect, store, and why.
 
 ### Fields to Encrypt (AES-256, GCP KMS)
 
-1. **User Email**
-   - Field: `users.email_plaintext`
-   - When: At rest in Firestore
-   - How: Before INSERT/UPDATE, after SELECT
-   - Key rotation: Quarterly (handled by KMS)
-   - Decrypt only when: Sending email, identity verification
+> ❌ **Superseded — nothing is application-encrypted in the MVP, because no
+> field that would need it is stored any more.** Decisions 002, 003 and 005
+> removed every one of them. Firestore still encrypts everything at rest with
+> Google-managed keys; that is unchanged and always applied. The
+> `zeker-encryption-key` in Cloud KMS stays in place, unused, so that revisiting
+> any of those decisions does not start from zero.
+>
+> The original plan is kept below because it defines what to build if that
+> happens.
 
-2. **Phone Numbers**
-   - Field: `authorized_person.phone_encrypted`
-   - Field: `users.phone_encrypted`
-   - When: At rest in Firestore
-   - How: AES-256-GCM (authenticated encryption)
-   - Access: Only admin of org or user themselves
+1. ~~**User Email**~~ — not stored (Decision 002; Firebase Auth is the record)
+   - ~~Field: `users.email_plaintext`~~
+   - ~~When: At rest in Firestore~~
+   - ~~How: Before INSERT/UPDATE, after SELECT~~
+   - ~~Key rotation: Quarterly (handled by KMS)~~
+   - ~~Decrypt only when: Sending email, identity verification~~
+
+2. ~~**Phone Numbers**~~ — not collected (Decisions 002, 005)
+   - ~~Field: `authorized_person.phone_encrypted`~~
+   - ~~Field: `users.phone_encrypted`~~
+   - ~~When: At rest in Firestore~~
+   - ~~How: AES-256-GCM (authenticated encryption)~~
+   - ~~Access: Only admin of org or user themselves~~
 
 3. **Optional: Relationship Notes**
    - Field: `authorization_details.notes`

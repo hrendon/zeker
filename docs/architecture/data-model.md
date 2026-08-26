@@ -221,7 +221,8 @@ Access permit (core entity).
   "created_by": "user1",              // userId who created authorization
   "authorized_person": {
     "name": "María García López",     // Required: full name
-    "phone_encrypted": "{encrypted}", // Optional: encrypted phone
+    // No phone number. Decision 005: the visitor is not our user and never
+    // consented; nothing in the MVP sends them anything.
     "relationship": "abuelo",         // "parent" | "guardian" | "grandparent" | "nanny" | "visitor" | "employee" | "provider" | "other"
     "document_type": null,            // NEVER store, reference only if needed
     "document_number_encrypted": null // NEVER store, reference only if needed
@@ -326,10 +327,17 @@ Log of notifications sent to user.
 
 ### ALWAYS Encrypt
 
-- `user.email_plaintext`
-- `authorized_person.phone_encrypted`
-- `user.phone_encrypted`
-- Any field that could identify a minor
+> ❌ **Superseded — nothing on this list is stored any more, so nothing in the
+> MVP is application-encrypted.** The user's email and phone went with
+> Decision 002, the organization's phone with Decision 003, and the visitor's
+> phone with Decision 005. Firestore's own at-rest encryption still covers
+> everything. The rule below stands for any future field that does identify a
+> person, and the Cloud KMS key is kept, unused, for that case.
+
+- ~~`user.email_plaintext`~~ — not stored (Decision 002)
+- ~~`authorized_person.phone_encrypted`~~ — not collected (Decision 005)
+- ~~`user.phone_encrypted`~~ — not stored (Decision 002)
+- Any field that could identify a minor — **still in force**
 
 ### NEVER Store
 

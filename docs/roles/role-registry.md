@@ -24,6 +24,8 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ Sign-in happens in the browser; the API never sees a password (2026-08-25, Decision 002)
 - ✅ Interiors as a real level; plan-based limits (2026-08-25, Decision 003)
 - ✅ Clients denied direct database access (2026-08-25, Decision 004)
+- ✅ A permit does not collect the visitor's phone number (2026-08-26, Decision 005)
+- ✅ Build the sign-in screens before the permit endpoints (2026-08-26, session objective)
 
 **Pending 🟡 approvals:**
 - D-005 — how many free organizations one person may create. Not blocking
@@ -145,7 +147,7 @@ These roles own specific artifacts and can turn proposals into decisions within 
 - Usability testing
 
 **Owned Artifacts:**
-- `docs/architecture/design.md` (wireframes, components)
+- `docs/architecture/design.md` (layout, components, language, accessibility)
 - `docs/architecture/design-system.md` (future)
 
 **Decision Authority:**

@@ -8,7 +8,10 @@ node_modules/
 npm-debug.log
 yarn-error.log
 pnpm-debug.log
-package-lock.json
+
+# package-lock.json is deliberately NOT ignored. It pins the exact version of
+# every library, so the code that runs in production is the code that was
+# tested. Ignoring it lets two builds of the same commit differ.
 yarn.lock
 pnpm-lock.yaml
 

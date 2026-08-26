@@ -85,7 +85,6 @@ these units, so the product could not deliver what it sells without them.
 
 - [x] User can create authorization with:
   - Authorized person: name
-  - Authorized person: phone number (optional)
   - Location: select from org's locations
   - Interior: which unit the visitor is coming to (Decision 003)
   - Valid from: date + time
@@ -237,8 +236,10 @@ these units, so the product could not deliver what it sells without them.
 
 - [x] Never store ID documents
 - [x] Never store photos
-- [x] Encrypt phone numbers at rest
-- [x] Encrypt email addresses at rest (Firestore encryption)
+- [x] No phone number is stored — not for a user, not for an organization, not
+      for a visitor on a permit (Decisions 002, 003, 005)
+- [x] No email address is stored in our database — Firebase Auth holds it and
+      sends it verified with every request (Decision 002)
 - [x] Logs retention: 90 days (auto-delete)
 - [x] User deletion: cascade delete all their authorizations + events
 

@@ -621,7 +621,6 @@ Create authorization permit.
   "location_id": "loc_entrance_1",
   "authorized_person": {
     "name": "María García López",
-    "phone": "+571234567890",
     "relationship": "grandmother"
   },
   "authorization_details": {
@@ -642,7 +641,6 @@ Create authorization permit.
   "location_id": "loc_entrance_1",
   "authorized_person": {
     "name": "María García López",
-    "phone_encrypted": "{encrypted}",
     "relationship": "grandmother"
   },
   "authorization_details": {

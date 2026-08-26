@@ -214,11 +214,12 @@ express. This is also the only record of membership — see `data-model.md`.
 
 ### At Rest
 
-> ⚠️ **This plan is not buildable as written, and is not implemented.** It said
-> the frontend encrypts before sending. A browser cannot hold the Cloud KMS key
-> — giving it one would hand the key to every user. Encryption has to happen on
-> the server, after the request arrives over TLS. This is an open item, to be
-> resolved before the authorization endpoints store a visitor's phone number.
+> ❌ **Superseded and closed (Decision 005).** This plan said the frontend
+> encrypts before sending. A browser cannot hold the Cloud KMS key — giving it
+> one would hand the key to every user, so it could never have been built as
+> written. It was closed by removing the data rather than by moving the
+> encryption to the server: **the MVP stores no field that needs
+> application-level encryption.**
 
 **What is true today (2026-08-25):** nothing is application-encrypted, because
 nothing that would need it is stored yet.
@@ -232,10 +233,15 @@ nothing that would need it is stored yet.
 - Firestore encrypts everything at rest by default (Google-managed keys). That
   protects against physical media access, not against application-level access.
 
-**Still to decide, before permits are built:** the visitor's phone number in an
-authorization is optional and personal. The options are to encrypt it
-server-side with Cloud KMS as originally intended, or not to collect it at all.
-The KMS key already exists (`zeker-encryption-key`, 90-day rotation).
+**Decided 2026-08-26 (Decision 005): the visitor's phone number is not
+collected.** A permit stores the visitor's name and nothing else about them. The
+visitor is not our user, never consented, and nothing in the MVP sends them
+anything. With the user's email and phone already gone (Decision 002) and the
+organization's address and phone gone (Decision 003), this was the last field
+that would have needed Cloud KMS — so nothing in the MVP does.
+
+The KMS key (`zeker-encryption-key`, 90-day rotation) stays in place, unused. It
+costs nothing and will be needed if any of those three decisions is revisited.
 
 ### In Transit
 

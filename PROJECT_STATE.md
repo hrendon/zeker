@@ -2,8 +2,8 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-25
-**Last verified:** 2026-08-25 — full audit at session close. Backend typecheck clean, 102/102 tests pass, production build clean, live Firestore reachable, deny-all rules deployed and confirmed live, every route answered on a running server, documents checked against the code and corrected.
+**Last updated:** 2026-08-26
+**Last verified:** 2026-08-26 — backend typecheck clean, 102/102 tests pass, production build clean; frontend typecheck clean, 9/9 tests pass, production build clean; sign-up, sign-in, sign-out and password reset driven end to end in a real browser against live Firebase and live Firestore.
 
 ---
 
@@ -15,19 +15,55 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 ## Current Status
 
-🟢 **Infrastructure Complete — Ready for MVP Build** (Camino B: Build first, validate after)
+🟢 **The product is visible in a browser for the first time** (Camino B: Build first, validate after)
 
 ```
-Completed:       Setup half of the product is done on the server:
-                 sign-in, organizations, locations, interiors + limits
-                 (102 tests pass)
-In Progress:     Week 1 — Backend feature endpoints
+Completed:       Setup half of the product on the server (sign-in,
+                 organizations, locations, interiors + limits) and the
+                 account screens people actually see
+                 (102 backend tests + 9 frontend tests pass)
+In Progress:     Week 1 — entry permits next
 Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
-Critical Risk:   None open — the open-database risk was closed on 2026-08-25
+Critical Risk:   None open
 Next:            Entry permits (QR), then validating a scan at the door
 ```
 
-**Latest Update (2026-08-25):** Three blocking decisions answered by the Founder
+**Latest Update (2026-08-26): the product can be seen and used in a browser.**
+Someone can now create an account, sign in, recover a forgotten password and
+sign out — in Spanish, on a phone or a computer. Nothing else is on screen yet;
+after signing in they see their name and an empty list of organizations.
+
+- **Everything was tried for real, not just tested.** An account was created
+  against live Firebase, the profile was written to the live database, signing
+  out was confirmed to end the session on the server, and signing back in
+  reused the same profile rather than creating a second one.
+- **The Spanish is complete and lives in one file.** No English can reach a
+  customer's screen: the API answers with codes, and one file turns each code
+  into Spanish. Adding a second language later is one file, not a rewrite.
+- **Two deliberate refusals to be helpful, for security.** Signing in never says
+  whether the email exists or the password was wrong. Password recovery gives
+  the same answer whether or not the account exists. Being more specific would
+  let anyone with a list of emails find out who our customers are.
+- **Signing out is honest.** If the server cannot end the session, the person is
+  told they are still signed in, instead of the screen pretending otherwise.
+- ⚠️ **Found and fixed while building:** library versions were not being locked,
+  so two builds of the same code could install different versions. Both projects
+  now lock them and the production container refuses to build if they disagree.
+- ✅ **A gap was closed:** the screen-design document that everything since
+  launch has referred to had never been written. It exists now, describing what
+  was actually built.
+- **A test account exists in Firebase** (`prueba.desarrollo@zeker-test.com`) from
+  verifying the flow. Delete it whenever you like — nothing depends on it.
+- ⚠️ **Not checked:** the screens were only viewed at desktop width. The layout
+  is built phone-first, but no one has looked at it on a real phone.
+
+**Decision 005 recorded (2026-08-26).** A permit will not collect the visitor's
+phone number. Your call, made this session. The knock-on effect is larger than
+it sounds: that was the last piece of personal data that needed our own
+encryption, so **the encryption problem that has been open since 2026-08-21 is
+now closed by not holding the data at all** rather than by building anything.
+
+**Previous Update (2026-08-25):** Three blocking decisions answered by the Founder
 and recorded. Database access closed.
 - ✅ D-002 approved → sign-in happens in the browser with Firebase; our server
   never handles a password. Recorded as Decision 002.
@@ -233,7 +269,34 @@ works end to end on the server.
 - Role is per organization, not global (one person can run several orgs)
 - Verified: 27/27 tests pass · typecheck clean · live routes answer correctly
 
+✅ **Account screens — the first thing anyone sees** (2026-08-26)
+- Next.js app in `frontend/`, Spanish, phone-first, four screens: `/entrar`,
+  `/crear-cuenta`, `/recuperar`, `/inicio`
+- Sign-in happens in the browser against Firebase; our API never sees a password
+  (Decision 002). `POST /auth/session` runs once after sign-in
+- Signing out calls the server first; if that fails the person is told they are
+  still signed in rather than shown a fake success
+- Sign-in and password recovery never reveal whether an account exists
+- All user text in `lib/strings.ts`; all API error codes turned into Spanish in
+  `lib/errors.ts` — no English can reach a customer's screen
+- Verified in a real browser: account created, profile written to the live
+  database (201), signed out (200), signed back in reusing the same profile
+  (200), and no email address written to our server logs
+- Verified: 9/9 frontend tests pass · typecheck clean · production build clean
+
+✅ **Screen design recorded** (2026-08-26)
+- `docs/architecture/design.md` — who uses the product and on what, the layout,
+  the five interface pieces, touch sizes, colour, how waiting and failing are
+  shown, accessibility, and the two sign-in rules that are security rather than
+  design. Written from what was built, not as a wish list.
+
+✅ **Library versions locked** (2026-08-26)
+- `package-lock.json` is now kept in version control for both projects
+- The production container installs with `npm ci`, which fails if the lockfile
+  and the package list disagree, instead of quietly resolving newer versions
+
 ✅ **Documentation**
+- `docs/architecture/design.md` — how the screens look and behave
 - `docs/architecture/developer-guide.md` — how to run, test, and deploy
 - `docs/product/brief.md` — what we build
 - `docs/product/requirements.md` — 10 user stories
@@ -244,6 +307,7 @@ works end to end on the server.
 - `docs/decisions/002-client-side-firebase-auth.md` — how users sign in
 - `docs/decisions/003-interiors-and-plan-quotas.md` — interiors and plan limits
 - `docs/decisions/004-backend-only-firestore-access.md` — who can reach the database
+- `docs/decisions/005-no-visitor-phone-number.md` — a permit holds no phone number
 - `firestore.rules` — the database rules actually deployed
 - `docs/roles/role-registry.md` — who owns what
 
@@ -269,10 +333,12 @@ works end to end on the server.
 - [ ] Cloud Run deployment pipeline ready
 
 **Frontend (Days 1-3 scaffold, 5-14 build):**
-- [ ] Next.js 14 + React 18 scaffolded
-- [ ] Firebase Auth SDK configured
-- [ ] Zustand state management (auth, org, ui stores)
-- [ ] Signup/signin pages connected to backend
+- [x] Next.js + React scaffolded (Next 16 / React 19 / Tailwind 4)
+- [x] Firebase Auth SDK configured
+- [x] Sign-in state held in one place (`AuthProvider`). Zustand is named in the
+      architecture but not installed — there is one piece of state so far, and
+      a library for it would be weight with no job yet
+- [x] Signup/signin/password-reset pages connected to backend
 - [ ] Admin dashboard: org switcher, location CRUD
 - [ ] Responsable experience: create auth, display QR
 - [ ] Security experience: QR scan + validation result
@@ -389,19 +455,25 @@ works end to end on the server.
   list because it is a standing rule, not a finished task:** every new
   org-scoped route must mount the membership check and ship with a test proving
   another customer gets 404. Forgetting it once exposes every customer.
-- 🟡 **Four documents are named but were never written** — a roadmap, the UX
-  design, the threat model and the privacy policy. The first two are not urgent.
-  **The privacy policy is legally required before launch** (Ley 1581/2016) and
-  the threat model should exist before real customer data arrives. The document
-  map now marks all four as missing rather than pointing at empty paths.
-- 🟡 **Encryption plan is not buildable as written** — the architecture says the
-  browser encrypts phone numbers before sending them. The browser cannot hold the
-  Cloud KMS key. Encryption has to happen on the server. To resolve before the
-  authorization endpoints are built.
-- 🟡 **Dependency versions are not locked** — `package-lock.json` is excluded
-  from version control and the container image installs with `npm install`
-  instead of `npm ci`. Two builds of the same code can therefore pull different
-  library versions. Small fix, but it affects what actually ships to production.
+- 🟡 **Two documents are still missing: the threat model and the privacy
+  policy.** **The privacy policy is legally required before launch**
+  (Ley 1581/2016) and the threat model should exist before real customer data
+  arrives. The screen design was written on 2026-08-26; the roadmap still lives
+  inside this file under "Next", which is adequate for now.
+- 🟡 **The screens have not been seen on a real phone.** They are built
+  phone-first — one column, large buttons, 44px touch targets — but were only
+  viewed at desktop width. Security staff will use this at a gate on a phone, so
+  this needs a real check, ideally before the guard screens are designed.
+- 🟡 **Nobody has checked contrast or used a screen reader.** The screens carry
+  proper labels, announced errors and visible focus rings, but no contrast ratio
+  has been measured and no screen reader has been run against them.
+- ✅ ~~Encryption plan is not buildable as written~~ — closed 2026-08-26 by
+  Decision 005. The visitor's phone number was the last field that would have
+  needed our own encryption. It is not collected, so nothing in the MVP needs
+  Cloud KMS. The key is kept, unused, in case a decision is revisited.
+- ✅ ~~Dependency versions are not locked~~ — fixed 2026-08-26. Both projects
+  keep `package-lock.json` in version control and the container builds with
+  `npm ci`, which fails rather than silently installing different versions.
 - 🟡 **Rate limits are counted per internet address, not per person** — the
   general 60-per-minute limit runs before the app knows who the caller is, so
   everyone in one office shares one budget. Fine for now; will need attention if
@@ -474,13 +546,33 @@ Recommendation: B for now, A before the first paid customer. While the goal is
 
 Cost impact:    B = none today · A ≈ half a day · C ≈ 2 days
 Reversibility:  High for A and B · Medium for C (changes how limits are counted)
-Waiting since:  2026-08-25
+Waiting since:  2026-08-25 (1 day)
 Blocks:         Nothing today. Blocks launching paid plans.
 ```
+
+*(When answered, this becomes `docs/decisions/006-...`. The file numbered 005 is
+the visitor phone-number decision, already answered on 2026-08-26.)*
 
 ---
 
 ## Approved Decisions
+
+### Decision 005: A permit does not collect the visitor's phone number ✅ APPROVED (2026-08-26)
+
+A permit stores the visitor's name and nothing else about them. The visitor is
+not our user, never agreed to anything, and nothing in the product sends them
+anything. Full record: `docs/decisions/005-no-visitor-phone-number.md`.
+
+**Consequence to carry forward:** this was the last field that would have needed
+our own encryption, so the encryption question is closed rather than solved.
+What we give up: we cannot message a visitor — the resident passes the code on
+themselves. Reopening it costs about a day and needs a consent mechanism for
+someone who is not our user.
+
+*(Numbered 005 in `docs/decisions/`. The card labelled D-005 in the queue below
+is a different, still-unanswered question and will be recorded as 006.)*
+
+---
 
 ### D-004: Close the database to browsers ✅ APPROVED (2026-08-25) — BUILT
 
@@ -574,6 +666,8 @@ Blocker:        Data model + MVP scope locked until this approved
 - **Sign-in in the browser** — Firebase Auth Web SDK; our API never sees a password (Decision 002)
 - **Interiors under locations** — plan-based limits on the org document; free = 1 location / 10 interiors total (Decision 003)
 - **Backend-only database access** — clients denied all Firestore access; isolation enforced in backend code (Decision 004)
+- **A permit holds no phone number** — nothing in the MVP needs application-level encryption (Decision 005)
+- **Frontend: Next.js App Router + Firebase Auth Web SDK** — Spanish only, all user text in one file so a second language is cheap later
 - **Freemium Model (Resource-Limited)** — 1 location + 10 interiors free; paid plans unlock more locations/interiors
 - **MVP Scope: Locations Only** — Entry authorization (QR validation). Schools deferred to Phase 2.
 - **Web + PWA** — No mobile native (Phase 2+)
@@ -643,7 +737,7 @@ Blocker:        Data model + MVP scope locked until this approved
 |------|----------|-----------|--------|
 | No market demand | 🔴 Critical | Validate with 5-10 schools ASAP (week 5) | ⏳ Mitigating |
 | Compliance violation | 🔴 Critical | Privacy lawyer review before launch | ⏳ Planning |
-| Data breach | 🔴 Critical | Encryption in place, audit logs enabled | ✅ Mitigated |
+| Data breach | 🔴 Critical | Least data possible is held: no ID documents, photos, addresses, emails or phone numbers anywhere (Decisions 002, 003, 005); audit logs enabled | ✅ Mitigated |
 | Multi-org isolation bug | 🔴 Critical | Clients cannot reach the database at all; backend checks org membership per request; 6 isolation tests run on every change | ✅ Tested (2026-08-25) |
 | Firestore costs exceed budget | 🟡 High | Set alerts at 80% quota, scale pricing if needed | ✅ Monitored |
 | Vercel deployment fails | 🟡 High | Have rollback plan, GitHub branches | ⏳ Prepared |
@@ -698,31 +792,35 @@ When you restart, check:
 
 ## Where to pick up
 
-**The setup half of the product is finished on the server. The working half is
-not started, and there is still no interface at all.**
+**The setup half of the product works on the server, and for the first time
+someone can see and use part of it in a browser.** What is still missing is the
+half that makes money: issuing an entry permit and checking it at a door.
 
-Two sensible next moves, in the order they were last discussed:
+The next unit is **entry permits**. The question that was blocking it — the
+visitor's phone number — was answered on 2026-08-26 (Decision 005: not
+collected). Nothing else blocks it.
 
-**1. Entry permits (the heart of the product).** Create a permit for a visitor,
-generate the QR and the fallback numeric code, revoke it. Then validating a
-scan at the door and recording the entry.
+**Entry permits, in order:**
 
-Before starting, three things need answering — the first is a real decision:
+1. Create a permit for a visitor: their name, which interior they are coming to,
+   and when it is valid. Generate the QR and a fallback numeric code for when a
+   camera will not read it. Revoke a permit.
+2. Validate a scan at the door and record the entry.
 
-- **The visitor's phone number is optional and personal.** The original plan was
-  to encrypt it, but the encryption design as written cannot work (see Known
-  Issues). Either encrypt it on the server with the Cloud KMS key that already
-  exists, or do not collect it at all. Not collecting it is simpler, cheaper and
-  safer; collecting it enables notifying the visitor later. **Founder's call.**
+What is already settled and needs no new decision:
+
 - A permit belongs to exactly one interior (Decision 003). There is no
-  building-wide permit in the MVP. That assumption is recorded and accepted.
-- Who may create a permit: the interior's responsable, and an admin. Security
-  personnel may not.
+  building-wide permit in the MVP.
+- A permit stores the visitor's name and nothing else about them (Decision 005).
+- Who may create one: the interior's responsable, and an admin. Security staff
+  may not.
 
-**2. A sign-in screen first**, so all of this becomes visible in a browser.
-Roughly half a day. Five units are built and none can be seen. Recommended
-before going much further, because seeing it working surfaces product problems
-that testing does not.
+**Alternatively:** keep building screens, so each backend piece becomes visible
+as it lands. The account screens exist; creating an organization is the natural
+next one, and it is what a new user hits immediately after signing up — right
+now they see an empty list and a dead end.
+
+---
 
 **What a new session needs to know that is not obvious from the code:**
 
@@ -731,15 +829,22 @@ that testing does not.
   `requireOrgAdmin` and ships with a test proving another customer gets 404.
 - The built code deliberately **stores less** than `data-model.md` originally
   specified — no user email or phone, no organization address or phone, no staff
-  names on locations. Every one of those is marked in `data-model.md` under
-  "What is actually implemented", with the reason.
+  names on locations, and no visitor phone on a permit. Each is marked in
+  `data-model.md` under "What is actually implemented", with the reason.
 - Anything the plan limits is created through `createCounted()` in
   `backend/src/lib/quota.ts`, never by writing the document directly.
-- The API returns error **codes**; the Spanish wording the customer reads belongs
-  in the interface.
+- The API returns error **codes**; `frontend/lib/errors.ts` is the only place a
+  code becomes Spanish. No English may reach a customer's screen.
+- All user-facing text lives in `frontend/lib/strings.ts`. Text written inside a
+  component is a bug, because it is what makes a second language expensive.
+- `docs/architecture/design.md` holds the screen conventions. Two of them look
+  cosmetic but are security and must not be softened: sign-in never says which
+  half was wrong, and password recovery never reveals whether an account exists.
+- A test account exists in Firebase (`prueba.desarrollo@zeker-test.com`) from
+  verifying the sign-in flow. Nothing depends on it.
 
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 **Approval:** ⏳ One card waiting — D-005 (free organizations per person). Not blocking today.

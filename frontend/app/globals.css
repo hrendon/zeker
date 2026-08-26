@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens for the whole product.
+ *
+ * One accent colour, a neutral grey scale, generous spacing. Guards use this
+ * on a phone in daylight, so contrast and tap-target size matter more than
+ * decoration.
+ */
+@theme {
+  --color-ink: #0f172a;
+  --color-ink-soft: #475569;
+  --color-ink-faint: #94a3b8;
+  --color-surface: #ffffff;
+  --color-canvas: #f1f5f9;
+  --color-line: #cbd5e1;
+  --color-brand: #1d4ed8;
+  --color-brand-dark: #1e3a8a;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-ok: #15803d;
+  --color-ok-soft: #f0fdf4;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every interactive element keeps a visible focus ring — people who navigate
+   with a keyboard must be able to see where they are. */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}

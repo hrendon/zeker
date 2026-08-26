@@ -1,8 +1,10 @@
 # Build stage — compiles TypeScript to plain JavaScript.
 FROM node:24-alpine AS build
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+# `npm ci` installs exactly what the lockfile pins and fails if the two
+# disagree. `npm install` would quietly resolve newer versions instead.
+RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
@@ -11,8 +13,8 @@ RUN npm run build
 FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY package.json ./
-RUN npm install --omit=dev && npm cache clean --force
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 
 # Never run the API as root on Cloud Run.

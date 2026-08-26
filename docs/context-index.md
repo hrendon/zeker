@@ -12,7 +12,7 @@ Map of authoritative sources for project knowledge.
 | Technical decisions | `architecture/architecture.md` | Stack, deployment, multi-tenant design | Software Architect |
 | Data model | `architecture/data-model.md` | Firestore collections, schema, constraints | Software Architect |
 | APIs | `architecture/api.md` | Endpoints, request/response, authentication | Software Architect |
-| Design (UX/UI) | ⛔ not written | Wireframes and the three experiences. Needed before any screen is built | UI/UX Designer |
+| Design (UX/UI) | `architecture/design.md` | Layout, language, components, accessibility. Covers the sign-in screens; the three experiences are still to be designed | UI/UX Designer |
 | Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code | Backend Developer |
 | **Security** | | | |
 | Data minimization | `security/data-minimization.md` | What we store, what we never store, minimization rules | Security Engineer |
@@ -25,6 +25,7 @@ Map of authoritative sources for project knowledge.
 | — 002 | `decisions/002-client-side-firebase-auth.md` | How users sign in; the API never sees a password | Architect + Security |
 | — 003 | `decisions/003-interiors-and-plan-quotas.md` | Interiors as a real level; plan-based limits | Architect + Product Owner |
 | — 004 | `decisions/004-backend-only-firestore-access.md` | Clients denied direct database access | Security |
+| — 005 | `decisions/005-no-visitor-phone-number.md` | A permit stores no phone number; nothing needs KMS encryption | Security + Product Owner |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
@@ -47,7 +48,9 @@ Map of authoritative sources for project knowledge.
 3. Check `architecture/api.md` for the endpoint contract
 4. Check `security/data-minimization.md` for data handling rules
 5. Check `decisions/` for anything that changed the answer
-6. `architecture/design.md` (UX spec) does not exist yet
+6. Check `architecture/design.md` for the screen conventions — layout, the
+   component set, the Spanish-only rule, and the two sign-in rules that look
+   like design but are security
 
 **Every org-scoped route must mount the membership check** (`requireOrgMember`
 or `requireOrgAdmin`). Since Decision 004, backend code is the only thing

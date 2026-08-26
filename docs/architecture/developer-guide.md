@@ -186,20 +186,82 @@ the original setup script assumed; use the Firebase CLI.
 
 ## Frontend
 
-Not scaffolded yet — `frontend/` holds only environment files. When that work
-starts:
+Next.js (App Router) in `frontend/`. Runs on port 3000 and talks only to the
+Zeker API on port 3001.
 
-* Sign-up, sign-in, password reset and token refresh use the Firebase Auth Web
-  SDK directly. This API has no such endpoints (Decision 002).
-* The frontend cannot use the Firestore Web SDK for data — it talks only to
-  this API.
-* After a successful Firebase sign-in, call `POST /auth/session` once, then
-  `GET /auth/me` to learn which organizations the person belongs to.
-* Error responses carry a machine-readable `error` code. The Spanish wording
-  the customer reads belongs in the interface, not in the API.
+### Scripts
+
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Development server on http://localhost:3000 |
+| `npm run build` | Production build |
+| `npm run typecheck` | TypeScript, no output |
+| `npm test` | Unit tests (vitest) |
+
+### Environment variables
+
+Copy `frontend/.env.local.example` to `frontend/.env.local`. Every value is
+`NEXT_PUBLIC_*` and therefore visible in the browser — that is correct. Firebase
+client configuration identifies the project; it does not grant access to it.
+Access is decided by Firebase Auth and by `firestore.rules`, which deny browsers
+entirely (Decision 004).
+
+`NEXT_PUBLIC_API_URL` must match a value in the backend's `CORS_ORIGINS`, or the
+browser will block every call.
+
+### Running both halves
+
+```bash
+cd backend  && npm run dev   # port 3001
+cd frontend && npm run dev   # port 3000
+```
+
+### How the frontend is laid out
+
+```
+app/                 One folder per screen. URLs are in Spanish.
+  entrar/            Sign in
+  crear-cuenta/      Create account
+  recuperar/         Password reset
+  inicio/            Landing page after sign-in (temporary)
+components/
+  AuthProvider.tsx   Holds "who is signed in" for the whole app
+  ui.tsx             Field, SubmitButton, Notice, AuthCard
+lib/
+  firebase.ts        Firebase client setup
+  api.ts             The only place that calls the Zeker API
+  errors.ts          Error code -> Spanish
+  strings.ts         Every word the user reads
+  validate.ts        Form checks
+```
+
+### Rules that must not be broken
+
+* **Sign-up, sign-in, password reset and token refresh use the Firebase Auth Web
+  SDK directly.** This API has no such endpoints (Decision 002).
+* **The frontend never uses the Firestore Web SDK for data.** It talks only to
+  this API. Browsers are denied all database access (Decision 004).
+* **All API calls go through `lib/api.ts`.** It attaches the Firebase ID token,
+  read fresh from the SDK each time. Never store a token yourself.
+* **No user-facing text lives in a component.** It goes in `lib/strings.ts`, so
+  adding a second language later is one file, not a search of the whole app.
+* **No English ever reaches the screen.** The API returns an `error` code plus
+  an English `message` meant for developers. `lib/errors.ts` maps the code to
+  Spanish; the English message is for logs and bug reports only.
+* **Sign-in and password reset never reveal whether an account exists.** Both
+  give the same answer either way. Different answers would let anyone check who
+  is a customer.
+* **Signing out calls the server first.** If `POST /auth/logout` fails, the
+  session is still alive and the user is told so — clearing only the browser
+  copy would hide a live session on a shared computer.
+
+### After adding a screen
+
+Run `npm run typecheck`, `npm test` and `npm run build`, and check the screen on
+a narrow window — security staff use this on a phone.
 
 ---
 
 **Owner:** Backend Developer / Full-Stack Developer
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 **Related:** `architecture.md`, `api.md`, `../security/data-minimization.md`
