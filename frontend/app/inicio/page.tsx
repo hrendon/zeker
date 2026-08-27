@@ -1,30 +1,44 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { FullPageMessage, Notice } from '@/components/ui'
+import { FullPageMessage, Notice, TextLink } from '@/components/ui'
 import { toSpanish } from '@/lib/errors'
+import { orgsApi, type Org } from '@/lib/api'
 import { es } from '@/lib/strings'
-import type { OrgMembership } from '@/lib/api'
 
 /**
- * Temporary landing screen after sign-in.
+ * Home after signing in: the organizations this person belongs to.
  *
- * It exists to prove the whole chain works end to end: Firebase signs the user
- * in, the API creates or refreshes their profile, and signing out closes the
- * session on both sides. The real admin / responsable / security screens
- * replace it.
+ * This is also the organization switcher — picking one from the list is what
+ * "switching" means. There is no remembered selection stored in the browser,
+ * on purpose (see components/OrgShell.tsx), so this list is always the way in.
  */
 export default function HomePage() {
   const { status, user, profile, profileError, signOut } = useAuth()
   const router = useRouter()
+
+  const [orgs, setOrgs] = useState<Org[] | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
+
+  const load = useCallback(() => {
+    setLoadError(null)
+    orgsApi
+      .list()
+      .then((result) => setOrgs(result.orgs))
+      .catch((error) => setLoadError(toSpanish(error)))
+  }, [])
 
   useEffect(() => {
     if (status === 'signed-out') router.replace('/entrar')
   }, [status, router])
+
+  useEffect(() => {
+    if (status === 'signed-in') load()
+  }, [status, load])
 
   if (status !== 'signed-in') {
     return <FullPageMessage>{es.common.loading}</FullPageMessage>
@@ -37,9 +51,8 @@ export default function HomePage() {
       await signOut()
       router.replace('/entrar')
     } catch (error) {
-      // The server refused to revoke the session, which means the user is
-      // still signed in. Telling them so is the honest thing to do — pretending
-      // otherwise would leave a live session on a shared computer.
+      // The server refused to end the session, so the person is still signed
+      // in. Saying otherwise would leave a live session on a shared computer.
       setSignOutError(`${es.errors.signOutFailed} (${toSpanish(error)})`)
       setSigningOut(false)
     }
@@ -74,30 +87,63 @@ export default function HomePage() {
         {profileError ? <Notice kind="error">{profileError}</Notice> : null}
 
         <section className="rounded-2xl bg-[var(--color-surface)] p-6 ring-1 ring-[var(--color-line)]/60">
-          <h2 className="text-base font-semibold">{es.home.yourOrgs}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-semibold">{es.orgs.listTitle}</h2>
+            {orgs && orgs.length > 0 ? (
+              <TextLink href="/organizaciones/nueva">{es.orgs.create}</TextLink>
+            ) : null}
+          </div>
 
-          {!profile ? (
+          {loadError ? (
+            <div className="mt-4 space-y-3">
+              <Notice kind="error">{loadError}</Notice>
+              <button
+                type="button"
+                onClick={load}
+                className="h-11 rounded-lg border border-[var(--color-line)] bg-white px-4 text-sm font-medium"
+              >
+                {es.actions.retry}
+              </button>
+            </div>
+          ) : !orgs ? (
             <p className="mt-3 text-sm text-[var(--color-ink-soft)]">{es.common.loading}</p>
-          ) : profile.orgs.length === 0 ? (
-            <>
-              <p className="mt-3 text-sm text-[var(--color-ink-soft)]">{es.home.noOrgs}</p>
-              <p className="mt-1 text-sm text-[var(--color-ink-faint)]">{es.home.noOrgsHint}</p>
-            </>
+          ) : orgs.length === 0 ? (
+            <div className="mt-3">
+              <p className="text-sm text-[var(--color-ink-soft)]">{es.orgs.empty}</p>
+              <p className="mt-1 text-sm text-[var(--color-ink-faint)]">{es.orgs.emptyHint}</p>
+              <a
+                href="/organizaciones/nueva"
+                className="mt-4 flex h-11 w-full items-center justify-center rounded-lg bg-[var(--color-brand)] px-4 text-base font-medium text-white hover:bg-[var(--color-brand-dark)]"
+              >
+                {es.orgs.create}
+              </a>
+            </div>
           ) : (
             <ul className="mt-3 divide-y divide-[var(--color-line)]/60">
-              {profile.orgs.map((org: OrgMembership) => (
-                <li key={org.org_id} className="flex items-center justify-between py-3">
-                  <span className="font-mono text-sm">{org.org_id}</span>
-                  <span className="text-sm text-[var(--color-ink-soft)]">
-                    {es.home.roleLabel}: {es.roles[org.role] ?? org.role}
-                  </span>
+              {orgs.map((org) => (
+                <li key={org.id} className="py-3">
+                  <a
+                    href={`/organizaciones/${org.id}/sedes`}
+                    className="flex items-center justify-between gap-3 rounded-lg py-1 hover:opacity-80"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium text-[var(--color-ink)]">{org.name}</span>
+                      <span className="block text-sm text-[var(--color-ink-soft)]">
+                        {es.home.roleLabel}: {org.role ? es.roles[org.role] : '—'} ·{' '}
+                        {es.usage.locationsLabel} {org.counts.locations}/{org.limits.max_locations}{' '}
+                        · {es.usage.interiorsLabel} {org.counts.interiors}/
+                        {org.limits.max_interiors}
+                      </span>
+                    </span>
+                    <span aria-hidden="true" className="text-[var(--color-ink-faint)]">
+                      →
+                    </span>
+                  </a>
                 </li>
               ))}
             </ul>
           )}
         </section>
-
-        <p className="text-sm text-[var(--color-ink-faint)]">{es.home.underConstruction}</p>
       </div>
     </main>
   )

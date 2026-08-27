@@ -4,16 +4,78 @@ import { ApiError, NetworkError, type ApiErrorBody } from './errors'
 /**
  * The only place the app talks to the Zeker API.
  *
- * Every call carries the Firebase ID token. The token is read fresh from the
- * SDK on each request, so it is always the current one — the SDK refreshes it
- * in the background and we never cache or store it ourselves.
+ * Every call carries the Firebase ID token, read fresh from the SDK each time,
+ * so it is always the current one. We never cache or store a token ourselves.
+ *
+ * Grouped by resource (`locationsApi.create(...)`) rather than a flat list of
+ * functions, so this stays readable as the endpoint count grows.
  */
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
+// ---------------------------------------------------------------------------
+// Shapes, mirroring backend/src/lib/{orgs,locations,interiors,users}.ts
+// ---------------------------------------------------------------------------
+
+export type OrgRole = 'admin' | 'responsable' | 'security'
+export type OrgType = 'school' | 'residence' | 'office' | 'other'
+export type OrgPlan = 'free' | 'paid_a' | 'paid_b'
+export type LocationType = 'entrance' | 'reception' | 'classroom' | 'zone' | 'other'
+
 export interface OrgMembership {
   org_id: string
-  role: 'admin' | 'responsable' | 'security'
+  role: OrgRole
+}
+
+export interface PlanLimits {
+  max_locations: number
+  /** Counted across the whole organization, not per location (Decision 003). */
+  max_interiors: number
+}
+
+export interface Org {
+  id: string
+  name: string
+  type: OrgType
+  description: string
+  plan: OrgPlan
+  limits: PlanLimits
+  counts: { locations: number; interiors: number }
+  city: string | null
+  country: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  /** Present on the list and create responses: the role the caller holds here. */
+  role?: OrgRole
+}
+
+export interface Location {
+  id: string
+  org_id: string
+  name: string
+  description: string
+  type: LocationType
+  /** false = retired: kept, with its history, and still using a plan slot. */
+  enabled: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Interior {
+  id: string
+  org_id: string
+  location_id: string
+  number: string
+  name: string
+  responsable_name: string
+  /** Link to a member account. Not settable yet — see docs/architecture/api.md. */
+  responsable_user_id: string | null
+  enabled: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
 }
 
 export interface UserProfile {
@@ -22,19 +84,22 @@ export interface UserProfile {
   email_verified: boolean
   first_name: string
   last_name: string
+  /** Ids and roles only, no names. Use orgsApi.list() for anything user-facing. */
   orgs: OrgMembership[]
   created_at: string
   last_login: string
-  /** Absent on POST /auth/session, which always leaves a profile behind. */
   profile_exists?: boolean
-  request_id?: string
 }
+
+// ---------------------------------------------------------------------------
+// Transport
+// ---------------------------------------------------------------------------
 
 async function idToken(): Promise<string> {
   const user = auth.currentUser
   if (!user) {
-    // Callers reach here only if they ran before sign-in finished. Treating it
-    // as an expired session sends the user somewhere useful.
+    // Only reachable if a caller ran before sign-in finished. Treating it as an
+    // expired session sends the person somewhere useful.
     throw new ApiError(401, { error: 'unauthorized', message: 'No signed-in user' })
   }
   return user.getIdToken()
@@ -61,8 +126,8 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    // A failure that is not our documented error shape (a proxy page, a
-    // gateway timeout) still has to become an ApiError rather than crash here.
+    // A failure that is not our documented error shape (a proxy page, a gateway
+    // timeout) still has to become an ApiError rather than crash here.
     const body = await response
       .json()
       .catch((): ApiErrorBody => ({ error: 'internal_server_error' }))
@@ -73,30 +138,141 @@ async function request<T>(
 }
 
 /**
- * Called once after Firebase reports a successful sign-in. Creates the profile
- * the first time, refreshes `last_login` afterwards. Safe to call repeatedly.
- * Names are only sent at sign-up; later calls omit them.
+ * Drops every key whose value is undefined or an empty string.
+ *
+ * The API schemas are strict: an unknown field, or an optional string sent
+ * empty, fails the whole request. Optional means omit the key entirely, not
+ * send it with nothing in it.
  */
-export function createSession(names?: {
-  first_name: string
-  last_name: string
-}): Promise<UserProfile> {
-  return request<UserProfile>('/auth/session', {
-    method: 'POST',
-    body: names ?? {},
-  })
+function omitBlank<T extends Record<string, unknown>>(input: T): Partial<T> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(input)) {
+    if (value === undefined) continue
+    if (typeof value === 'string' && value.trim() === '') continue
+    out[key] = typeof value === 'string' ? value.trim() : value
+  }
+  return out as Partial<T>
 }
 
-/** Who am I, and which organizations do I belong to. */
-export function getMe(): Promise<UserProfile> {
-  return request<UserProfile>('/auth/me')
+// ---------------------------------------------------------------------------
+// Endpoints
+// ---------------------------------------------------------------------------
+
+export const authApi = {
+  /**
+   * Called once after Firebase reports a successful sign-in. Creates the
+   * profile the first time, refreshes last_login afterwards. Names are only
+   * sent at sign-up; later calls omit them.
+   */
+  createSession: (names?: { first_name: string; last_name: string }) =>
+    request<UserProfile>('/auth/session', { method: 'POST', body: names ?? {} }),
+
+  me: () => request<UserProfile>('/auth/me'),
+
+  /**
+   * Ends the session on the server, so a stolen refresh token cannot resume it.
+   * If this fails the person is NOT logged out and must be told so.
+   */
+  logout: () => request<{ revoked: boolean }>('/auth/logout', { method: 'POST' }),
 }
 
-/**
- * Ends the session on the server, so a stolen refresh token cannot resume it.
- * If this fails the user is NOT logged out — the caller must say so rather
- * than pretending it worked.
- */
-export function logout(): Promise<{ revoked: boolean }> {
-  return request<{ revoked: boolean }>('/auth/logout', { method: 'POST' })
+export const orgsApi = {
+  /** The organizations the caller belongs to, with names, plan and usage. */
+  list: () => request<{ orgs: Org[] }>('/orgs'),
+
+  create: (input: {
+    name: string
+    type: OrgType
+    description?: string
+    city?: string
+    country?: string
+  }) => request<Org>('/orgs', { method: 'POST', body: omitBlank(input) }),
+
+  get: (orgId: string) => request<Org>(`/orgs/${orgId}`),
+
+  update: (
+    orgId: string,
+    input: Partial<{
+      name: string
+      type: OrgType
+      description: string
+      city: string
+      country: string
+    }>,
+  ) => request<Org>(`/orgs/${orgId}`, { method: 'PUT', body: omitBlank(input) }),
+
+  remove: (orgId: string) =>
+    request<{ id: string; deleted: true }>(`/orgs/${orgId}`, { method: 'DELETE' }),
+}
+
+export const locationsApi = {
+  list: (orgId: string) =>
+    request<{ locations: Location[]; usage: { locations: number; max_locations: number } }>(
+      `/orgs/${orgId}/locations`,
+    ),
+
+  create: (orgId: string, input: { name: string; description?: string; type?: LocationType }) =>
+    request<Location & { usage: { locations: number } }>(`/orgs/${orgId}/locations`, {
+      method: 'POST',
+      body: omitBlank(input),
+    }),
+
+  update: (
+    orgId: string,
+    locationId: string,
+    input: Partial<{
+      name: string
+      description: string
+      type: LocationType
+      enabled: boolean
+    }>,
+  ) =>
+    request<Location>(`/orgs/${orgId}/locations/${locationId}`, {
+      method: 'PUT',
+      // enabled:false must survive omitBlank — it is how a location is retired.
+      body: omitBlank(input),
+    }),
+
+  remove: (orgId: string, locationId: string) =>
+    request<{ id: string; deleted: true }>(`/orgs/${orgId}/locations/${locationId}`, {
+      method: 'DELETE',
+    }),
+}
+
+export const interiorsApi = {
+  list: (orgId: string, locationId?: string) =>
+    request<{ interiors: Interior[]; usage: { interiors: number; max_interiors: number } }>(
+      `/orgs/${orgId}/interiors${
+        locationId ? `?location_id=${encodeURIComponent(locationId)}` : ''
+      }`,
+    ),
+
+  create: (
+    orgId: string,
+    input: { location_id: string; number: string; name?: string; responsable_name: string },
+  ) =>
+    request<Interior & { usage: { interiors: number } }>(`/orgs/${orgId}/interiors`, {
+      method: 'POST',
+      body: omitBlank(input),
+    }),
+
+  update: (
+    orgId: string,
+    interiorId: string,
+    input: Partial<{
+      number: string
+      name: string
+      responsable_name: string
+      enabled: boolean
+    }>,
+  ) =>
+    request<Interior>(`/orgs/${orgId}/interiors/${interiorId}`, {
+      method: 'PUT',
+      body: omitBlank(input),
+    }),
+
+  remove: (orgId: string, interiorId: string) =>
+    request<{ id: string; deleted: true }>(`/orgs/${orgId}/interiors/${interiorId}`, {
+      method: 'DELETE',
+    }),
 }

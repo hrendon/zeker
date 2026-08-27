@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-27
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -25,11 +25,16 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ Interiors as a real level; plan-based limits (2026-08-25, Decision 003)
 - ✅ Clients denied direct database access (2026-08-25, Decision 004)
 - ✅ A permit does not collect the visitor's phone number (2026-08-26, Decision 005)
-- ✅ Build the sign-in screens before the permit endpoints (2026-08-26, session objective)
+- ✅ Build the sign-in screens before the permit endpoints (2026-08-26)
+- ✅ Build the setup screens now; make customer calls in parallel (2026-08-27)
+- ✅ No data-fetching library — keep it simple (2026-08-27)
 
 **Pending 🟡 approvals:**
 - D-005 — how many free organizations one person may create. Not blocking
   today; blocks launching paid plans. See `PROJECT_STATE.md`.
+- D-006 — whether we verify that whoever registers a building actually runs it.
+  Raised by the security review on 2026-08-27. Not blocking today; blocks
+  opening signup to the public.
 
 ---
 
@@ -318,6 +323,28 @@ These roles will activate when relevant.
 
 ---
 
+## Consultation History
+
+Which roles were actually consulted on which request, so a later Definition of
+Done check can see it happened rather than infer it from the output.
+
+| Date | Request | Roles consulted | Outcome |
+|------|---------|-----------------|---------|
+| 2026-08-19 | Multi-role dispatch validation | Backend, Frontend, Architect, Product Owner, Security | Recorded in `PROJECT_STATE.md` |
+| 2026-08-27 | Setup screens (create organization, locations, interiors) — full dispatch before implementation | Product Owner, UI/UX Designer, Software Architect, Security Engineer / CISO, Frontend Developer, QA Engineer, Customer Discovery & Validation Advisor, Data Analyst | 3 conflicts resolved between roles; 2 decisions answered by the Founder (build now + no new dependency); 1 new risk raised as D-006; 2 API documentation defects fixed; unit built and verified |
+
+**Concerns with no active owner, noted on 2026-08-26:** the Spanish wording
+itself has no owner — Content Strategist / Copywriter is not active, so
+interface copy is currently written by whoever builds the screen against the
+tone rules in `../architecture/design.md`. Regulatory & Data Privacy Counsel is
+also not active, and the privacy policy required before launch needs it.
+
+**Owned artifacts that do not exist:** `customer-discovery.md` (Customer
+Discovery & Validation Advisor) and `analytics.md` (Data Analyst). Both roles
+flagged the absence of their own artifact as a finding on 2026-08-26.
+
+---
+
 ## Role Activation History
 
 | Date | Role | Action | Notes |
@@ -358,5 +385,5 @@ These roles will activate when relevant.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-27
 **Related:** `mantis/roles.md` §5 (Role Activation Protocol)

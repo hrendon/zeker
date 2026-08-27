@@ -7,7 +7,7 @@ not a catalogue of screens that do not exist yet — those get added as they are
 designed and built.
 
 **Owner:** UI/UX Designer
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-27
 **Related:** `architecture.md`, `developer-guide.md`, `../product/requirements.md`
 
 ---
@@ -89,7 +89,16 @@ Five, deliberately. They live in `frontend/components/ui.tsx`.
 | `Notice` | A message about the whole form. Red for a problem, green for a success. |
 | `TextLink` | The way out of a screen — to sign up, to reset, to go back. |
 
-Adding a sixth needs a reason. A small, boring set is what keeps three
+Three more were added on 2026-08-27, when the setup screens needed shapes the
+sign-in screens had no equivalent of:
+
+| Piece | Why it exists |
+|-------|---------------|
+| `UsageMeter` | Plan usage, as a bar **and** in words. Colour is never the only signal: a bar that looks "nearly full" tells a colour-blind person nothing, and tells a screen reader nothing at all. |
+| `ConfirmDialog` | Asks before anything irreversible. Retiring and deleting look alike and are not, and the wording in this dialog is what separates them. |
+| `ListRow` | One item plus its actions, behind a menu. A phone row is not wide enough for three buttons kept 44px apart, and putting "delete" a thumb-width from "change" is how records get lost. |
+
+Adding a ninth needs a reason. A small, boring set is what keeps three
 different experiences feeling like one product.
 
 ---
@@ -172,8 +181,51 @@ reader has actually been run against these screens.
 
 ---
 
+## The setup flow
+
+Added 2026-08-27. From a new account to a building with apartments in it:
+
+```text
+sign up  →  no organizations  →  create organization
+                                      ↓
+                              organization: two tabs
+                                 Sedes | Interiores
+                                      ↓
+                        add a site  →  add apartments
+```
+
+Rules this flow follows, each for a reason:
+
+* **An empty screen always offers the one next step.** A new account used to
+  land on an empty list and stop there. Every empty state now names what is
+  missing and carries the button that fixes it.
+* **The organization list is the switcher.** There is no separate control and
+  nothing remembered between visits — that is a security rule, not a
+  simplification (see below).
+* **At the plan limit the button disappears.** Letting someone fill in a form
+  that will certainly be refused wastes their time and reads as a fault.
+* **Retire and delete are told apart by words, not colour.** Retiring keeps the
+  record and its plan place; deleting frees the place and cannot be undone.
+* **A refusal says what to do.** "That conflicts with something" is not a
+  message; "the site still has apartments, remove them first" is.
+* **Someone who is not an administrator sees the list and a line saying why the
+  actions are missing** — not buttons that fail when pressed.
+
+### Which organization am I looking at
+
+It lives in the web address and nowhere else. Not in browser storage, not
+remembered between sessions.
+
+This is a security requirement. One person can administer one building and be a
+plain member of another. Anything about an organization that survives a switch
+can be painted onto the next organization's screen — which would reopen, in the
+browser, exactly the separation that closing the database was meant to
+guarantee. The cost is small: someone managing several organizations picks one
+each time they sign in.
+
+---
+
 ## Not yet designed
 
-The administrator, responsable and security experiences. Their flows, and the
-screens for organizations, locations, interiors, permits and the QR scan, are
-still to be designed. The conventions above apply to them when they are.
+The responsable and security experiences, and the screens for permits and the
+QR scan at a door. The conventions above apply to them when they are designed.

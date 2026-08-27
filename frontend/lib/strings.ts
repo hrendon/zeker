@@ -58,13 +58,7 @@ export const es = {
 
   home: {
     greeting: 'Hola',
-    yourOrgs: 'Sus organizaciones',
-    noOrgs: 'Todavía no pertenece a ninguna organización.',
-    noOrgsHint:
-      'El siguiente paso será crear una organización. Esa pantalla aún no existe.',
     roleLabel: 'Rol',
-    underConstruction:
-      'Esta pantalla es temporal. Confirma que entrar, salir y leer su perfil funcionan de extremo a extremo.',
   },
 
   roles: {
@@ -81,6 +75,136 @@ export const es = {
     firstNameRequired: 'Escriba su nombre.',
     lastNameRequired: 'Escriba su apellido.',
     nameTooLong: 'Ese nombre es demasiado largo.',
+    orgNameRequired: 'Escriba un nombre para la organización.',
+    locationNameRequired: 'Escriba un nombre para la sede.',
+    numberRequired: 'Escriba el número del interior.',
+    responsableRequired: 'Escriba quién es el responsable.',
+    locationRequired: 'Elija una sede.',
+    textTooLong: 'Ese texto es demasiado largo.',
+  },
+
+  nav: {
+    myOrgs: 'Mis organizaciones',
+    backToOrgs: 'Volver a mis organizaciones',
+    locations: 'Sedes',
+    interiors: 'Interiores',
+    changeOrg: 'Cambiar organización',
+  },
+
+  orgs: {
+    listTitle: 'Sus organizaciones',
+    empty: 'Todavía no tiene ninguna organización.',
+    emptyHint: 'Cree una para empezar a registrar sus sedes y sus interiores.',
+    createTitle: 'Crear organización',
+    createSubtitle: 'Una organización es el cliente: un colegio, un edificio, una oficina.',
+    create: 'Crear organización',
+    creating: 'Creando…',
+    name: 'Nombre',
+    namePlaceholder: 'Conjunto Residencial Los Cedros',
+    type: 'Tipo',
+    description: 'Descripción (opcional)',
+    city: 'Ciudad (opcional)',
+    country: 'País (opcional)',
+    countryHint: 'Dos letras. Por ejemplo: CO',
+    noAddressNote:
+      'No pedimos la dirección. La ciudad y el país son suficientes, y guardar menos datos protege a los residentes.',
+    typeSchool: 'Colegio',
+    typeResidence: 'Conjunto o edificio',
+    typeOffice: 'Oficina',
+    typeOther: 'Otro',
+    open: 'Abrir',
+  },
+
+  org: {
+    adminOnlyNote:
+      'Solo un administrador puede crear, cambiar o eliminar. Usted puede consultar.',
+    noAccessTitle: 'No encontramos esa organización',
+    noAccessBody:
+      'O no existe, o usted ya no pertenece a ella. Vuelva a su lista de organizaciones.',
+  },
+
+  locations: {
+    title: 'Sedes',
+    subtitle: 'Los sitios físicos que controla: un edificio, una sede, una portería.',
+    empty: 'Todavía no hay sedes.',
+    emptyHint: 'Necesita al menos una sede antes de poder agregar interiores.',
+    add: 'Agregar sede',
+    adding: 'Agregando…',
+    addFirst: 'Agregar la primera sede',
+    name: 'Nombre de la sede',
+    namePlaceholder: 'Torre 1',
+    description: 'Descripción (opcional)',
+    retired: 'Sin usar',
+    retire: 'Dejar de usar',
+    reactivate: 'Volver a usar',
+    retireConfirmTitle: '¿Dejar de usar esta sede?',
+    retireConfirmBody:
+      'Se conserva con toda su historia y sigue ocupando un lugar de su plan. Puede volver a usarla cuando quiera.',
+    reactivateConfirmTitle: '¿Volver a usar esta sede?',
+    reactivateConfirmBody: 'Volverá a estar disponible para registrar interiores y permisos.',
+    deleteConfirmTitle: '¿Eliminar esta sede?',
+    deleteConfirmBody:
+      'Se borra para siempre y libera un lugar de su plan. Esta acción no se puede deshacer.',
+    // The API refuses for either reason and does not say which, so the message
+    // names both. A vague "that conflicts with something" leaves the
+    // administrator with nothing to do about it.
+    deleteConflict:
+      'No se puede eliminar. La sede todavía tiene interiores, o hay permisos de entrada activos. Quite los interiores o cancele los permisos, y vuelva a intentar.',
+  },
+
+  interiors: {
+    title: 'Interiores',
+    subtitle: 'Cada apartamento, bodega o zona dentro de una sede, con su responsable.',
+    empty: 'Todavía no hay interiores.',
+    emptyHint: 'Agregue el primero para empezar.',
+    needsLocation: 'Primero cree una sede. Un interior siempre vive dentro de una sede.',
+    goToLocations: 'Ir a sedes',
+    add: 'Agregar interior',
+    adding: 'Agregando…',
+    addFirst: 'Agregar el primer interior',
+    location: 'Sede',
+    number: 'Número',
+    numberPlaceholder: '302',
+    name: 'Nombre (opcional)',
+    namePlaceholder: 'Bodega esquinera',
+    responsable: 'Responsable',
+    responsablePlaceholder: 'Nombre de la persona a cargo',
+    responsableHint: 'Solo el nombre. No guardamos su teléfono, su correo ni su documento.',
+    filterAll: 'Todas las sedes',
+    retired: 'Sin usar',
+    retire: 'Dejar de usar',
+    reactivate: 'Volver a usar',
+    retireConfirmTitle: '¿Dejar de usar este interior?',
+    retireConfirmBody:
+      'Se conserva y sigue ocupando un lugar de su plan. Puede volver a usarlo cuando quiera.',
+    reactivateConfirmTitle: '¿Volver a usar este interior?',
+    reactivateConfirmBody: 'Volverá a estar disponible para registrar permisos de entrada.',
+    deleteConfirmTitle: '¿Eliminar este interior?',
+    deleteConfirmBody:
+      'Se borra para siempre y libera un lugar de su plan. Esta acción no se puede deshacer.',
+    deleteConflict:
+      'No se puede eliminar. Todavía hay permisos de entrada activos para este interior. Cancele los permisos y vuelva a intentar.',
+    numberTaken:
+      'Ya existe un interior con ese número en esa sede. Use otro número.',
+  },
+
+  usage: {
+    locationsLabel: 'Sedes',
+    interiorsLabel: 'Interiores',
+    of: 'de',
+    full: 'Alcanzó el límite de su plan.',
+    interiorsNote: 'Contados en toda la organización, no por sede.',
+  },
+
+  actions: {
+    edit: 'Cambiar',
+    save: 'Guardar',
+    saving: 'Guardando…',
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    deleting: 'Eliminando…',
+    options: 'Opciones',
+    retry: 'Reintentar',
   },
 
   errors: {

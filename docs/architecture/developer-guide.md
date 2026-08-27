@@ -219,21 +219,43 @@ cd frontend && npm run dev   # port 3000
 ### How the frontend is laid out
 
 ```
-app/                 One folder per screen. URLs are in Spanish.
-  entrar/            Sign in
-  crear-cuenta/      Create account
-  recuperar/         Password reset
-  inicio/            Landing page after sign-in (temporary)
+app/                          One folder per screen. URLs are in Spanish.
+  entrar/                     Sign in
+  crear-cuenta/               Create account
+  recuperar/                  Password reset
+  inicio/                     Your organizations. Also the switcher.
+  organizaciones/
+    nueva/                    Create an organization
+    [orgId]/sedes/            Sites: list, add, rename, retire, delete
+    [orgId]/interiores/       Interiors, with the person in charge
 components/
-  AuthProvider.tsx   Holds "who is signed in" for the whole app
-  ui.tsx             Field, SubmitButton, Notice, AuthCard
+  AuthProvider.tsx            Holds "who is signed in" for the whole app
+  OrgShell.tsx                Everything the org-scoped screens share
+  ui.tsx                      AuthCard, Field, SubmitButton, Notice, TextLink,
+                              UsageMeter, ConfirmDialog, ListRow
 lib/
-  firebase.ts        Firebase client setup
-  api.ts             The only place that calls the Zeker API
-  errors.ts          Error code -> Spanish
-  strings.ts         Every word the user reads
-  validate.ts        Form checks
+  firebase.ts                 Firebase client setup
+  api.ts                      The only place that calls the Zeker API
+  errors.ts                   Error code -> Spanish
+  strings.ts                  Every word the user reads
+  validate.ts                 Form checks
 ```
+
+### Adding an organization-scoped screen
+
+Wrap it in `OrgGate` (`components/OrgShell.tsx`) and read the id with
+`useOrgId()`. `OrgGate` does three things you must not reimplement:
+
+1. **Waits for the sign-in session to be restored before asking the API.**
+   Firebase restores it asynchronously, so a page opened directly has no token
+   for a moment. Fetching in that gap gets a 401 and tells the person their
+   session ended when it did not.
+2. **Clears the previous organization before loading the next.** Never render
+   data from the organization you just left.
+3. **Turns the API's 404 into "not found or no access"** without saying which.
+   The API answers the same way whether an organization does not exist or the
+   caller is not a member — so nobody can discover which customers exist by
+   guessing. Do not undo that in the interface.
 
 ### Rules that must not be broken
 
@@ -255,6 +277,22 @@ lib/
   session is still alive and the user is told so — clearing only the browser
   copy would hide a live session on a shared computer.
 
+### Reading a refusal correctly
+
+Two different refusals both come back as **403**. Branch on the error `code`,
+never the status:
+
+| Code | Means | What the person should see |
+|------|-------|----------------------------|
+| `quota_exceeded` | Out of room on the plan | Upgrade to add more |
+| `forbidden` | Not an administrator | You cannot do this |
+| `conflict` (409) | Something still depends on it | What to remove first |
+
+A `conflict` is not self-explaining — the API says why in English, which never
+reaches the screen. The screen knows its own context, so it supplies the Spanish
+message: deleting a site names its apartments and permits, adding an interior
+names the duplicate number.
+
 ### After adding a screen
 
 Run `npm run typecheck`, `npm test` and `npm run build`, and check the screen on
@@ -263,5 +301,5 @@ a narrow window — security staff use this on a phone.
 ---
 
 **Owner:** Backend Developer / Full-Stack Developer
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-27
 **Related:** `architecture.md`, `api.md`, `../security/data-minimization.md`

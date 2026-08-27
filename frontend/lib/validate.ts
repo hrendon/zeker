@@ -50,3 +50,18 @@ export function checkName(
   if (trimmed.length > MAX_NAME_LENGTH) return es.validation.nameTooLong
   return undefined
 }
+
+/**
+ * A required free-text field: present, and not longer than the API accepts.
+ * `missing` is the Spanish sentence shown when it is blank.
+ */
+export function checkRequiredText(
+  value: string,
+  missing: string,
+  maxLength = MAX_NAME_LENGTH,
+): string | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return missing
+  if (trimmed.length > maxLength) return es.validation.textTooLong
+  return undefined
+}

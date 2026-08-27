@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { onAuthStateChanged, signOut as firebaseSignOut, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { createSession, getMe, logout, type UserProfile } from '@/lib/api'
+import { authApi, type UserProfile } from '@/lib/api'
 
 /**
  * Holds the answer to "who is signed in" for the whole app.
@@ -85,13 +85,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pendingNames.current = null
         // On a first sign-in this creates the profile; afterwards it just
         // refreshes last_login. Either way we get the profile back.
-        setProfile(await createSession(names ?? undefined))
+        setProfile(await authApi.createSession(names ?? undefined))
         setProfileError(null)
       } catch (error) {
         // The account is valid — only our own profile call failed. Try a plain
         // read before giving up, so a transient write problem is not fatal.
         try {
-          setProfile(await getMe())
+          setProfile(await authApi.me())
           setProfileError(null)
         } catch {
           setProfile(null)
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     // Server first. If revoking fails the session is still alive, and clearing
     // the browser copy would only hide that from the user.
-    await logout()
+    await authApi.logout()
     await firebaseSignOut(auth)
   }, [])
 

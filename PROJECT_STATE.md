@@ -2,8 +2,8 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-26
-**Last verified:** 2026-08-26 — backend typecheck clean, 102/102 tests pass, production build clean; frontend typecheck clean, 9/9 tests pass, production build clean; sign-up, sign-in, sign-out and password reset driven end to end in a real browser against live Firebase and live Firestore.
+**Last updated:** 2026-08-27
+**Last verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
 
 ---
 
@@ -28,7 +28,37 @@ Critical Risk:   None open
 Next:            Entry permits (QR), then validating a scan at the door
 ```
 
-**Latest Update (2026-08-26): the product can be seen and used in a browser.**
+**Latest Update (2026-08-27): a building administrator can now set up their
+building from start to finish, in a browser.** Create an organization, add a
+site, add apartments with the person in charge of each, and see how much of the
+free plan is used. The dead end after signing up is gone.
+
+- **Eight roles reviewed this before a line was written** — product, design,
+  architecture, security, implementation, testing, customer validation and
+  metrics. Three disagreements between them were resolved, two questions went
+  to you, and one new risk was found that nobody had written down (D-006 below).
+- **The free plan is visible and enforced.** A bar shows what is used, turns red
+  at the limit, and the "add" button disappears rather than letting someone fill
+  in a form that will be refused.
+- **Deleting and retiring are kept apart on purpose.** Retiring keeps a site and
+  its history and keeps using a plan place; deleting frees the place and cannot
+  be undone. Both ask for confirmation, and the wording is what separates them.
+- **Nothing about a customer is kept in the browser.** Which organization you are
+  looking at lives in the web address only. This was a direct security
+  requirement: one person can be an administrator of one building and a plain
+  member of another, and leftover data must never be painted onto the next one.
+- **Two bugs were found by using it, not by testing it.** Opening a page
+  directly showed a false "your session ended" — fixed. And refusing to delete a
+  site said only "that conflicts with something", which told the administrator
+  nothing — it now names the cause and what to do.
+- **A resident's account still cannot be linked to their apartment.** The system
+  has no way to look up who belongs to an organization, so for now the person in
+  charge is a typed name. **This must be built before entry permits**, because
+  the plan says a resident issues permits for their own apartment.
+- Verified: 16 frontend tests, 102 backend tests, typecheck and production build
+  all clean, plus the whole flow driven by hand in a browser.
+
+**Previous Update (2026-08-26): the product can be seen and used in a browser.**
 Someone can now create an account, sign in, recover a forgotten password and
 sign out — in Spanish, on a phone or a computer. Nothing else is on screen yet;
 after signing in they see their name and an empty list of organizations.
@@ -269,6 +299,24 @@ works end to end on the server.
 - Role is per organization, not global (one person can run several orgs)
 - Verified: 27/27 tests pass · typecheck clean · live routes answer correctly
 
+✅ **Setup screens — a customer can set up their building** (2026-08-27)
+- `/inicio` lists your organizations and is also how you switch between them
+- `/organizaciones/nueva` creates one; whoever creates it becomes its admin
+- `/organizaciones/{id}/sedes` — list, add, rename, retire, reactivate, delete
+- `/organizaciones/{id}/interiores` — the same, plus the person in charge, with
+  a filter by site once there is more than one
+- Plan usage shown as a bar and in words; at the limit the add button is removed
+  rather than letting someone fill in a form that will be refused
+- Refusals say what to do: hitting the plan limit, deleting a site that still
+  has apartments, and reusing an apartment number each have their own message
+- Which organization you are viewing lives in the web address only. Nothing
+  about a customer is stored in the browser, so switching cannot leak
+- Only admins see the create, change and delete actions; other members see a
+  read-only list and a line explaining why
+- Guessing an organization address shows "not found", never "not allowed"
+- Verified: 16/16 frontend tests · typecheck clean · production build clean ·
+  the whole flow driven by hand in a browser against the live database
+
 ✅ **Account screens — the first thing anyone sees** (2026-08-26)
 - Next.js app in `frontend/`, Spanish, phone-first, four screens: `/entrar`,
   `/crear-cuenta`, `/recuperar`, `/inicio`
@@ -339,7 +387,7 @@ works end to end on the server.
       architecture but not installed — there is one piece of state so far, and
       a library for it would be weight with no job yet
 - [x] Signup/signin/password-reset pages connected to backend
-- [ ] Admin dashboard: org switcher, location CRUD
+- [x] Admin dashboard: org switcher, location CRUD, interior CRUD, plan usage
 - [ ] Responsable experience: create auth, display QR
 - [ ] Security experience: QR scan + validation result
 - [ ] Entry history view
@@ -460,6 +508,14 @@ works end to end on the server.
   (Ley 1581/2016) and the threat model should exist before real customer data
   arrives. The screen design was written on 2026-08-26; the roadmap still lives
   inside this file under "Next", which is adequate for now.
+- 🔴 **A resident's account cannot be linked to their apartment, and entry
+  permits need it.** The API has no way to list who belongs to an organization,
+  so the person in charge of an apartment is a typed name with no account behind
+  it. Decision 003 says a resident issues permits for their own apartment — that
+  cannot work until this exists. **Resolve before building permits**, not after.
+  Adding it is a normal piece of work, but it is a scope question first: it is
+  the beginning of inviting and managing members, which the API document
+  currently marks as outside the MVP.
 - 🟡 **The screens have not been seen on a real phone.** They are built
   phone-first — one column, large buttons, 44px touch targets — but were only
   viewed at desktop width. Security staff will use this at a gate on a phone, so
@@ -552,6 +608,53 @@ Blocks:         Nothing today. Blocks launching paid plans.
 
 *(When answered, this becomes `docs/decisions/006-...`. The file numbered 005 is
 the visitor phone-number decision, already answered on 2026-08-26.)*
+
+---
+
+### D-006 — Nothing checks that a person actually runs the building they register
+
+```
+Decision:       Before real customers use Zeker, must we verify that whoever
+                creates an organization has any real authority over the
+                building they describe?
+
+Why it matters: Anyone can sign up, name a building, and record that a named
+                person lives in a specific apartment. Nothing checks that they
+                have anything to do with that building. Held together, those
+                records say where a named individual lives.
+
+                Our whole justification for storing "apartment 302 = María
+                García" is that the building administration is our customer
+                and already holds that information legitimately. If the
+                creator is not the administration, that justification is gone
+                and the product becomes a way to find where someone lives.
+
+                Raised by the security review on 2026-08-27, while building
+                the setup screens. Nobody had written it down before.
+
+Option A:       Verify before an organization can be used: a document, a phone
+                call, or manual approval by us for the first customers.
+                → Safest. Slows down every new customer. With fewer than ten
+                  pilot customers, doing it by hand costs almost nothing.
+
+Option B:       Leave open during the pilot, verify before opening signup to
+                the public.
+                → Costs nothing now. Acceptable only while every customer is
+                  someone you personally recruited and know.
+
+Option C:       Do nothing.
+                → Not recommended. This is the kind of thing that ends a
+                  company if it is discovered by a journalist rather than by us.
+
+Recommendation: B now, A before anyone can sign up without you knowing.
+                Concretely: keep signup closed or invitation-only until this is
+                answered properly.
+
+Cost impact:    B = none today · A ≈ 1-3 days depending on how it is checked
+Reversibility:  High
+Waiting since:  2026-08-27
+Blocks:         Nothing today. Blocks opening signup to the public.
+```
 
 ---
 
@@ -668,6 +771,12 @@ Blocker:        Data model + MVP scope locked until this approved
 - **Backend-only database access** — clients denied all Firestore access; isolation enforced in backend code (Decision 004)
 - **A permit holds no phone number** — nothing in the MVP needs application-level encryption (Decision 005)
 - **Frontend: Next.js App Router + Firebase Auth Web SDK** — Spanish only, all user text in one file so a second language is cheap later
+- **No data-fetching library** — decided 2026-08-27. Each screen fetches what it
+  shows and re-reads after a change. A caching library was proposed and refused:
+  its job is to keep data around, and the security rule here is to keep nothing
+  from the previous organization. Revisit if hand-written refreshing gets messy
+- **Nothing about a customer in browser storage** — which organization is being
+  viewed lives in the web address only, so it cannot survive a switch
 - **Freemium Model (Resource-Limited)** — 1 location + 10 interiors free; paid plans unlock more locations/interiors
 - **MVP Scope: Locations Only** — Entry authorization (QR validation). Schools deferred to Phase 2.
 - **Web + PWA** — No mobile native (Phase 2+)
@@ -792,33 +901,34 @@ When you restart, check:
 
 ## Where to pick up
 
-**The setup half of the product works on the server, and for the first time
-someone can see and use part of it in a browser.** What is still missing is the
-half that makes money: issuing an entry permit and checking it at a door.
+**A customer can now be set up end to end in a browser: account, organization,
+site, apartments. What is still missing is the half that makes money — issuing
+an entry permit and checking it at a door.**
 
-The next unit is **entry permits**. The question that was blocking it — the
-visitor's phone number — was answered on 2026-08-26 (Decision 005: not
-collected). Nothing else blocks it.
+**Before permits can be built, one thing must be settled** (see Known Issues):
+a resident's account cannot yet be linked to their apartment, because the API
+has no way to list an organization's members. Decision 003 says a resident
+issues permits for their own apartment, so permits depend on this. It is a
+scope question first — a member list is the start of inviting and managing
+people, which the API document currently puts outside the MVP.
 
-**Entry permits, in order:**
+**Then entry permits, in order:**
 
-1. Create a permit for a visitor: their name, which interior they are coming to,
-   and when it is valid. Generate the QR and a fallback numeric code for when a
-   camera will not read it. Revoke a permit.
+1. Create a permit for a visitor: their name, which apartment they are coming
+   to, and when it is valid. Generate the QR and a fallback numeric code for
+   when a camera will not read it. Revoke a permit.
 2. Validate a scan at the door and record the entry.
 
-What is already settled and needs no new decision:
+Already settled, needing no new decision:
 
-- A permit belongs to exactly one interior (Decision 003). There is no
-  building-wide permit in the MVP.
+- A permit belongs to exactly one interior (Decision 003).
 - A permit stores the visitor's name and nothing else about them (Decision 005).
 - Who may create one: the interior's responsable, and an admin. Security staff
   may not.
 
-**Alternatively:** keep building screens, so each backend piece becomes visible
-as it lands. The account screens exist; creating an organization is the natural
-next one, and it is what a new user hits immediately after signing up — right
-now they see an empty list and a dead end.
+**Also worth doing soon, cheaply:** open the screens on a real phone. They are
+built phone-first but have only ever been seen on a desktop, and security staff
+will use this at a gate.
 
 ---
 
@@ -837,6 +947,17 @@ now they see an empty list and a dead end.
   code becomes Spanish. No English may reach a customer's screen.
 - All user-facing text lives in `frontend/lib/strings.ts`. Text written inside a
   component is a bug, because it is what makes a second language expensive.
+- **Nothing about a customer goes in browser storage.** Which organization is
+  being viewed comes from the web address. A person can be an administrator of
+  one building and a plain member of another, so anything kept across a switch
+  could put one customer's data on another customer's screen.
+- Every organization-scoped screen goes through `OrgGate` in
+  `frontend/components/OrgShell.tsx`. It waits for the sign-in session to be
+  restored before asking the API — skipping that gives a false "your session
+  ended" on any direct page load — and it turns the API's deliberately vague
+  404 into "not found or no access" without revealing which.
+- A refusal that is a plan limit and a refusal that is a permission problem are
+  both 403. Branch on the error **code**, never the status.
 - `docs/architecture/design.md` holds the screen conventions. Two of them look
   cosmetic but are security and must not be softened: sign-in never says which
   half was wrong, and password recovery never reveals whether an account exists.
@@ -846,5 +967,7 @@ now they see an empty list and a dead end.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-26
-**Approval:** ⏳ One card waiting — D-005 (free organizations per person). Not blocking today.
+**Last updated:** 2026-08-27
+**Approval:** ⏳ Two cards waiting — D-005 (free organizations per person) and
+D-006 (verifying that whoever registers a building actually runs it). Neither
+blocks work today; both block opening the product to the public.

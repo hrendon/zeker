@@ -67,9 +67,13 @@ rejected rather than stored.
 
 ### GET /auth/me
 
-The current user's profile and the organizations they belong to. The frontend
-uses this to choose which experience to show (admin, responsable, security) and
-to fill the organization switcher.
+The current user's profile and the organizations they belong to, as **ids and
+roles only**. The frontend uses this to choose which experience to show (admin,
+responsable, security).
+
+> ⚠️ **This endpoint cannot fill an organization switcher on its own.** It
+> returns no organization names. Use `GET /orgs`, which returns the name, plan,
+> limits and current usage for each organization the caller belongs to.
 
 **Response (200):**
 ```json
@@ -610,6 +614,17 @@ Removes an interior and frees its slot against the plan. **Administrators only.*
 ---
 
 ## Authorization Endpoints
+
+> ⛔ **NOT BUILT. This section is a specification, not a description.**
+> Nothing below this line exists in the backend — `backend/src/routes/index.ts`
+> mounts only `/health`, `/auth` and `/orgs` (which mounts locations and
+> interiors beneath it). The Authorization, Validation and Access Events
+> sections that follow are the agreed contract for work not yet started. Do not
+> build a frontend against them.
+>
+> One part is already settled and differs from an earlier draft: a permit
+> carries the visitor's name and **no phone number**
+> (`../decisions/005-no-visitor-phone-number.md`).
 
 ### POST /orgs/{orgId}/authorizations
 
