@@ -3,6 +3,12 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-27
+**Session closed:** 2026-08-27. Two units built (account screens, setup
+screens), three commits, two decisions answered by the Founder and one recorded
+as Decision 005, one new risk raised as D-006. Documents audited against the
+code at close: three documented rules were checked in the code and hold, and two
+missing documents that two roles had flagged are now on the map.
+
 **Last verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
 
 ---
@@ -27,6 +33,11 @@ Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
 Critical Risk:   None open
 Next:            Entry permits (QR), then validating a scan at the door
 ```
+
+**Found at session close (2026-08-27): a second program was listening on the
+API's port** (a WSL forwarder on 3001), answering some requests instead of our
+backend and producing confusing failures. Not a fault in our code. How to spot
+it and how to work around it is written in the developer guide.
 
 **Latest Update (2026-08-27): a building administrator can now set up their
 building from start to finish, in a browser.** Create an organization, add a

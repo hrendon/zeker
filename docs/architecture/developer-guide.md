@@ -216,6 +216,25 @@ cd backend  && npm run dev   # port 3001
 cd frontend && npm run dev   # port 3000
 ```
 
+**If the API answers strangely, check that it is actually ours.** On 2026-08-27
+a WSL port forwarder (`wslrelay.exe`) was also listening on 3001 and intercepted
+requests: `GET /health` returned a plausible `{"status":"ok"}` while
+`/health/ready` returned an HTML 404. Two signs it is not the Zeker backend:
+
+* it sets an `X-Powered-By: Express` header — ours removes that header
+* a missing route returns an HTML page — ours returns JSON with a `request_id`
+
+To work around it, run both halves on a different port:
+
+```bash
+cd backend  && PORT=3002 CORS_ORIGINS=http://localhost:3000 npm run dev
+cd frontend && NEXT_PUBLIC_API_URL=http://localhost:3002 npm run dev
+```
+
+Environment variables set this way take precedence over `.env.local`, so nothing
+needs editing. To see what holds a port on Windows:
+`Get-NetTCPConnection -LocalPort 3001 -State Listen`.
+
 ### How the frontend is laid out
 
 ```

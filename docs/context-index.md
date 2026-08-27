@@ -12,7 +12,9 @@ Map of authoritative sources for project knowledge.
 | Technical decisions | `architecture/architecture.md` | Stack, deployment, multi-tenant design | Software Architect |
 | Data model | `architecture/data-model.md` | Firestore collections, schema, constraints | Software Architect |
 | APIs | `architecture/api.md` | Endpoints, request/response, authentication | Software Architect |
-| Design (UX/UI) | `architecture/design.md` | Layout, language, components, accessibility. Covers the sign-in screens; the three experiences are still to be designed | UI/UX Designer |
+| Design (UX/UI) | `architecture/design.md` | Layout, language, components, accessibility, and the setup flow. The responsable and security experiences are still to be designed | UI/UX Designer |
+| Metrics | ⛔ not written | Metric definitions and what each one actually measures | Data Analyst |
+| Customer evidence | ⛔ not written | What was assumed, what was tested, what was learned | Customer Discovery & Validation Advisor |
 | Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code | Backend Developer |
 | **Security** | | | |
 | Data minimization | `security/data-minimization.md` | What we store, what we never store, minimization rules | Security Engineer |
@@ -74,11 +76,14 @@ keeping one customer's data away from another's.
 Named above and referenced elsewhere, but not written. Listed here so nobody
 looks for them:
 
-| Document | Needed by |
-|----------|-----------|
-| `product/roadmap.md` | Not urgent — `PROJECT_STATE.md` carries the ordering |
-| `architecture/design.md` | Before any screen is built |
-| `security/threat-model.md` | Before launch |
-| `security/privacy.md` | Before launch — legally required (Ley 1581/2016) |
+| Document | Owner | Needed by |
+|----------|-------|-----------|
+| `product/roadmap.md` | Product Owner | Not urgent — `PROJECT_STATE.md` carries the ordering |
+| `product/customer-discovery.md` | Customer Discovery & Validation Advisor | **Now.** The hypothesis and evidence log. Nine days of building, zero customer conversations, and nowhere to record what is learned when they start |
+| `architecture/analytics.md` | Data Analyst | When the first real users arrive. Metric definitions, so "organizations created" is not mistaken for a sign of anything |
+| `security/threat-model.md` | Security Engineer / CISO | Before real customer data arrives |
+| `security/privacy.md` | Security Engineer / CISO (with legal review) | Before launch — legally required (Ley 1581/2016) |
 
-**Last updated:** 2026-08-25
+`architecture/design.md` was written on 2026-08-26 and is no longer missing.
+
+**Last updated:** 2026-08-27
