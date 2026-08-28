@@ -94,7 +94,13 @@ export function isAdmin(org: Org | null): boolean {
   return org?.role === 'admin'
 }
 
-export function OrgHeader({ org, current }: { org: Org; current: 'locations' | 'interiors' }) {
+export function OrgHeader({
+  org,
+  current,
+}: {
+  org: Org
+  current: 'locations' | 'interiors' | 'members'
+}) {
   const tabs = [
     { key: 'locations' as const, label: es.nav.locations, href: `/organizaciones/${org.id}/sedes` },
     {
@@ -102,6 +108,7 @@ export function OrgHeader({ org, current }: { org: Org; current: 'locations' | '
       label: es.nav.interiors,
       href: `/organizaciones/${org.id}/interiores`,
     },
+    { key: 'members' as const, label: es.nav.members, href: `/organizaciones/${org.id}/personas` },
   ]
 
   return (

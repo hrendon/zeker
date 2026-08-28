@@ -12,7 +12,15 @@ import {
   UsageMeter,
 } from '@/components/ui'
 import { ApiError, toSpanish } from '@/lib/errors'
-import { interiorsApi, locationsApi, type Interior, type Location, type Org } from '@/lib/api'
+import {
+  interiorsApi,
+  locationsApi,
+  membersApi,
+  type Interior,
+  type Location,
+  type Member,
+  type Org,
+} from '@/lib/api'
 import { checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
 
@@ -21,9 +29,17 @@ import { es } from '@/lib/strings'
  * in charge of it.
  *
  * The free plan allows ten of these across the whole organization, not ten per
- * site. Only the person's name is collected — no phone, no email, no document
- * number. That restraint is deliberate: "apartment 302 is Juan García" already
- * says where a named person lives, and anything more would say far too much.
+ * site.
+ *
+ * The person in charge is chosen from the people already in the organization,
+ * never typed (Decision 006). Every interior always has one, because an
+ * interior with nobody designated has nobody to issue its permits. When the
+ * resident's email is not known yet, the administrator picks themselves and
+ * hands it over later.
+ *
+ * Nothing extra is stored about that person here — no phone, no email, no
+ * document number. "Apartment 302 is Juan García" already says where a named
+ * person lives, and anything more would say far too much.
  */
 export default function InteriorsPage() {
   const orgId = useOrgId()
@@ -34,13 +50,17 @@ export default function InteriorsPage() {
   )
 }
 
-type Pending = { kind: 'retire' | 'reactivate' | 'delete'; interior: Interior } | null
+type Pending = {
+  kind: 'retire' | 'reactivate' | 'delete' | 'handover'
+  interior: Interior
+} | null
 
 function InteriorsScreen({ org }: { org: Org }) {
   const admin = isAdmin(org)
 
   const [interiors, setInteriors] = useState<Interior[] | null>(null)
   const [locations, setLocations] = useState<Location[] | null>(null)
+  const [members, setMembers] = useState<Member[] | null>(null)
   const [usage, setUsage] = useState({
     used: org.counts.interiors,
     limit: org.limits.max_interiors,
@@ -51,7 +71,7 @@ function InteriorsScreen({ org }: { org: Org }) {
   const [locationId, setLocationId] = useState('')
   const [number, setNumber] = useState('')
   const [name, setName] = useState('')
-  const [responsable, setResponsable] = useState('')
+  const [responsableId, setResponsableId] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -60,20 +80,29 @@ function InteriorsScreen({ org }: { org: Org }) {
   const [pending, setPending] = useState<Pending>(null)
   const [pendingBusy, setPendingBusy] = useState(false)
   const [pendingError, setPendingError] = useState<string | null>(null)
+  /** Who the interior is being handed to, while that dialog is open. */
+  const [handoverId, setHandoverId] = useState('')
 
   const load = useCallback(() => {
     setLoadError(null)
-    Promise.all([interiorsApi.list(org.id), locationsApi.list(org.id)])
-      .then(([interiorResult, locationResult]) => {
+    Promise.all([
+      interiorsApi.list(org.id),
+      locationsApi.list(org.id),
+      // Only an administrator may list the people, and only an administrator
+      // can change an interior. A plain member reads the list without it.
+      isAdmin(org) ? membersApi.list(org.id) : Promise.resolve({ members: [] }),
+    ])
+      .then(([interiorResult, locationResult, memberResult]) => {
         setInteriors(interiorResult.interiors)
         setUsage({
           used: interiorResult.usage.interiors,
           limit: interiorResult.usage.max_interiors,
         })
         setLocations(locationResult.locations)
+        setMembers(memberResult.members)
       })
       .catch((error) => setLoadError(toSpanish(error)))
-  }, [org.id])
+  }, [org])
 
   useEffect(load, [load])
 
@@ -94,7 +123,7 @@ function InteriorsScreen({ org }: { org: Org }) {
     const errors = {
       locationId: chosen ? undefined : es.validation.locationRequired,
       number: checkRequiredText(number, es.validation.numberRequired, 40),
-      responsable: checkRequiredText(responsable, es.validation.responsableRequired, 120),
+      responsable: responsableId ? undefined : es.validation.responsableRequired,
     }
     setFieldErrors(errors)
     if (Object.values(errors).some(Boolean)) return
@@ -106,11 +135,11 @@ function InteriorsScreen({ org }: { org: Org }) {
         location_id: chosen,
         number,
         name,
-        responsable_name: responsable,
+        responsable_user_id: responsableId,
       })
       setNumber('')
       setName('')
-      setResponsable('')
+      setResponsableId('')
       setShowForm(false)
       // Re-read rather than counting locally: the limit is enforced inside a
       // transaction, so the server is the only reliable source of the count.
@@ -132,6 +161,10 @@ function InteriorsScreen({ org }: { org: Org }) {
     try {
       if (pending.kind === 'delete') {
         await interiorsApi.remove(org.id, pending.interior.id)
+      } else if (pending.kind === 'handover') {
+        await interiorsApi.update(org.id, pending.interior.id, {
+          responsable_user_id: handoverId,
+        })
       } else {
         await interiorsApi.update(org.id, pending.interior.id, {
           enabled: pending.kind === 'reactivate',
@@ -223,14 +256,28 @@ function InteriorsScreen({ org }: { org: Org }) {
                 <ListRow
                   key={interior.id}
                   title={interior.name ? `${interior.number} · ${interior.name}` : interior.number}
-                  subtitle={`${es.interiors.responsable}: ${interior.responsable_name} · ${locationName(
-                    interior.location_id,
-                  )}`}
+                  subtitle={`${es.interiors.responsable}: ${
+                    interior.responsable_name || es.interiors.noResponsable
+                  } · ${locationName(interior.location_id)}`}
                   badge={interior.enabled ? undefined : es.interiors.retired}
                   dimmed={!interior.enabled}
                   actions={
                     admin
                       ? [
+                          {
+                            label: es.interiors.handOver,
+                            onSelect: () => {
+                              // Falling back to the first member keeps the
+                              // value in step with what the list shows. A
+                              // select whose value matches no option still
+                              // displays the first one, and saving that
+                              // mismatch sends nothing at all.
+                              setHandoverId(
+                                interior.responsable_user_id || (members?.[0]?.user_id ?? ''),
+                              )
+                              setPending({ kind: 'handover', interior })
+                            },
+                          },
                           interior.enabled
                             ? {
                                 label: es.interiors.retire,
@@ -254,7 +301,18 @@ function InteriorsScreen({ org }: { org: Org }) {
           )}
         </div>
 
-        {admin && interiors && usableLocations.length > 0 && !full ? (
+        {admin && interiors && usableLocations.length > 0 && !full && members?.length === 0 ? (
+          <div className="mt-5 border-t border-[var(--color-line)]/60 pt-5">
+            <p className="text-sm text-[var(--color-ink-soft)]">{es.interiors.needsMember}</p>
+            <p className="mt-2">
+              <TextLink href={`/organizaciones/${org.id}/personas`}>
+                {es.interiors.goToMembers}
+              </TextLink>
+            </p>
+          </div>
+        ) : null}
+
+        {admin && interiors && usableLocations.length > 0 && !full && members?.length ? (
           <div className="mt-5 border-t border-[var(--color-line)]/60 pt-5">
             {showForm ? (
               <form onSubmit={handleAdd} noValidate className="space-y-4">
@@ -302,18 +360,46 @@ function InteriorsScreen({ org }: { org: Org }) {
                   onChange={(event) => setName(event.target.value)}
                 />
 
-                <Field
-                  label={es.interiors.responsable}
-                  placeholder={es.interiors.responsablePlaceholder}
-                  hint={es.interiors.responsableHint}
-                  // A shared front-desk computer must not build a browsing
-                  // history of residents' names in its autofill suggestions.
-                  autoComplete="off"
-                  value={responsable}
-                  disabled={adding}
-                  error={fieldErrors.responsable}
-                  onChange={(event) => setResponsable(event.target.value)}
-                />
+                <div>
+                  <label
+                    htmlFor="interior-responsable"
+                    className="block text-sm font-medium text-[var(--color-ink)]"
+                  >
+                    {es.interiors.responsable}
+                  </label>
+                  <select
+                    id="interior-responsable"
+                    value={responsableId}
+                    disabled={adding}
+                    aria-invalid={fieldErrors.responsable ? true : undefined}
+                    aria-describedby="interior-responsable-hint"
+                    onChange={(event) => setResponsableId(event.target.value)}
+                    className="mt-1.5 block h-11 w-full rounded-lg border border-[var(--color-line)] bg-white px-3 text-base disabled:bg-[var(--color-canvas)]"
+                  >
+                    <option value="">{es.interiors.responsableNobody}</option>
+                    {(members ?? []).map((member) => (
+                      <option key={member.user_id} value={member.user_id}>
+                        {`${member.first_name} ${member.last_name}`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                  <p
+                    id="interior-responsable-hint"
+                    className="mt-1.5 text-sm text-[var(--color-ink-faint)]"
+                  >
+                    {es.interiors.responsableHint}
+                  </p>
+                  {fieldErrors.responsable ? (
+                    <p role="alert" className="mt-1.5 text-sm text-[var(--color-danger)]">
+                      {fieldErrors.responsable}
+                    </p>
+                  ) : null}
+                  <p className="mt-2">
+                    <TextLink href={`/organizaciones/${org.id}/personas`}>
+                      {es.interiors.goToMembers}
+                    </TextLink>
+                  </p>
+                </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row-reverse">
                   <SubmitButton busy={adding}>
@@ -351,23 +437,29 @@ function InteriorsScreen({ org }: { org: Org }) {
         title={
           pending?.kind === 'delete'
             ? es.interiors.deleteConfirmTitle
-            : pending?.kind === 'reactivate'
-              ? es.interiors.reactivateConfirmTitle
-              : es.interiors.retireConfirmTitle
+            : pending?.kind === 'handover'
+              ? es.interiors.handOverTitle
+              : pending?.kind === 'reactivate'
+                ? es.interiors.reactivateConfirmTitle
+                : es.interiors.retireConfirmTitle
         }
         body={
           pending?.kind === 'delete'
             ? es.interiors.deleteConfirmBody
-            : pending?.kind === 'reactivate'
-              ? es.interiors.reactivateConfirmBody
-              : es.interiors.retireConfirmBody
+            : pending?.kind === 'handover'
+              ? es.interiors.handOverBody
+              : pending?.kind === 'reactivate'
+                ? es.interiors.reactivateConfirmBody
+                : es.interiors.retireConfirmBody
         }
         confirmLabel={
           pending?.kind === 'delete'
             ? es.actions.delete
-            : pending?.kind === 'reactivate'
-              ? es.interiors.reactivate
-              : es.interiors.retire
+            : pending?.kind === 'handover'
+              ? es.actions.save
+              : pending?.kind === 'reactivate'
+                ? es.interiors.reactivate
+                : es.interiors.retire
         }
         busyLabel={pending?.kind === 'delete' ? es.actions.deleting : es.actions.saving}
         danger={pending?.kind === 'delete'}
@@ -378,7 +470,31 @@ function InteriorsScreen({ org }: { org: Org }) {
           setPending(null)
           setPendingError(null)
         }}
-      />
+      >
+        {pending?.kind === 'handover' ? (
+          <div>
+            <label
+              htmlFor="handover-responsable"
+              className="block text-sm font-medium text-[var(--color-ink)]"
+            >
+              {es.interiors.responsable}
+            </label>
+            <select
+              id="handover-responsable"
+              value={handoverId}
+              disabled={pendingBusy}
+              onChange={(event) => setHandoverId(event.target.value)}
+              className="mt-1.5 block h-11 w-full rounded-lg border border-[var(--color-line)] bg-white px-3 text-base disabled:bg-[var(--color-canvas)]"
+            >
+              {(members ?? []).map((member) => (
+                <option key={member.user_id} value={member.user_id}>
+                  {`${member.first_name} ${member.last_name}`.trim()}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+      </ConfirmDialog>
     </>
   )
 }

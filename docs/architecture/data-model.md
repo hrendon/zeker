@@ -38,10 +38,14 @@ Organization (tenant) data.
 >
 > - **No `admin_users` array, and no `users/` subcollection.** Membership lives
 >   in exactly one place: `users/{uid}.orgs[]`. Two copies of "who belongs here"
->   drift apart, and nothing in the MVP lists an organization's members — there
->   is no invite or member-management user story yet. Adding one later is an
->   additive change. Access checks read the caller's own profile, which is one
+>   drift apart. Access checks read the caller's own profile, which is one
 >   document read and cannot be stale relative to itself.
+>
+>   Updated 2026-08-28 (Decision 006): an organization's members **are** now
+>   listed and managed, by `GET/POST/DELETE /orgs/{orgId}/members`. That did not
+>   require a second copy of the fact — the list is a query for the membership
+>   objects inside `users/{uid}.orgs[]`, so this remains the only place it
+>   lives.
 >
 > - **No `metadata.address` and no `metadata.phone`.** The data-minimization
 >   policy forbids a detailed address. For a `residence` customer, the building
@@ -176,8 +180,7 @@ interiors of one location stays a plain equality filter.
   "location_id": "loc_entrance_1",     // required
   "number": "302",                     // required; unique within its location
   "name": "Apartamento 302",           // optional label
-  "responsable_name": "María García",  // required — shown to security personnel
-  "responsable_user_id": "user_xyz",   // null until that person has an account
+  "responsable_user_id": "user_xyz",   // required — a member of this org
   "enabled": true,
   "created_by": "user1",
   "created_at": 2026-08-25T10:00:00Z,
@@ -191,7 +194,14 @@ interiors of one location stays a plain equality filter.
   claim apartment 302
 - `location_id` cannot be changed after creation: moving an interior to another
   building would carry its permits with it
-- `responsable_user_id` must be a member of the organization
+- `responsable_user_id` is **required** and must be a member of the
+  organization (Decision 006). An interior always has a designated person,
+  because an interior with nobody designated has nobody to issue its permits.
+  It cannot be cleared — handing an interior over is choosing a different
+  member, never nobody.
+- **No `responsable_name` field.** The name shown comes from that person's
+  account, so correcting the spelling of a name corrects it everywhere
+  (Decision 006). It is returned by the API, never stored here.
 - Cannot delete while an authorization for it is still active
 - Total interiors limited by `orgs/{orgId}.limits.max_interiors` (10 on the
   free plan), counted in `orgs/{orgId}.counts.interiors`

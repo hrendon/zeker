@@ -2,14 +2,16 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-28
 **Session closed:** 2026-08-27. Two units built (account screens, setup
 screens), three commits, two decisions answered by the Founder and one recorded
 as Decision 005, one new risk raised as D-006. Documents audited against the
 code at close: three documented rules were checked in the code and hold, and two
 missing documents that two roles had flagged are now on the map.
 
-**Last verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
+**Last verified:** 2026-08-28 — backend typecheck clean, 122/122 tests pass; frontend typecheck clean, 22/22 tests pass, production build clean; the whole people flow driven in a real browser against live Firebase and live Firestore: a resident's account created by the administrator, the "set your password" email accepted by Firebase, the member list showing her with the email Firebase holds, an apartment handed over to her, and removing her correctly refused while she was still in charge of it.
+
+**Previously verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
 
 ---
 
@@ -25,11 +27,12 @@ missing documents that two roles had flagged are now on the map.
 
 ```
 Completed:       Setup half of the product on the server (sign-in,
-                 organizations, locations, interiors + limits) and the
-                 account screens people actually see
-                 (102 backend tests + 9 frontend tests pass)
-In Progress:     Week 1 — entry permits next
-Blocked:         0 to continue · 1 decision waiting on Founder (D-005)
+                 organizations, locations, interiors + limits, people),
+                 and the screens people actually see
+                 (122 backend tests + 22 frontend tests pass)
+In Progress:     Week 1 — entry permits next, now unblocked
+Blocked:         0 · 2 decisions waiting on Founder (D-005, D-006),
+                 neither blocking today
 Critical Risk:   None open
 Next:            Entry permits (QR), then validating a scan at the door
 ```
@@ -39,7 +42,47 @@ API's port** (a WSL forwarder on 3001), answering some requests instead of our
 backend and producing confusing failures. Not a fault in our code. How to spot
 it and how to work around it is written in the developer guide.
 
-**Latest Update (2026-08-27): a building administrator can now set up their
+**Latest Update (2026-08-28): a resident can now have a real account, and the
+building administrator creates it.** This was the last thing standing between
+the product and the part that makes money — entry permits. Your decision this
+session, recorded as Decision 006.
+
+- **The administrator adds a person by name, email and role**, and that person
+  receives an email to set their own password. Nothing about the password ever
+  touches our server.
+- **The email problem that made this look expensive did not exist.** Firebase
+  sends that email itself, and has done since the password-recovery screen was
+  built. Nothing to buy, build or operate. What was estimated at two to three
+  days took one session.
+- **Nothing new is stored about a resident.** The email lives in Firebase, which
+  already holds every user's email. Our database keeps their name and which
+  apartment they are in charge of — the same two things it already kept for you.
+- **Your rule is enforced: every apartment always has a designated person.** The
+  typed name is gone; the administrator picks a real person. When the resident's
+  email is not known yet, the administrator can take the apartment themselves
+  and hand it over later in one step.
+- **Security guards arrive by the same door.** The same screen adds them with a
+  different role, so their screens will not need this built a second time.
+- **A person can be removed**, which a product about physical access must
+  allow. Removal is refused while they are still in charge of an apartment, and
+  the message says what to do about it. Their account is never deleted — they
+  may belong to another building.
+- **An administrator cannot use this screen to find out who else uses Zeker.**
+  The answer is identical whether or not that email already had an account. It
+  is the same deliberate unhelpfulness as the sign-in and recovery screens.
+- ⚠️ **One bug found by using it, not by testing it.** Handing over an apartment
+  that had no account yet showed a person in the list but saved nothing, and
+  refused with a message that explained nothing. Fixed: the choice now matches
+  what the screen shows, and an apartment with nobody attached says
+  "sin asignar" instead of leaving a blank.
+- ⚠️ **A test resident now exists in Firebase**
+  (`residente.prueba@zeker-test.com`) from verifying the flow, and apartment
+  302 in "Conjunto Los Cedros" is assigned to her. The domain does not exist,
+  so no real person was emailed. Delete both whenever you like.
+- Verified: 122 backend tests, 22 frontend tests, typecheck and production build
+  all clean, plus the whole flow driven by hand in a browser.
+
+**Previous Update (2026-08-27): a building administrator can now set up their
 building from start to finish, in a browser.** Create an organization, add a
 site, add apartments with the person in charge of each, and see how much of the
 free plan is used. The dead end after signing up is gone.
@@ -386,6 +429,8 @@ works end to end on the server.
 - [x] Org endpoints + multi-org support + membership check + 6 isolation tests
 - [x] Location endpoints + plan limit enforced in a transaction (Decision 003)
 - [x] Interior endpoints + global 10-interior quota enforced in a transaction (403)
+- [x] Member endpoints — add a person (account created), list, remove
+      (Decision 006) + 4 isolation tests
 - [ ] Authorization creation + QR/numeric code generation
 - [ ] Validation endpoint (scan QR, check validity, log event)
 - [ ] Unit + integration tests for all critical flows
@@ -399,6 +444,8 @@ works end to end on the server.
       a library for it would be weight with no job yet
 - [x] Signup/signin/password-reset pages connected to backend
 - [x] Admin dashboard: org switcher, location CRUD, interior CRUD, plan usage
+- [x] People screen: add a person with a role, list them, remove them, and
+      hand an apartment over to someone else
 - [ ] Responsable experience: create auth, display QR
 - [ ] Security experience: QR scan + validation result
 - [ ] Entry history view
@@ -519,14 +566,14 @@ works end to end on the server.
   (Ley 1581/2016) and the threat model should exist before real customer data
   arrives. The screen design was written on 2026-08-26; the roadmap still lives
   inside this file under "Next", which is adequate for now.
-- 🔴 **A resident's account cannot be linked to their apartment, and entry
-  permits need it.** The API has no way to list who belongs to an organization,
-  so the person in charge of an apartment is a typed name with no account behind
-  it. Decision 003 says a resident issues permits for their own apartment — that
-  cannot work until this exists. **Resolve before building permits**, not after.
-  Adding it is a normal piece of work, but it is a scope question first: it is
-  the beginning of inviting and managing members, which the API document
-  currently marks as outside the MVP.
+- ✅ ~~A resident's account cannot be linked to their apartment~~ — closed
+  2026-08-28 by Decision 006. An administrator creates the person's account,
+  and every apartment always has one designated. Entry permits are unblocked.
+- 🟡 **Nothing limits how many accounts one organization may create.** The free
+  plan caps apartments at 10, which bounds how many responsables a free
+  customer needs — but not how many people they may add. No customer can abuse
+  this today because there are no customers; it belongs with D-005, which asks
+  the same kind of question about free organizations.
 - 🟡 **The screens have not been seen on a real phone.** They are built
   phone-first — one column, large buttons, 44px touch targets — but were only
   viewed at desktop width. Security staff will use this at a gate on a phone, so
@@ -667,9 +714,32 @@ Waiting since:  2026-08-27
 Blocks:         Nothing today. Blocks opening signup to the public.
 ```
 
----
-
 ## Approved Decisions
+
+### Decision 006: A responsable is an account, created by the administrator ✅ APPROVED (2026-08-28)
+
+The person in charge of an apartment is a real account, not typed text, and only
+a building administrator creates it. Your call, made this session. It answers
+what was raised as D-007 and unblocks entry permits.
+
+- Every apartment always has a designated person — your rule. An apartment with
+  nobody designated has nobody to issue its permits.
+- When the resident's email is not known yet, the administrator designates
+  themselves and hands the apartment over later. Setting up a large building is
+  never blocked.
+- One screen adds people, with a role: responsable of an apartment, or security
+  staff at the gate. Guards need accounts by the same route within days.
+- The name shown comes from the account. The typed name disappears.
+- **Nothing new is stored about a resident.** The email goes to Firebase, which
+  already holds every user's email. Our database keeps the account link and the
+  name — the same two things it keeps for an administrator today.
+- The email worry in the original card was wrong: Firebase sends the
+  "set your password" email itself, and has done since the password-recovery
+  screen was built. Nothing to buy, build or operate.
+
+Full record: `docs/decisions/006-members-and-responsable-accounts.md`
+
+---
 
 ### Decision 005: A permit does not collect the visitor's phone number ✅ APPROVED (2026-08-26)
 
@@ -916,14 +986,11 @@ When you restart, check:
 site, apartments. What is still missing is the half that makes money — issuing
 an entry permit and checking it at a door.**
 
-**Before permits can be built, one thing must be settled** (see Known Issues):
-a resident's account cannot yet be linked to their apartment, because the API
-has no way to list an organization's members. Decision 003 says a resident
-issues permits for their own apartment, so permits depend on this. It is a
-scope question first — a member list is the start of inviting and managing
-people, which the API document currently puts outside the MVP.
+**Nothing is blocking entry permits any more.** A resident can have an account,
+created by the administrator, and every apartment has one designated person
+(Decision 006).
 
-**Then entry permits, in order:**
+**Entry permits, in order:**
 
 1. Create a permit for a visitor: their name, which apartment they are coming
    to, and when it is valid. Generate the QR and a fallback numeric code for
@@ -935,7 +1002,8 @@ Already settled, needing no new decision:
 - A permit belongs to exactly one interior (Decision 003).
 - A permit stores the visitor's name and nothing else about them (Decision 005).
 - Who may create one: the interior's responsable, and an admin. Security staff
-  may not.
+  may not. Both now exist as real accounts (Decision 006), so this is
+  buildable as written.
 
 **Also worth doing soon, cheaply:** open the screens on a real phone. They are
 built phone-first but have only ever been seen on a desktop, and security staff
@@ -962,6 +1030,13 @@ will use this at a gate.
   being viewed comes from the web address. A person can be an administrator of
   one building and a plain member of another, so anything kept across a switch
   could put one customer's data on another customer's screen.
+- Since Decision 006, an interior's responsable is **an account, never typed
+  text**, and the name shown comes from that account. `displayNames()` in
+  `backend/src/lib/users.ts` resolves a whole list in one read; do not
+  denormalize the name back onto the interior.
+- Adding a person answers the same way whether or not the account already
+  existed. That is deliberate anti-enumeration, not an oversight — do not
+  "improve" it by reporting which happened.
 - Every organization-scoped screen goes through `OrgGate` in
   `frontend/components/OrgShell.tsx`. It waits for the sign-in session to be
   restored before asking the API — skipping that gives a false "your session
@@ -978,7 +1053,7 @@ will use this at a gate.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-28
 **Approval:** ⏳ Two cards waiting — D-005 (free organizations per person) and
 D-006 (verifying that whoever registers a building actually runs it). Neither
 blocks work today; both block opening the product to the public.

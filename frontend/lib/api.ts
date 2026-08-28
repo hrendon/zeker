@@ -69,14 +69,28 @@ export interface Interior {
   location_id: string
   number: string
   name: string
-  responsable_name: string
-  /** Link to a member account. Not settable yet — see docs/architecture/api.md. */
+  /** Required since Decision 006: always a member of this organization. */
   responsable_user_id: string | null
+  /** Read-only. Comes from the responsable's account, not stored on the interior. */
+  responsable_name: string
   enabled: boolean
   created_by: string
   created_at: string
   updated_at: string
 }
+
+/** A person who belongs to one organization (Decision 006). */
+export interface Member {
+  user_id: string
+  first_name: string
+  last_name: string
+  /** Held by Firebase, not by our database. Null when Firebase has none. */
+  email: string | null
+  role: OrgRole
+}
+
+/** The roles an administrator may hand out. `admin` is not one of them. */
+export type AssignableRole = 'responsable' | 'security'
 
 export interface UserProfile {
   user_id: string
@@ -239,6 +253,31 @@ export const locationsApi = {
     }),
 }
 
+export const membersApi = {
+  /** Everyone in this organization. Administrators only. */
+  list: (orgId: string) => request<{ members: Member[] }>(`/orgs/${orgId}/members`),
+
+  /**
+   * Adds a person, creating their Firebase account if they have none.
+   *
+   * The API sends no email. The caller asks Firebase to send the person a
+   * "set your password" email afterwards — see `sendPasswordSetupEmail`.
+   *
+   * The answer is the same whether or not the account already existed, so
+   * nothing here reveals which email addresses belong to Zeker users.
+   */
+  add: (
+    orgId: string,
+    input: { email: string; first_name: string; last_name: string; role: AssignableRole },
+  ) => request<Member>(`/orgs/${orgId}/members`, { method: 'POST', body: omitBlank(input) }),
+
+  /** Removes the membership. The person's account itself is left alone. */
+  remove: (orgId: string, userId: string) =>
+    request<{ user_id: string; removed: true }>(`/orgs/${orgId}/members/${userId}`, {
+      method: 'DELETE',
+    }),
+}
+
 export const interiorsApi = {
   list: (orgId: string, locationId?: string) =>
     request<{ interiors: Interior[]; usage: { interiors: number; max_interiors: number } }>(
@@ -249,7 +288,13 @@ export const interiorsApi = {
 
   create: (
     orgId: string,
-    input: { location_id: string; number: string; name?: string; responsable_name: string },
+    input: {
+      location_id: string
+      number: string
+      name?: string
+      /** Required: an interior always has a designated person (Decision 006). */
+      responsable_user_id: string
+    },
   ) =>
     request<Interior & { usage: { interiors: number } }>(`/orgs/${orgId}/interiors`, {
       method: 'POST',
@@ -262,7 +307,8 @@ export const interiorsApi = {
     input: Partial<{
       number: string
       name: string
-      responsable_name: string
+      /** Handing an interior over. It can be changed but never cleared. */
+      responsable_user_id: string
       enabled: boolean
     }>,
   ) =>

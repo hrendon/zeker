@@ -216,6 +216,13 @@ export class FakeCollection {
   }
 }
 
+/** Compares two stored objects by content, as Firestore does — not by key order. */
+function stableKey(value: unknown): string {
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value)
+  const entries = Object.entries(value as Doc).sort(([a], [b]) => a.localeCompare(b))
+  return JSON.stringify(entries)
+}
+
 export class FakeQuery {
   private rows: Array<{ id: string; path: string; data: Doc }>
 
@@ -228,9 +235,21 @@ export class FakeQuery {
   }
 
   where(field: string, op: string, value: unknown): FakeQuery {
-    if (op !== '==') throw new Error(`FakeFirestore supports "==" only, got "${op}"`)
-    this.rows = this.rows.filter((row) => row.data[field] === value)
-    return this
+    if (op === '==') {
+      this.rows = this.rows.filter((row) => row.data[field] === value)
+      return this
+    }
+    // Membership is stored as objects inside users/{uid}.orgs[], so listing an
+    // organization's members matches on any of the {org_id, role} shapes.
+    if (op === 'array-contains-any') {
+      const wanted = (value as unknown[]).map(stableKey)
+      this.rows = this.rows.filter((row) => {
+        const held = row.data[field]
+        return Array.isArray(held) && held.some((item) => wanted.includes(stableKey(item)))
+      })
+      return this
+    }
+    throw new Error(`FakeFirestore does not support "${op}"`)
   }
 
   orderBy(field: string): FakeQuery {

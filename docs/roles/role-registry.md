@@ -25,6 +25,7 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ Interiors as a real level; plan-based limits (2026-08-25, Decision 003)
 - ✅ Clients denied direct database access (2026-08-25, Decision 004)
 - ✅ A permit does not collect the visitor's phone number (2026-08-26, Decision 005)
+- ✅ A responsable is an account created by the administrator (2026-08-28, Decision 006)
 - ✅ Build the sign-in screens before the permit endpoints (2026-08-26)
 - ✅ Build the setup screens now; make customer calls in parallel (2026-08-27)
 - ✅ No data-fetching library — keep it simple (2026-08-27)
@@ -35,6 +36,7 @@ These roles are held by humans and carry final decision authority. AI never simu
 - D-006 — whether we verify that whoever registers a building actually runs it.
   Raised by the security review on 2026-08-27. Not blocking today; blocks
   opening signup to the public.
+
 
 ---
 

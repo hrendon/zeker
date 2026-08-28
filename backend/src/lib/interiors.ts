@@ -13,9 +13,15 @@ import { orgRef } from './orgs.js'
  * single location is still a plain equality filter.
  *
  * The `responsable_user_id` link is what lets a resident sign in and issue
- * permits for their own interior (US-003). It is null until that person has an
- * account in the organization; the name is always present so security personnel
- * can see who is in charge even before then.
+ * permits for their own interior (US-003). Since Decision 006 it is required:
+ * an interior always has a designated person with a real account, because an
+ * interior with nobody designated has nobody to issue its permits. When the
+ * resident's email is not known yet, the administrator designates themselves.
+ *
+ * The responsable's **name is not stored here**. It comes from their account,
+ * so there is one source of truth and correcting the spelling of a name
+ * corrects it everywhere (Decision 006). `toInteriorResponse` takes the
+ * resolved name; `displayNames` in `users.ts` resolves a whole list in one read.
  *
  * Not stored: no address, no phone, no email for the responsable. The
  * organization already knows where it is, and contacting a responsable goes
@@ -30,9 +36,8 @@ export interface InteriorDocument {
   number: string
   /** Optional label, e.g. "Apartamento 302". */
   name: string
-  responsable_name: string
-  /** Null until the responsable has an account in this organization. */
-  responsable_user_id: string | null
+  /** Required since Decision 006, and a member of this organization. */
+  responsable_user_id: string
   enabled: boolean
   created_by: string
   created_at?: unknown
@@ -57,23 +62,27 @@ export interface InteriorResponse {
   location_id: string
   number: string
   name: string
-  responsable_name: string
   responsable_user_id: string | null
+  /** Resolved from the responsable's account, not stored on the interior. */
+  responsable_name: string
   enabled: boolean
   created_by: string
   created_at: string | null
   updated_at: string | null
 }
 
-export function toInteriorResponse(stored: Partial<InteriorDocument>): InteriorResponse {
+export function toInteriorResponse(
+  stored: Partial<InteriorDocument>,
+  responsableName = '',
+): InteriorResponse {
   return {
     id: String(stored.id ?? ''),
     org_id: String(stored.org_id ?? ''),
     location_id: String(stored.location_id ?? ''),
     number: String(stored.number ?? ''),
     name: String(stored.name ?? ''),
-    responsable_name: String(stored.responsable_name ?? ''),
     responsable_user_id: stored.responsable_user_id ?? null,
+    responsable_name: responsableName,
     enabled: stored.enabled !== false,
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),

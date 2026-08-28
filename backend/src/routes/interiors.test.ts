@@ -41,11 +41,14 @@ function seedOrg(orgId: string, maxInteriors = 10, used = 0) {
   })
 }
 
-function seedMember(uid: string, orgId: string, role: string) {
+function seedMember(uid: string, orgId: string, role: string, name = 'María García') {
   const existing = (store.docs.get(`users/${uid}`)?.orgs as unknown[]) ?? []
+  const [firstName, ...rest] = name.split(' ')
   store.seed(`users/${uid}`, {
     id: uid,
     deleted: false,
+    first_name: firstName,
+    last_name: rest.join(' '),
     orgs: [...existing, { org_id: orgId, role }],
   })
 }
@@ -67,8 +70,7 @@ function seedInterior(orgId: string, interiorId: string, extra: Record<string, u
     location_id: LOC,
     number: '302',
     name: '',
-    responsable_name: 'María García',
-    responsable_user_id: null,
+    responsable_user_id: RESIDENT,
     enabled: true,
     created_by: ADMIN,
     ...extra,
@@ -82,7 +84,7 @@ function counts(orgId = ORG): Record<string, number> {
 const NEW_INTERIOR = {
   location_id: LOC,
   number: '302',
-  responsable_name: 'María García',
+  responsable_user_id: RESIDENT,
 }
 
 beforeEach(() => {
@@ -117,8 +119,9 @@ describe('POST /orgs/{orgId}/interiors', () => {
       location_id: LOC,
       number: '302',
       name: 'Apartamento 302',
+      responsable_user_id: RESIDENT,
+      // The name is shown from the account, not stored on the interior.
       responsable_name: 'María García',
-      responsable_user_id: null,
       enabled: true,
     })
     expect(res.body.id).toMatch(/^int_/)
@@ -197,7 +200,7 @@ describe('POST /orgs/{orgId}/interiors', () => {
     expect(counts().interiors).toBe(0)
   })
 
-  it('requires a person in charge', async () => {
+  it('refuses an interior with nobody in charge of it', async () => {
     signedInAs(ADMIN)
 
     const res = await request(app)
@@ -205,19 +208,36 @@ describe('POST /orgs/{orgId}/interiors', () => {
       .set('Authorization', 'Bearer good')
       .send({ location_id: LOC, number: '302' })
 
+    // Decision 006: an interior with nobody designated has nobody to issue
+    // its permits, so it may not exist.
     expect(res.status).toBe(400)
+    expect(store.writes).toHaveLength(0)
   })
 
-  it('links a responsable who belongs to the organization', async () => {
+  it('does not accept a typed name instead of an account', async () => {
     signedInAs(ADMIN)
 
     const res = await request(app)
       .post(`/orgs/${ORG}/interiors`)
       .set('Authorization', 'Bearer good')
-      .send({ ...NEW_INTERIOR, responsable_user_id: RESIDENT })
+      .send({ location_id: LOC, number: '302', responsable_name: 'María García' })
+
+    expect(res.status).toBe(400)
+    expect(store.writes).toHaveLength(0)
+  })
+
+  it('stores no name on the interior — it comes from the account', async () => {
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/interiors`)
+      .set('Authorization', 'Bearer good')
+      .send(NEW_INTERIOR)
 
     expect(res.status).toBe(201)
-    expect(res.body.responsable_user_id).toBe(RESIDENT)
+    expect(res.body.responsable_name).toBe('María García')
+    const stored = store.docs.get(`orgs/${ORG}/interiors/${res.body.id}`)
+    expect(stored).not.toHaveProperty('responsable_name')
   })
 
   it('refuses a responsable from outside the organization', async () => {
@@ -310,7 +330,7 @@ describe('interiors stay inside their organization', () => {
   beforeEach(() => {
     seedOrg(OTHER_ORG)
     seedMember(OUTSIDER, OTHER_ORG, 'admin')
-    seedInterior(ORG, 'int_secret', { number: '302', responsable_name: 'María García' })
+    seedInterior(ORG, 'int_secret', { number: '302' })
   })
 
   it('does not list another organization\'s interiors', async () => {
@@ -351,10 +371,10 @@ describe('interiors stay inside their organization', () => {
     const res = await request(app)
       .put(`/orgs/${ORG}/interiors/int_secret`)
       .set('Authorization', 'Bearer good')
-      .send({ responsable_name: 'Tomado' })
+      .send({ number: 'Tomado' })
 
     expect(res.status).toBe(404)
-    expect(store.docs.get(`orgs/${ORG}/interiors/int_secret`)?.responsable_name).toBe('María García')
+    expect(store.docs.get(`orgs/${ORG}/interiors/int_secret`)?.number).toBe('302')
   })
 
   it('does not delete another organization\'s interior', async () => {
@@ -370,22 +390,24 @@ describe('interiors stay inside their organization', () => {
 })
 
 describe('PUT /orgs/{orgId}/interiors/{interiorId}', () => {
-  it('changes who is in charge', async () => {
+  it('hands the interior over to another member', async () => {
+    seedMember(GUARD, ORG, 'security', 'Carlos Pérez')
     seedInterior(ORG, 'int_1')
     signedInAs(ADMIN)
 
     const res = await request(app)
       .put(`/orgs/${ORG}/interiors/int_1`)
       .set('Authorization', 'Bearer good')
-      .send({ responsable_name: 'Carlos Pérez', responsable_user_id: RESIDENT })
+      .send({ responsable_user_id: GUARD })
 
     expect(res.status).toBe(200)
+    expect(res.body.responsable_user_id).toBe(GUARD)
+    // The name follows the account it was handed to.
     expect(res.body.responsable_name).toBe('Carlos Pérez')
-    expect(res.body.responsable_user_id).toBe(RESIDENT)
   })
 
-  it('detaches the account while keeping the name', async () => {
-    seedInterior(ORG, 'int_1', { responsable_user_id: RESIDENT })
+  it('refuses to leave an interior with nobody in charge', async () => {
+    seedInterior(ORG, 'int_1')
     signedInAs(ADMIN)
 
     const res = await request(app)
@@ -393,9 +415,23 @@ describe('PUT /orgs/{orgId}/interiors/{interiorId}', () => {
       .set('Authorization', 'Bearer good')
       .send({ responsable_user_id: null })
 
-    expect(res.status).toBe(200)
-    expect(res.body.responsable_user_id).toBeNull()
-    expect(res.body.responsable_name).toBe('María García')
+    expect(res.status).toBe(400)
+    expect(store.docs.get(`orgs/${ORG}/interiors/int_1`)?.responsable_user_id).toBe(RESIDENT)
+  })
+
+  it('refuses to hand an interior to someone outside the organization', async () => {
+    seedOrg(OTHER_ORG)
+    seedMember(OUTSIDER, OTHER_ORG, 'admin')
+    seedInterior(ORG, 'int_1')
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .put(`/orgs/${ORG}/interiors/int_1`)
+      .set('Authorization', 'Bearer good')
+      .send({ responsable_user_id: OUTSIDER })
+
+    expect(res.status).toBe(400)
+    expect(store.docs.get(`orgs/${ORG}/interiors/int_1`)?.responsable_user_id).toBe(RESIDENT)
   })
 
   it('refuses a number already used in the same location', async () => {
@@ -445,7 +481,7 @@ describe('PUT /orgs/{orgId}/interiors/{interiorId}', () => {
     const res = await request(app)
       .put(`/orgs/${ORG}/interiors/int_1`)
       .set('Authorization', 'Bearer good')
-      .send({ responsable_name: 'Cambiado' })
+      .send({ number: 'Cambiado' })
 
     expect(res.status).toBe(403)
   })

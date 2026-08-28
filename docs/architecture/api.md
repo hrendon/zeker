@@ -490,18 +490,20 @@ Adds an interior. **Administrators only.**
   "location_id": "loc_abc123",
   "number": "302",
   "name": "Apartamento 302",
-  "responsable_name": "María García",
   "responsable_user_id": "user_xyz789"
 }
 ```
 
-- `location_id` and `number` are required. `number` must be unused in that
-  location — the same number may repeat in a different location.
-- `responsable_name` is required, so security personnel can always see who is
-  in charge, even before that person has an account.
-- `responsable_user_id` is optional. It links the interior to a user account so
-  that person can issue permits for their own interior. They must already be a
-  member of the organization.
+- `location_id`, `number` and `responsable_user_id` are required. `number` must
+  be unused in that location — the same number may repeat in a different
+  location.
+- **`responsable_user_id` is required** (Decision 006). Every interior always
+  has a designated person, because an interior with nobody designated has
+  nobody to issue its permits. That person must already be a member of this
+  organization — see `POST /orgs/{orgId}/members`. When the resident's email is
+  not known yet, the administrator designates themselves.
+- There is no `responsable_name` field. The name comes from the responsable's
+  account and is returned, not sent.
 - `name` is an optional label. Unknown fields are rejected.
 
 **Response (201):**
@@ -512,8 +514,8 @@ Adds an interior. **Administrators only.**
   "location_id": "loc_abc123",
   "number": "302",
   "name": "Apartamento 302",
-  "responsable_name": "María García",
   "responsable_user_id": "user_xyz789",
+  "responsable_name": "María García",
   "enabled": true,
   "created_by": "user_admin",
   "created_at": "2026-08-25T10:00:00.000Z",
@@ -574,8 +576,11 @@ One interior. **Any member.**
 
 Changes an interior. **Administrators only.** Send at least one field.
 
-Accepted fields: `number`, `name`, `responsable_name`, `responsable_user_id`
-(send `null` to detach the account while keeping the name), `enabled`.
+Accepted fields: `number`, `name`, `responsable_user_id`, `enabled`.
+
+`responsable_user_id` cannot be cleared. Handing an interior over is choosing a
+different member, never nobody (Decision 006). `responsable_name` is not
+accepted — the name comes from the account.
 
 `location_id` cannot be changed. Moving apartment 302 into another building is
 really a different interior, and moving it silently would carry its existing
@@ -610,6 +615,129 @@ Removes an interior and frees its slot against the plan. **Administrators only.*
 - `404 not_found` — no such interior, or the caller is not a member
 - `409 conflict` — an authorization for this interior is still active. Revoke
   it first, so a permit can never point at an interior that no longer exists.
+
+---
+
+## Member Endpoints
+
+The people who belong to one organization (Decision 006). A membership is not a
+document of its own: it is an entry in `users/{uid}.orgs[]`, which is where
+membership has always lived.
+
+**Administrators only, on every route.** Who lives in a building is exactly what
+one resident must not be able to read about their neighbours.
+
+**No email address is stored.** Firebase Auth is the system of record for it
+(Decision 002). The email in a response is read back from Firebase at request
+time, never from our database.
+
+---
+
+### POST /orgs/{orgId}/members
+
+Adds a person to the organization, creating their Firebase account if they do
+not have one. **Administrators only.**
+
+**Request:**
+```json
+{
+  "email": "maria@example.com",
+  "first_name": "María",
+  "last_name": "García",
+  "role": "responsable"
+}
+```
+
+- All four fields are required. Unknown fields are rejected.
+- `role` is `responsable` or `security`. **`admin` cannot be granted** —
+  a second administrator for one building is not part of Decision 006.
+- If the email already has an account, that account is reused and its
+  membership updated. The person's stored name is **not** overwritten: someone
+  who already has a profile owns how their own name is spelled.
+- The server sends no email. After a 201 the browser asks Firebase to send that
+  person a "set your password" email — the same mechanism the password-recovery
+  screen already uses. This server never handles a password (Decision 002).
+
+**Response (201):**
+```json
+{
+  "user_id": "user_xyz789",
+  "first_name": "María",
+  "last_name": "García",
+  "email": "maria@example.com",
+  "role": "responsable",
+  "request_id": "req_abc123xyz"
+}
+```
+
+**The answer is identical whether or not the account already existed.** An
+administrator must not be able to use this endpoint to discover which email
+addresses belong to Zeker users — the same refusal to be helpful that sign-in
+and password recovery make, applied to an authenticated caller.
+
+**Errors:**
+- `400 invalid_request` — missing or unknown field, malformed email, or a role
+  an administrator may not grant
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — the caller is not a member of the organization
+- `409 conflict` — the email belongs to the caller. An administrator cannot
+  change their own role here.
+
+---
+
+### GET /orgs/{orgId}/members
+
+Everyone who belongs to this organization. **Administrators only.**
+
+**Response (200):**
+```json
+{
+  "members": [
+    {
+      "user_id": "user_xyz789",
+      "first_name": "María",
+      "last_name": "García",
+      "email": "maria@example.com",
+      "role": "responsable"
+    }
+  ],
+  "request_id": "req_abc123xyz"
+}
+```
+
+Ordered by name. `email` is `null` when Firebase has none for that account.
+
+**Errors:**
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — the caller is not a member of the organization
+
+---
+
+### DELETE /orgs/{orgId}/members/{userId}
+
+Removes a person from the organization. **Administrators only.**
+
+Their Firebase account is left alone. One person can belong to several
+organizations, so deleting the account would remove access they still
+legitimately have elsewhere. What is removed is this organization's membership.
+
+**Response (200):**
+```json
+{
+  "user_id": "user_xyz789",
+  "removed": true,
+  "request_id": "req_abc123xyz"
+}
+```
+
+**Errors:**
+- `401 unauthorized`
+- `403 forbidden` — a member who is not an administrator
+- `404 not_found` — that person is not a member, or the caller is not a member
+- `409 conflict` — the person is still in charge of an interior (choose a
+  replacement first), or an administrator is trying to remove themselves
 
 ---
 

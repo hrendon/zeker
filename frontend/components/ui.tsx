@@ -230,6 +230,7 @@ export function ConfirmDialog({
   danger,
   busy,
   error,
+  children,
   onConfirm,
   onCancel,
 }: {
@@ -241,6 +242,8 @@ export function ConfirmDialog({
   danger?: boolean
   busy?: boolean
   error?: string | null
+  /** An optional control the decision needs — e.g. choosing a replacement. */
+  children?: React.ReactNode
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -275,6 +278,8 @@ export function ConfirmDialog({
         <p id="confirm-body" className="mt-2 text-sm leading-relaxed text-[var(--color-ink-soft)]">
           {body}
         </p>
+
+        {children ? <div className="mt-4">{children}</div> : null}
 
         {error ? (
           <p role="alert" className="mt-3 rounded-lg bg-[var(--color-danger-soft)] px-3 py-2 text-sm text-[var(--color-danger)]">

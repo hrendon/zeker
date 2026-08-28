@@ -3,7 +3,15 @@
 **Date:** 2026-08-25
 **Owning Role:** Software Architect + Product Owner
 **Approved by:** Founder / CEO
-**Status:** ✅ DECIDED
+**Status:** ✅ DECIDED — one part amended by
+[Decision 006](006-members-and-responsable-accounts.md) on 2026-08-28
+
+> **Amended (2026-08-28).** The interior shape shown below has
+> `responsable_user_id` nullable and a required `responsable_name`. Decision 006
+> reverses both: `responsable_user_id` is required and `responsable_name` no
+> longer exists, because the responsable is now a real account created by the
+> administrator and the name comes from it. Everything else in this decision —
+> interiors as a level, and organization-wide plan quotas — stands unchanged.
 
 ---
 

@@ -28,6 +28,7 @@ Map of authoritative sources for project knowledge.
 | — 003 | `decisions/003-interiors-and-plan-quotas.md` | Interiors as a real level; plan-based limits | Architect + Product Owner |
 | — 004 | `decisions/004-backend-only-firestore-access.md` | Clients denied direct database access | Security |
 | — 005 | `decisions/005-no-visitor-phone-number.md` | A permit stores no phone number; nothing needs KMS encryption | Security + Product Owner |
+| — 006 | `decisions/006-members-and-responsable-accounts.md` | A responsable is an account created by the administrator | Product Owner + Architect + Security |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |

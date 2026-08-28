@@ -9,7 +9,7 @@ import { logger } from '../lib/logger.js'
 import { orgRef } from '../lib/orgs.js'
 import { createCounted, deleteCounted } from '../lib/quota.js'
 import { locationRef } from '../lib/locations.js'
-import { userRef } from '../lib/users.js'
+import { displayNames, userRef } from '../lib/users.js'
 import type { UserDocument } from '../lib/users.js'
 import {
   interiorRef,
@@ -26,8 +26,9 @@ const CreateInteriorSchema = z
     location_id: z.string().trim().min(1),
     number: z.string().trim().min(1).max(40),
     name: z.string().trim().max(120).optional(),
-    responsable_name: z.string().trim().min(1).max(120),
-    responsable_user_id: z.string().trim().min(1).optional(),
+    // Required since Decision 006: every interior always has a designated
+    // person, and that person is an account, not typed text.
+    responsable_user_id: z.string().trim().min(1),
   })
   .strict()
 
@@ -35,9 +36,9 @@ const UpdateInteriorSchema = z
   .object({
     number: z.string().trim().min(1).max(40).optional(),
     name: z.string().trim().max(120).optional(),
-    responsable_name: z.string().trim().min(1).max(120).optional(),
-    // null detaches the account while keeping the name on the door.
-    responsable_user_id: z.string().trim().min(1).nullable().optional(),
+    // Handing an interior over is choosing a different person, never nobody
+    // (Decision 006), so this cannot be cleared.
+    responsable_user_id: z.string().trim().min(1).optional(),
     enabled: z.boolean().optional(),
   })
   .strict()
@@ -52,8 +53,12 @@ function badRequest(error: z.ZodError): ReturnType<typeof invalidRequest> {
   )
 }
 
-/** The responsable must already belong to this organization. */
-async function assertMemberOfOrg(uid: string, orgId: string): Promise<void> {
+/**
+ * The responsable must already belong to this organization. Returns the name
+ * held on their account, which is the only name an interior shows
+ * (Decision 006).
+ */
+async function assertMemberOfOrg(uid: string, orgId: string): Promise<string> {
   const snapshot = await userRef(uid).get()
   const stored = snapshot.exists ? (snapshot.data() as Partial<UserDocument>) : undefined
   const isMember = stored?.orgs?.some((membership) => membership.org_id === orgId)
@@ -63,6 +68,8 @@ async function assertMemberOfOrg(uid: string, orgId: string): Promise<void> {
       'That person is not a member of this organization, so they cannot be put in charge of an interior.',
     )
   }
+
+  return [stored?.first_name ?? '', stored?.last_name ?? ''].join(' ').trim()
 }
 
 /**
@@ -87,9 +94,7 @@ interiorsRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) =
   const interiorId = newInteriorId(orgId)
 
   try {
-    if (parsed.data.responsable_user_id) {
-      await assertMemberOfOrg(parsed.data.responsable_user_id, orgId)
-    }
+    const responsableName = await assertMemberOfOrg(parsed.data.responsable_user_id, orgId)
 
     const document: Record<string, unknown> = {
       id: interiorId,
@@ -97,8 +102,7 @@ interiorsRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) =
       location_id: locationId,
       number,
       name: parsed.data.name ?? '',
-      responsable_name: parsed.data.responsable_name,
-      responsable_user_id: parsed.data.responsable_user_id ?? null,
+      responsable_user_id: parsed.data.responsable_user_id,
       enabled: true,
       created_by: req.user!.uid,
       created_at: FieldValue.serverTimestamp(),
@@ -143,7 +147,10 @@ interiorsRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) =
 
     const now = { toDate: () => new Date() }
     res.status(201).json({
-      ...toInteriorResponse({ ...document, created_at: now, updated_at: now } as Partial<InteriorDocument>),
+      ...toInteriorResponse(
+        { ...document, created_at: now, updated_at: now } as Partial<InteriorDocument>,
+        responsableName,
+      ),
       usage: { interiors: used },
       request_id: req.id,
     })
@@ -167,8 +174,19 @@ interiorsRouter.get('/', requireAuth, requireOrgMember, async (req, res, next) =
     const query = locationId ? base.where('location_id', '==', locationId) : base
     const snapshot = await query.get()
 
-    const interiors = snapshot.docs
-      .map((doc) => toInteriorResponse({ id: doc.id, ...(doc.data() as Partial<InteriorDocument>) }))
+    const stored = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Partial<InteriorDocument>),
+    }))
+    // One read for the whole list rather than one per row.
+    const names = await displayNames(
+      stored.map((interior) => interior.responsable_user_id ?? '').filter((uid) => uid.length > 0),
+    )
+
+    const interiors = stored
+      .map((interior) =>
+        toInteriorResponse(interior, names.get(interior.responsable_user_id ?? '') ?? ''),
+      )
       .sort((a, b) => a.number.localeCompare(b.number, 'es', { numeric: true }))
 
     res.json({
@@ -198,8 +216,11 @@ interiorsRouter.get('/:interiorId', requireAuth, requireOrgMember, async (req, r
       return
     }
 
+    const stored = { id: snapshot.id, ...(snapshot.data() as Partial<InteriorDocument>) }
+    const names = await displayNames([stored.responsable_user_id ?? ''])
+
     res.json({
-      ...toInteriorResponse({ id: snapshot.id, ...(snapshot.data() as Partial<InteriorDocument>) }),
+      ...toInteriorResponse(stored, names.get(stored.responsable_user_id ?? '') ?? ''),
       request_id: req.id,
     })
   } catch (error) {
@@ -234,9 +255,10 @@ interiorsRouter.put('/:interiorId', requireAuth, requireOrgAdmin, async (req, re
 
     const current = snapshot.data() as Partial<InteriorDocument>
 
-    if (parsed.data.responsable_user_id) {
-      await assertMemberOfOrg(parsed.data.responsable_user_id, orgId)
-    }
+    const responsableId = parsed.data.responsable_user_id ?? current.responsable_user_id ?? ''
+    const responsableName = parsed.data.responsable_user_id
+      ? await assertMemberOfOrg(parsed.data.responsable_user_id, orgId)
+      : ((await displayNames([responsableId])).get(responsableId) ?? '')
 
     if (parsed.data.number !== undefined && parsed.data.number !== current.number) {
       const duplicate = await interiorsCollection(orgId)
@@ -266,7 +288,10 @@ interiorsRouter.put('/:interiorId', requireAuth, requireOrgAdmin, async (req, re
 
     const now = { toDate: () => new Date() }
     res.json({
-      ...toInteriorResponse({ id: interiorId, ...current, ...parsed.data, updated_at: now }),
+      ...toInteriorResponse(
+        { id: interiorId, ...current, ...parsed.data, updated_at: now },
+        responsableName,
+      ),
       request_id: req.id,
     })
   } catch (error) {

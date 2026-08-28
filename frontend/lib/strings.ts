@@ -78,7 +78,7 @@ export const es = {
     orgNameRequired: 'Escriba un nombre para la organización.',
     locationNameRequired: 'Escriba un nombre para la sede.',
     numberRequired: 'Escriba el número del interior.',
-    responsableRequired: 'Escriba quién es el responsable.',
+    responsableRequired: 'Elija quién es el responsable.',
     locationRequired: 'Elija una sede.',
     textTooLong: 'Ese texto es demasiado largo.',
   },
@@ -88,6 +88,7 @@ export const es = {
     backToOrgs: 'Volver a mis organizaciones',
     locations: 'Sedes',
     interiors: 'Interiores',
+    members: 'Personas',
     changeOrg: 'Cambiar organización',
   },
 
@@ -168,8 +169,16 @@ export const es = {
     name: 'Nombre (opcional)',
     namePlaceholder: 'Bodega esquinera',
     responsable: 'Responsable',
-    responsablePlaceholder: 'Nombre de la persona a cargo',
-    responsableHint: 'Solo el nombre. No guardamos su teléfono, su correo ni su documento.',
+    responsableHint:
+      'La persona que podrá crear permisos de entrada para este interior. Si todavía no tiene su correo, póngase usted y cámbielo después.',
+    responsableNobody: 'Elija una persona',
+    noResponsable: 'sin asignar',
+    needsMember: 'Primero agregue a la persona que estará a cargo.',
+    goToMembers: 'Ir a personas',
+    handOver: 'Cambiar responsable',
+    handOverTitle: '¿Cambiar el responsable?',
+    handOverBody:
+      'La persona que elija podrá crear permisos de entrada para este interior. La anterior dejará de poder hacerlo. Los permisos que ya existen no cambian.',
     filterAll: 'Todas las sedes',
     retired: 'Sin usar',
     retire: 'Dejar de usar',
@@ -186,6 +195,44 @@ export const es = {
       'No se puede eliminar. Todavía hay permisos de entrada activos para este interior. Cancele los permisos y vuelva a intentar.',
     numberTaken:
       'Ya existe un interior con ese número en esa sede. Use otro número.',
+  },
+
+  members: {
+    title: 'Personas',
+    subtitle:
+      'Quién puede entrar a esta organización: los responsables de cada interior y el personal de seguridad.',
+    empty: 'Todavía no ha agregado a nadie.',
+    emptyHint:
+      'Agregue al responsable de un interior o a alguien de seguridad. Recibirá un correo para crear su contraseña.',
+    add: 'Agregar persona',
+    addFirst: 'Agregar la primera persona',
+    adding: 'Agregando…',
+    firstName: 'Nombre',
+    lastName: 'Apellido',
+    email: 'Correo electrónico',
+    emailHint:
+      'Le enviamos un correo para que cree su propia contraseña. Nosotros nunca vemos ni guardamos esa contraseña.',
+    role: 'Qué hace en la organización',
+    roleResponsable: 'Responsable de un interior',
+    roleSecurity: 'Personal de seguridad',
+    roleResponsableHint: 'Puede crear permisos de entrada para su propio interior.',
+    roleSecurityHint: 'Revisa los permisos en la portería. No puede crear permisos.',
+    added: 'Listo. Le enviamos un correo para que cree su contraseña.',
+    addedNoEmail:
+      'La persona quedó agregada, pero no pudimos enviarle el correo. Pídale que use “Olvidé mi contraseña” en la pantalla de entrar.',
+    noEmail: 'Sin correo',
+    remove: 'Quitar de la organización',
+    removeConfirmTitle: '¿Quitar a esta persona?',
+    removeConfirmBody:
+      'Deja de tener acceso a esta organización. Su cuenta no se borra: si pertenece a otra organización, allí sigue igual. Puede volver a agregarla después.',
+    removeConflict:
+      'No se puede quitar. Todavía es responsable de un interior. Ponga a otra persona a cargo de ese interior y vuelva a intentar.',
+    removeSelf: 'No puede quitarse a usted mismo de la organización.',
+    selfConflict: 'Usted ya es administrador de esta organización.',
+    // The API answers the same way whether or not the account existed, so the
+    // screen must not imply that it knows either.
+    privacyNote:
+      'Guardamos su nombre y el interior a su cargo. El correo lo guarda Firebase, no nosotros.',
   },
 
   usage: {

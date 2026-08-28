@@ -63,6 +63,26 @@ export function userRef(uid: string) {
   return usersCollection().doc(uid)
 }
 
+/**
+ * The display names of several accounts at once, keyed by uid.
+ *
+ * Since Decision 006 an interior's responsable is an account, and the name
+ * shown for them comes from that account rather than from text typed onto the
+ * interior. One read for a whole list keeps that from costing a query per row.
+ */
+export async function displayNames(uids: string[]): Promise<Map<string, string>> {
+  const names = new Map<string, string>()
+  const unique = [...new Set(uids.filter((uid) => uid.length > 0))]
+  if (unique.length === 0) return names
+
+  const snapshots = await db().getAll(...unique.map((uid) => userRef(uid)))
+  for (const snapshot of snapshots) {
+    const stored = snapshot.exists ? (snapshot.data() as Partial<UserDocument>) : undefined
+    names.set(snapshot.id, [stored?.first_name ?? '', stored?.last_name ?? ''].join(' ').trim())
+  }
+  return names
+}
+
 /** Firestore timestamps are objects; the API contract sends ISO-8601 strings. */
 export function toIso(value: unknown): string | null {
   if (value && typeof (value as FirestoreTimestampLike).toDate === 'function') {

@@ -18,6 +18,7 @@ import {
 import type { OrgDocument } from '../lib/orgs.js'
 import { locationsRouter } from './locations.js'
 import { interiorsRouter } from './interiors.js'
+import { membersRouter } from './members.js'
 
 export const orgsRouter: Router = Router()
 
@@ -25,6 +26,7 @@ export const orgsRouter: Router = Router()
 // membership checks that keep one customer out of another's data.
 orgsRouter.use('/:orgId/locations', locationsRouter)
 orgsRouter.use('/:orgId/interiors', interiorsRouter)
+orgsRouter.use('/:orgId/members', membersRouter)
 
 const CreateOrgSchema = z
   .object({
