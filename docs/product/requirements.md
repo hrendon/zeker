@@ -85,15 +85,21 @@ these units, so the product could not deliver what it sells without them.
 
 - [x] User can create authorization with:
   - Authorized person: name
-  - Location: select from org's locations
-  - Interior: which unit the visitor is coming to (Decision 003)
+  - Interior: which unit the visitor is coming to (Decision 003). The location
+    is derived from it and is not chosen separately
   - Valid from: date + time
   - Valid to: date + time
-  - Purpose: text (e.g., "pickup", "visitor")
+  - Purpose: chosen from a list, not free text
 - [x] Authorization assigned unique ID
 - [x] QR code generated locally (client-side)
 - [x] Numeric code generated (fallback if QR doesn't scan)
-- [x] Codes stored in authorization record
+- [x] The numeric code is stored; **the QR image is not** — it encodes the code,
+      so the browser draws it (Decision 007)
+
+> ⚠️ **A daily time window** (`time_from` / `time_to` — valid every day but only
+> between 14:00 and 17:00) is **not built**. Founder's decision, 2026-08-29: it
+> needs each building's local time, which is not stored. A permit runs from one
+> moment to another moment.
 
 ---
 
@@ -109,7 +115,11 @@ these units, so the product could not deliver what it sells without them.
 - [x] Numeric code displayed below (format: XXXX-XXXX, 8 chars)
 - [x] User can copy code to clipboard
 - [x] User can download QR as image (PNG)
-- [x] User can share code link (ephemeral, expires if auth expires)
+- [ ] ⚠️ **Share code link — not built.** Founder's decision, 2026-08-29: a
+      public page keyed by a permit code is a new unauthenticated entrance to
+      the product, and it tells anyone holding the link where a named person is
+      going. The resident sends the QR image or the eight characters through
+      whatever they already use (Decision 007)
 
 ---
 
@@ -133,7 +143,12 @@ these units, so the product could not deliver what it sells without them.
 - [x] Clear success (green): name, location, allowed time
 - [x] Clear failure (red): reason (expired, wrong location, revoked, etc.)
 - [x] Event logged (entry)
-- [x] Parent notified via email (basic: "{name} entered on {date} {time}")
+- [ ] ⚠️ **Email on entry — not built.** The product can send no email of its
+      own; Firebase Auth sends only password emails. This needs a paid
+      notification service, a new supplier, and a privacy decision about telling
+      an outside company who visited whom. Deferred on 2026-08-29 until real
+      customers say whether they want it (Decision 007). The resident sees the
+      entry in the app instead
 
 ---
 
@@ -145,11 +160,13 @@ these units, so the product could not deliver what it sells without them.
 
 ### Acceptance Criteria
 
-- [x] Revoke button on authorization detail
+- [x] Revoke button on authorization detail ("Anular el permiso")
 - [x] Revoke requires confirmation
-- [x] Authorization status changed to "revoked"
-- [x] QR/code no longer valid immediately
-- [x] Email notification to parent confirming revoke
+- [x] Authorization status changed to "revoked"; the record is kept, never
+      deleted — it is part of the audit trail
+- [x] QR/code no longer valid immediately, and the screen stops showing them
+- [ ] ⚠️ **Email confirming the revoke — not built**, for the same reason as
+      US-005 above
 
 ---
 

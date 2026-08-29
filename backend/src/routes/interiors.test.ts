@@ -509,6 +509,7 @@ describe('DELETE /orgs/{orgId}/interiors/{interiorId}', () => {
       id: 'auth_1',
       interior_id: 'int_1',
       status: 'active',
+      valid_to: '2099-01-01T00:00:00.000Z',
     })
     signedInAs(ADMIN)
 
@@ -519,6 +520,29 @@ describe('DELETE /orgs/{orgId}/interiors/{interiorId}', () => {
     expect(res.status).toBe(409)
     expect(store.docs.has(`orgs/${ORG}/interiors/int_1`)).toBe(true)
     expect(counts().interiors).toBe(1)
+  })
+
+  it('allows deletion when the only authorization has already expired', async () => {
+    // A finished permit keeps status "active" — nothing runs to change it. If
+    // the guard looked at status alone, this apartment could never be deleted
+    // again, and its plan slot would be lost with it.
+    seedOrg(ORG, 10, 1)
+    seedInterior(ORG, 'int_1')
+    store.seed(`orgs/${ORG}/authorizations/auth_1`, {
+      id: 'auth_1',
+      interior_id: 'int_1',
+      status: 'active',
+      valid_to: '2020-01-01T00:00:00.000Z',
+    })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .delete(`/orgs/${ORG}/interiors/int_1`)
+      .set('Authorization', 'Bearer good')
+
+    expect(res.status).toBe(200)
+    expect(store.docs.has(`orgs/${ORG}/interiors/int_1`)).toBe(false)
+    expect(counts().interiors).toBe(0)
   })
 
   it('frees a slot that can then be reused', async () => {

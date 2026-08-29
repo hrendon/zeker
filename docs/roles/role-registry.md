@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-29
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -26,6 +26,8 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ Clients denied direct database access (2026-08-25, Decision 004)
 - ✅ A permit does not collect the visitor's phone number (2026-08-26, Decision 005)
 - ✅ A responsable is an account created by the administrator (2026-08-28, Decision 006)
+- ✅ What an entry permit is: no share link, no daily time window, no entry
+  emails, and a QR library added (2026-08-29, Decision 007)
 - ✅ Build the sign-in screens before the permit endpoints (2026-08-26)
 - ✅ Build the setup screens now; make customer calls in parallel (2026-08-27)
 - ✅ No data-fetching library — keep it simple (2026-08-27)
@@ -334,6 +336,7 @@ Done check can see it happened rather than infer it from the output.
 |------|---------|-----------------|---------|
 | 2026-08-19 | Multi-role dispatch validation | Backend, Frontend, Architect, Product Owner, Security | Recorded in `PROJECT_STATE.md` |
 | 2026-08-27 | Setup screens (create organization, locations, interiors) — full dispatch before implementation | Product Owner, UI/UX Designer, Software Architect, Security Engineer / CISO, Frontend Developer, QA Engineer, Customer Discovery & Validation Advisor, Data Analyst | 3 conflicts resolved between roles; 2 decisions answered by the Founder (build now + no new dependency); 1 new risk raised as D-006; 2 API documentation defects fixed; unit built and verified |
+| 2026-08-29 | Entry permits — issuing, the code, revoking | Product Owner (scope against US-003/004/006), Software Architect (record shape, indexes, why the dates are strings), Security Engineer / CISO (the code is a credential; security staff excluded; no document fields), UI/UX Designer (the permit flow, and the "Cancelar"/"Cancelar el permiso" collision), Frontend Developer, QA Engineer (41 new tests, plus the expiry case the old guards missed) | 5 corrections to a specification that predated Decisions 003/005/006; 4 scope questions answered by the Founder and recorded as Decision 007; 1 deployment gap found by live use (composite indexes declared but never deployed) and closed; 1 wording defect found by live use and fixed |
 
 **Concerns with no active owner, noted on 2026-08-26:** the Spanish wording
 itself has no owner — Content Strategist / Copywriter is not active, so
@@ -387,5 +390,5 @@ flagged the absence of their own artifact as a finding on 2026-08-26.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-29
 **Related:** `mantis/roles.md` §5 (Role Activation Protocol)

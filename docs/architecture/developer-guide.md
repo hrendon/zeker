@@ -123,6 +123,12 @@ request id  →  security headers  →  CORS  →  JSON body  →  logging
    and the write stay in one transaction.
 7. Add tests next to the code as `*.test.ts`, **including a test that another
    organization's member gets 404.**
+8. **If the query combines filters, add its index to `firestore.indexes.json`
+   and deploy it.** Firestore needs a composite index for anything beyond plain
+   equality — an equality filter plus a range (`where('valid_to','>',now)`) is
+   the common case — and without it the query does not run at all. The
+   in-memory test double answers such a query happily, so a green test suite is
+   no evidence: see "Database rules and indexes" below.
 
 ---
 
@@ -168,7 +174,7 @@ Google Cloud Logging expects, so levels and messages display correctly.
 
 ---
 
-## Database rules
+## Database rules and indexes
 
 The rules in force are `firestore.rules` at the repository root, tracked in git.
 They deny clients all access to Firestore (Decision 004) — the backend is the
@@ -181,6 +187,30 @@ firebase deploy --only firestore:rules --project zeker-505918
 `scripts/setup-firestore-rules.*` deploy that same tracked file. Note that
 `gcloud firestore databases update` has **no** `--rules` option, despite what
 the original setup script assumed; use the Firebase CLI.
+
+### Indexes
+
+`firestore.indexes.json`, also at the root and also tracked, holds every
+composite index the code needs.
+
+```bash
+firebase deploy --only firestore:indexes --project zeker-505918
+firebase firestore:indexes --pretty     # CREATING or READY?
+```
+
+**Declaring an index is not deploying it, and the tests cannot tell you the
+difference.** The in-memory test double in `backend/src/test/fakeFirestore.ts`
+answers any query it understands, including ones real Firestore refuses. On
+2026-08-29 the whole suite passed while deleting an apartment failed with
+`FAILED_PRECONDITION: The query requires an index` — found only by using the
+product against the live database.
+
+Two things follow:
+
+* deploy indexes in the same change that adds the query;
+* a new index takes a few minutes to build. Until
+  `firebase firestore:indexes --pretty` stops saying `CREATING`, the query
+  still fails.
 
 ---
 

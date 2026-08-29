@@ -19,6 +19,8 @@ import type { OrgDocument } from '../lib/orgs.js'
 import { locationsRouter } from './locations.js'
 import { interiorsRouter } from './interiors.js'
 import { membersRouter } from './members.js'
+import { permitsRouter } from './permits.js'
+import { hasLivePermit } from '../lib/permits.js'
 
 export const orgsRouter: Router = Router()
 
@@ -27,6 +29,7 @@ export const orgsRouter: Router = Router()
 orgsRouter.use('/:orgId/locations', locationsRouter)
 orgsRouter.use('/:orgId/interiors', interiorsRouter)
 orgsRouter.use('/:orgId/members', membersRouter)
+orgsRouter.use('/:orgId/authorizations', permitsRouter)
 
 const CreateOrgSchema = z
   .object({
@@ -209,20 +212,16 @@ orgsRouter.put('/:orgId', requireAuth, requireOrgAdmin, async (req, res, next) =
  * audit trail with a retention period, and destroying them on request would
  * defeat the point of having one.
  *
- * Refused while any authorization is still active, so nobody can delete an
+ * Refused while any permit is still live, so nobody can delete an
  * organization out from under a permit that would otherwise still open a door.
+ * "Live" means not revoked *and* not yet finished — a permit that ended last
+ * year must not block a deletion forever (`lib/permits.ts`).
  */
 orgsRouter.delete('/:orgId', requireAuth, requireOrgAdmin, async (req, res, next) => {
   const orgId = String(req.params.orgId)
 
   try {
-    const active = await orgRef(orgId)
-      .collection('authorizations')
-      .where('status', '==', 'active')
-      .limit(1)
-      .get()
-
-    if (!active.empty) {
+    if (await hasLivePermit(orgId)) {
       next(
         conflict(
           'This organization still has active authorizations. Revoke them before deleting it.',

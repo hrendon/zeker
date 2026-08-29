@@ -81,6 +81,12 @@ export const es = {
     responsableRequired: 'Elija quién es el responsable.',
     locationRequired: 'Elija una sede.',
     textTooLong: 'Ese texto es demasiado largo.',
+    visitorNameRequired: 'Escriba el nombre de la persona que va a entrar.',
+    interiorRequired: 'Elija a dónde va a entrar.',
+    datesRequired: 'Escriba desde cuándo y hasta cuándo vale el permiso.',
+    datesOutOfOrder: 'El permiso debe terminar después de empezar.',
+    datesInThePast: 'El permiso ya habría terminado. Elija una fecha futura.',
+    datesTooLong: 'Un permiso no puede durar más de un año.',
   },
 
   nav: {
@@ -89,6 +95,7 @@ export const es = {
     locations: 'Sedes',
     interiors: 'Interiores',
     members: 'Personas',
+    permits: 'Permisos',
     changeOrg: 'Cambiar organización',
   },
 
@@ -150,7 +157,7 @@ export const es = {
     // names both. A vague "that conflicts with something" leaves the
     // administrator with nothing to do about it.
     deleteConflict:
-      'No se puede eliminar. La sede todavía tiene interiores, o hay permisos de entrada activos. Quite los interiores o cancele los permisos, y vuelva a intentar.',
+      'No se puede eliminar. La sede todavía tiene interiores, o hay permisos de entrada activos. Quite los interiores o anule los permisos, y vuelva a intentar.',
   },
 
   interiors: {
@@ -192,7 +199,7 @@ export const es = {
     deleteConfirmBody:
       'Se borra para siempre y libera un lugar de su plan. Esta acción no se puede deshacer.',
     deleteConflict:
-      'No se puede eliminar. Todavía hay permisos de entrada activos para este interior. Cancele los permisos y vuelva a intentar.',
+      'No se puede eliminar. Todavía hay permisos de entrada activos para este interior. Anule los permisos y vuelva a intentar.',
     numberTaken:
       'Ya existe un interior con ese número en esa sede. Use otro número.',
   },
@@ -233,6 +240,63 @@ export const es = {
     // screen must not imply that it knows either.
     privacyNote:
       'Guardamos su nombre y el interior a su cargo. El correo lo guarda Firebase, no nosotros.',
+  },
+
+  permits: {
+    title: 'Permisos de entrada',
+    subtitle: 'Quién puede entrar, a dónde y hasta cuándo.',
+    empty: 'Todavía no hay permisos.',
+    emptyHint: 'Cree uno cuando espere una visita, un domicilio o un técnico.',
+    emptyNoInterior:
+      'Todavía no está a cargo de ningún interior, así que no puede crear permisos. Pídale al administrador que lo ponga a cargo de uno.',
+    needsInterior: 'Primero agregue un interior. Un permiso siempre es para entrar a uno.',
+    goToInteriors: 'Ir a interiores',
+
+    add: 'Crear permiso',
+    addFirst: 'Crear el primer permiso',
+    adding: 'Creando…',
+
+    visitorName: 'Nombre de quien entra',
+    visitorNamePlaceholder: 'Ana Ruiz',
+    // Says plainly what is kept, because the visitor never agreed to anything.
+    visitorNameHint:
+      'Solo su nombre. No pedimos cédula, teléfono ni foto, y no guardamos nada más de esa persona.',
+    interior: 'A dónde entra',
+    purpose: 'Motivo',
+    purposeVisitor: 'Visita',
+    purposePickup: 'Recoger a alguien',
+    purposeProvider: 'Domicilio o proveedor',
+    purposeEmployee: 'Trabajo o servicio',
+    purposeOther: 'Otro',
+    validFrom: 'Desde',
+    validTo: 'Hasta',
+    validHint: 'Fuera de estas fechas el código no sirve.',
+
+    stateActive: 'Activo',
+    stateScheduled: 'Programado',
+    stateExpired: 'Vencido',
+    stateRevoked: 'Anulado',
+
+    codeTitle: 'Código de entrada',
+    codeHint: 'Muestre el código QR en la portería. Si la cámara no lo lee, dicte el número.',
+    qrAlt: 'Código QR del permiso de entrada',
+    copyCode: 'Copiar el número',
+    copied: 'Copiado',
+    downloadQr: 'Descargar el QR',
+    qrFailed: 'No pudimos dibujar el código QR. Use el número de abajo.',
+    shareHint: 'Envíele el QR o el número a la persona que va a entrar.',
+
+    revoke: 'Anular el permiso',
+    revokeConfirmTitle: '¿Anular este permiso?',
+    revokeConfirmBody:
+      'El código deja de servir de inmediato. El permiso se conserva en la historia de entradas, pero ya no abre nada. Esta acción no se puede deshacer.',
+    revoked: 'Este permiso está anulado. Su código ya no sirve.',
+    expired: 'Este permiso ya terminó.',
+    scheduled: 'Este permiso todavía no empieza.',
+
+    backToList: 'Volver a los permisos',
+    filterAll: 'Todos',
+    forInterior: 'Interior',
   },
 
   usage: {

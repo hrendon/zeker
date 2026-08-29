@@ -99,7 +99,7 @@ export function OrgHeader({
   current,
 }: {
   org: Org
-  current: 'locations' | 'interiors' | 'members'
+  current: 'locations' | 'interiors' | 'members' | 'permits'
 }) {
   const tabs = [
     { key: 'locations' as const, label: es.nav.locations, href: `/organizaciones/${org.id}/sedes` },
@@ -109,6 +109,7 @@ export function OrgHeader({
       href: `/organizaciones/${org.id}/interiores`,
     },
     { key: 'members' as const, label: es.nav.members, href: `/organizaciones/${org.id}/personas` },
+    { key: 'permits' as const, label: es.nav.permits, href: `/organizaciones/${org.id}/permisos` },
   ]
 
   return (

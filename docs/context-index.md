@@ -21,6 +21,7 @@ Map of authoritative sources for project knowledge.
 | Threat model | ⛔ not written | Threats, mitigations, assumptions | Security Engineer |
 | Privacy policy | ⛔ not written | Ley 1581/2016 compliance, consent, retention. Required before launch | Security Engineer |
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
+| Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
 | **Decisions** | | | |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
 | — 001 | `decisions/001-freemium-gcp-stack.md` | Freemium model + GCP stack | Commercial + Architect |
@@ -29,6 +30,7 @@ Map of authoritative sources for project knowledge.
 | — 004 | `decisions/004-backend-only-firestore-access.md` | Clients denied direct database access | Security |
 | — 005 | `decisions/005-no-visitor-phone-number.md` | A permit stores no phone number; nothing needs KMS encryption | Security + Product Owner |
 | — 006 | `decisions/006-members-and-responsable-accounts.md` | A responsable is an account created by the administrator | Product Owner + Architect + Security |
+| — 007 | `decisions/007-entry-permits.md` | What an entry permit is, and why its code is random | Founder + Architect + Security |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
@@ -54,6 +56,9 @@ Map of authoritative sources for project knowledge.
 6. Check `architecture/design.md` for the screen conventions — layout, the
    component set, the Spanish-only rule, and the two sign-in rules that look
    like design but are security
+7. **If the query combines an equality filter with a range, add the composite
+   index to `../firestore.indexes.json` and deploy it.** The test double does
+   not need indexes; real Firestore refuses the query without one
 
 **Every org-scoped route must mount the membership check** (`requireOrgMember`
 or `requireOrgAdmin`). Since Decision 004, backend code is the only thing
@@ -87,4 +92,4 @@ looks for them:
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-29

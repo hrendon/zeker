@@ -6,7 +6,6 @@ import { requireAuth } from '../middleware/auth.js'
 import { requireOrgAdmin, requireOrgMember } from '../middleware/orgAccess.js'
 import { conflict, invalidRequest, notFound } from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
-import { orgRef } from '../lib/orgs.js'
 import { createCounted, deleteCounted } from '../lib/quota.js'
 import { locationRef } from '../lib/locations.js'
 import { displayNames, userRef } from '../lib/users.js'
@@ -18,6 +17,7 @@ import {
   toInteriorResponse,
 } from '../lib/interiors.js'
 import type { InteriorDocument } from '../lib/interiors.js'
+import { hasLivePermit } from '../lib/permits.js'
 
 export const interiorsRouter: Router = Router({ mergeParams: true })
 
@@ -318,14 +318,7 @@ interiorsRouter.delete('/:interiorId', requireAuth, requireOrgAdmin, async (req,
       return
     }
 
-    const authorizations = await orgRef(orgId)
-      .collection('authorizations')
-      .where('interior_id', '==', interiorId)
-      .where('status', '==', 'active')
-      .limit(1)
-      .get()
-
-    if (!authorizations.empty) {
+    if (await hasLivePermit(orgId, { interior_id: interiorId })) {
       next(
         conflict(
           'This interior still has active authorizations. Revoke them before deleting it.',

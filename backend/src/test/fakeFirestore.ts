@@ -239,6 +239,23 @@ export class FakeQuery {
       this.rows = this.rows.filter((row) => row.data[field] === value)
       return this
     }
+    // Permits are found by a range on valid_to ("still live"), which in real
+    // Firestore needs the composite indexes in firestore.indexes.json. The
+    // stored value is an ISO 8601 UTC string, so comparing it as a string
+    // orders it chronologically — see lib/permits.ts.
+    if (op === '>' || op === '>=' || op === '<' || op === '<=') {
+      this.rows = this.rows.filter((row) => {
+        const held = row.data[field]
+        if (held === undefined || held === null) return false
+        const a = String(held)
+        const b = String(value)
+        if (op === '>') return a > b
+        if (op === '>=') return a >= b
+        if (op === '<') return a < b
+        return a <= b
+      })
+      return this
+    }
     // Membership is stored as objects inside users/{uid}.orgs[], so listing an
     // organization's members matches on any of the {org_id, role} shapes.
     if (op === 'array-contains-any') {

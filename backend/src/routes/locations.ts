@@ -15,6 +15,7 @@ import {
   toLocationResponse,
 } from '../lib/locations.js'
 import type { LocationDocument } from '../lib/locations.js'
+import { hasLivePermit } from '../lib/permits.js'
 
 // mergeParams so :orgId from the parent path is visible here.
 export const locationsRouter: Router = Router({ mergeParams: true })
@@ -231,14 +232,7 @@ locationsRouter.delete('/:locationId', requireAuth, requireOrgAdmin, async (req,
       return
     }
 
-    const authorizations = await orgRef(orgId)
-      .collection('authorizations')
-      .where('location_id', '==', locationId)
-      .where('status', '==', 'active')
-      .limit(1)
-      .get()
-
-    if (!authorizations.empty) {
+    if (await hasLivePermit(orgId, { location_id: locationId })) {
       next(
         conflict(
           'This location still has active authorizations. Revoke them before deleting it.',

@@ -79,6 +79,37 @@ export interface Interior {
   updated_at: string
 }
 
+/** Why a visitor is coming. The only thing a permit says about them beyond a name. */
+export type PermitPurpose = 'visitor' | 'pickup' | 'provider' | 'employee' | 'other'
+
+/**
+ * What a permit is right now. Worked out by the server from the dates — it is
+ * not stored, so nothing has to run on a schedule to keep it true.
+ */
+export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked'
+
+/** An entry permit for one visitor, at one interior, between two moments. */
+export interface Permit {
+  id: string
+  org_id: string
+  interior_id: string
+  /** Read-only. Comes from the interior, not stored on the permit. */
+  interior_number: string
+  location_id: string
+  visitor_name: string
+  purpose: PermitPurpose
+  /** ISO 8601, UTC. */
+  valid_from: string
+  valid_to: string
+  /** Shown as `A1B2-C3D4`. The QR encodes the same characters without the dash. */
+  code: string
+  state: PermitState
+  created_by: string
+  created_at: string | null
+  revoked_at: string | null
+  revoked_by: string | null
+}
+
 /** A person who belongs to one organization (Decision 006). */
 export interface Member {
   user_id: string
@@ -321,4 +352,44 @@ export const interiorsApi = {
     request<{ id: string; deleted: true }>(`/orgs/${orgId}/interiors/${interiorId}`, {
       method: 'DELETE',
     }),
+}
+
+/**
+ * Entry permits.
+ *
+ * An administrator sees the whole organization's permits; a person in charge
+ * of an interior sees only their own. Security staff reach none of this — at a
+ * gate they check a code that is handed to them.
+ */
+export const permitsApi = {
+  list: (orgId: string, filters: { interior_id?: string; state?: PermitState } = {}) => {
+    const query = new URLSearchParams()
+    if (filters.interior_id) query.set('interior_id', filters.interior_id)
+    if (filters.state) query.set('state', filters.state)
+    const suffix = query.size > 0 ? `?${query.toString()}` : ''
+    return request<{ authorizations: Permit[] }>(`/orgs/${orgId}/authorizations${suffix}`)
+  },
+
+  create: (
+    orgId: string,
+    input: {
+      interior_id: string
+      visitor_name: string
+      purpose?: PermitPurpose
+      /** ISO 8601. `toIsoInstant` in lib/permits.ts builds these. */
+      valid_from: string
+      valid_to: string
+    },
+  ) =>
+    request<Permit>(`/orgs/${orgId}/authorizations`, { method: 'POST', body: omitBlank(input) }),
+
+  get: (orgId: string, permitId: string) =>
+    request<Permit>(`/orgs/${orgId}/authorizations/${permitId}`),
+
+  /** Cancels it. The record is kept and marked — it is part of the audit trail. */
+  revoke: (orgId: string, permitId: string) =>
+    request<{ id: string; state: PermitState; revoked: true }>(
+      `/orgs/${orgId}/authorizations/${permitId}`,
+      { method: 'DELETE' },
+    ),
 }

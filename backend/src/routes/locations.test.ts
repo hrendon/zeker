@@ -353,6 +353,7 @@ describe('DELETE /orgs/{orgId}/locations/{locationId}', () => {
       id: 'auth_1',
       location_id: 'loc_1',
       status: 'active',
+      valid_to: '2099-01-01T00:00:00.000Z',
     })
     signedInAs(ADMIN)
 
@@ -364,6 +365,24 @@ describe('DELETE /orgs/{orgId}/locations/{locationId}', () => {
     expect(store.docs.has(`orgs/${ORG}/locations/loc_1`)).toBe(true)
   })
 
+  it('allows deletion when the authorization pointing at it has expired', async () => {
+    seedOrg(ORG, 1, 1)
+    seedLocation(ORG, 'loc_1')
+    store.seed(`orgs/${ORG}/authorizations/auth_1`, {
+      id: 'auth_1',
+      location_id: 'loc_1',
+      status: 'active',
+      valid_to: '2020-01-01T00:00:00.000Z',
+    })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .delete(`/orgs/${ORG}/locations/loc_1`)
+      .set('Authorization', 'Bearer good')
+
+    expect(res.status).toBe(200)
+  })
+
   it('allows deletion once the authorization is revoked', async () => {
     seedOrg(ORG, 1, 1)
     seedLocation(ORG, 'loc_1')
@@ -371,6 +390,7 @@ describe('DELETE /orgs/{orgId}/locations/{locationId}', () => {
       id: 'auth_1',
       location_id: 'loc_1',
       status: 'revoked',
+      valid_to: '2099-01-01T00:00:00.000Z',
     })
     signedInAs(ADMIN)
 

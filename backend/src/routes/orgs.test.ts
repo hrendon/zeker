@@ -328,7 +328,11 @@ describe('DELETE /orgs/{orgId}', () => {
 
   it('refuses while an authorization is still active', async () => {
     seedOrg('org_alice', ALICE)
-    store.seed('orgs/org_alice/authorizations/auth_1', { id: 'auth_1', status: 'active' })
+    store.seed('orgs/org_alice/authorizations/auth_1', {
+      id: 'auth_1',
+      status: 'active',
+      valid_to: '2099-01-01T00:00:00.000Z',
+    })
     signedInAs(ALICE)
 
     const res = await request(app).delete('/orgs/org_alice').set('Authorization', 'Bearer good')
@@ -340,12 +344,34 @@ describe('DELETE /orgs/{orgId}', () => {
 
   it('allows deletion once the authorizations are revoked', async () => {
     seedOrg('org_alice', ALICE)
-    store.seed('orgs/org_alice/authorizations/auth_1', { id: 'auth_1', status: 'revoked' })
+    store.seed('orgs/org_alice/authorizations/auth_1', {
+      id: 'auth_1',
+      status: 'revoked',
+      valid_to: '2099-01-01T00:00:00.000Z',
+    })
     signedInAs(ALICE)
 
     const res = await request(app).delete('/orgs/org_alice').set('Authorization', 'Bearer good')
 
     expect(res.status).toBe(200)
+  })
+
+  it('allows deletion when the only authorization has already expired', async () => {
+    // Nothing marks a permit expired on a schedule, so an old one keeps
+    // status "active" forever. If the guard looked at status alone, one
+    // permit from 2020 would block this organization for good.
+    seedOrg('org_alice', ALICE)
+    store.seed('orgs/org_alice/authorizations/auth_1', {
+      id: 'auth_1',
+      status: 'active',
+      valid_to: '2020-01-01T00:00:00.000Z',
+    })
+    signedInAs(ALICE)
+
+    const res = await request(app).delete('/orgs/org_alice').set('Authorization', 'Bearer good')
+
+    expect(res.status).toBe(200)
+    expect(org('org_alice')?.status).toBe('deleted')
   })
 
   it('cannot be reached twice — a deleted organization is gone', async () => {

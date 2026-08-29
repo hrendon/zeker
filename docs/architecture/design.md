@@ -7,7 +7,7 @@ not a catalogue of screens that do not exist yet — those get added as they are
 designed and built.
 
 **Owner:** UI/UX Designer
-**Last updated:** 2026-08-27
+**Last updated:** 2026-08-29
 **Related:** `architecture.md`, `developer-guide.md`, `../product/requirements.md`
 
 ---
@@ -225,7 +225,57 @@ each time they sign in.
 
 ---
 
+## The permit flow
+
+Added 2026-08-29. From a set-up building to a code in a visitor's hands:
+
+```text
+Permisos (empty)  ->  Crear permiso
+                          |
+                    name, apartment, motivo, from/to
+                          |
+                    the code screen: QR + 8 characters
+                          |
+                    send it  /  anular it
+```
+
+Rules this flow follows, each for a reason:
+
+* **Creating a permit lands straight on its code.** The reason anyone creates a
+  permit is to send it to the person who is coming. Making them find it again
+  in a list would add a step to the one path everybody takes.
+* **The form starts filled in for the common case** — from this hour, for one
+  day, at the only apartment they are in charge of. A resident with someone at
+  the gate types a name and presses one button. Minutes are rounded down,
+  because a pre-filled "14:37" reads like a mistake.
+* **The code is shown large, spaced and monospaced.** It gets read aloud across
+  a gate, or typed by a guard holding a phone in one hand.
+* **A cancelled or finished permit shows no QR.** Drawing one would invite
+  somebody to send a code that will be turned away at the door.
+* **The dates are shown in the reader's own timezone**, and always in Spanish
+  ("29 de ago de 2026, 5:00 p. m."), never in the browser's locale.
+* **"Anular", not "cancelar".** Found by using the screen: a dialog whose
+  dismiss button said *Cancelar* and whose confirm button said *Cancelar el
+  permiso* used one word for two opposite actions. The permit action is now
+  *anular* everywhere, including in the refusals that mention it.
+
+### A select is not one of the building blocks
+
+The permit form needs three dropdowns. Rather than making `Select` a ninth
+shared component, it is defined inside the permit screen, following `Field`'s
+rules exactly — a real `<label>` tied to the control, `aria-describedby` for the
+error, 44px tall. The shared set stays small on purpose. When a third screen
+needs one, that is the moment to promote it.
+
+---
+
 ## Not yet designed
 
-The responsable and security experiences, and the screens for permits and the
-QR scan at a door. The conventions above apply to them when they are designed.
+The security experience — the QR scan at a door and the result a guard sees —
+and the entry history. The conventions above apply to them when they are
+designed.
+
+The responsable experience is now partly designed: a resident issues and revokes
+permits through the screens above. What they do *not* have yet is a home of
+their own — they still arrive through the organization list and the same tab
+bar an administrator sees.

@@ -221,55 +221,75 @@ them; no composite index is required.
 
 ### `orgs/{orgId}/authorizations/{authId}`
 
-Access permit (core entity).
+Access permit (core entity). **Built 2026-08-29.**
 
 ```firestore
 {
-  "id": "auth_p1k2p9m",               // Short unique code for QR
+  "id": "auth_Qh1hK6tqoFcRHSYXhyGn",
   "org_id": "org_abc123",
-  "location_id": "loc_entrance_1",    // Location where this auth applies
-  "created_by": "user1",              // userId who created authorization
-  "authorized_person": {
-    "name": "María García López",     // Required: full name
-    // No phone number. Decision 005: the visitor is not our user and never
-    // consented; nothing in the MVP sends them anything.
-    "relationship": "abuelo",         // "parent" | "guardian" | "grandparent" | "nanny" | "visitor" | "employee" | "provider" | "other"
-    "document_type": null,            // NEVER store, reference only if needed
-    "document_number_encrypted": null // NEVER store, reference only if needed
-  },
-  "authorization_details": {
-    "purpose": "school_pickup",       // "pickup" | "visitor" | "provider" | "employee" | "other"
-    "valid_from": 2026-08-19T00:00:00Z,  // Effective date
-    "valid_to": 2026-08-20T23:59:59Z,    // Expiration date/time
-    "time_from": "14:00",             // Optional: earliest time per day
-    "time_to": "17:00",               // Optional: latest time per day
-    "days_of_week": null,             // FUTURE: for recurring ["MON", "TUE", "WED"]
-    "max_entries": null,              // FUTURE: limit entries (e.g., 1 per day)
-    "notes": "Only Mon-Fri for pickup" // Admin notes
-  },
-  "codes": {
-    "qr": "data:image/png;base64,iVBORw0KG...", // Base64 PNG data
-    "numeric": "P1K2-P9M7",           // 8-character code (human-readable fallback)
-    "link": "https://zeker.app/v/auth_p1k2p9m"  // Shareable link
-  },
-  "status": "active",                 // "active" | "revoked" | "expired"
-  "revoked_at": null,
-  "revoked_by": null,
-  "created_at": 2026-08-18T10:00:00Z,
-  "updated_at": 2026-08-18T10:00:00Z
+  "interior_id": "int_a1b2c3",         // required — the apartment being visited
+  "location_id": "loc_torre_1",        // copied from the interior at creation
+  "visitor_name": "Ana Ruiz Peña",     // the only thing kept about the visitor
+  "purpose": "visitor",                // "visitor" | "pickup" | "provider" | "employee" | "other"
+  "valid_from": "2026-08-29T22:00:00.000Z",  // ISO 8601 string, UTC
+  "valid_to":   "2026-08-30T22:00:00.000Z",  // ISO 8601 string, UTC
+  "code": "4J044ZMF",                  // 8 chars, random, unique within the org
+  "status": "active",                  // "active" | "revoked" — NOT "expired"
+  "created_by": "user1",
+  "created_at": 2026-08-29T22:19:41Z,  // server timestamp
+  "revoked_at": null,                  // server timestamp once revoked
+  "revoked_by": null
 }
 ```
 
 **Constraints:**
-- `valid_from` must be < `valid_to`
-- `time_from` must be < `time_to` (if both present)
-- `created_by` must be admin or responsable of org
-- Cannot create auth for past dates (except today + 1 hour grace)
+- `valid_from` must be before `valid_to`
+- `valid_to` must be in the future when the permit is created. `valid_from` may
+  be in the past — "valid since this morning" is ordinary
+- a permit may not last longer than **365 days**. A visit is not a tenancy, and
+  a mistyped year must not admit someone until 2125
+- `interior_id` must exist in this organization. `location_id` is copied from
+  it, which is safe because an interior's location can never change
+- `code` is unique within the organization, checked inside the same transaction
+  that writes the permit
+- `created_by` must be an admin of the organization, or the responsable of that
+  interior. Security staff may not create one
 
-**Indexes needed:**
-- `org_id + status` (list active authorizations)
-- `org_id + location_id + status` (validate by location)
-- `org_id + valid_to` (find expired, cleanup)
+**What is actually implemented — departures from the original design.**
+Each is recorded in `../decisions/007-entry-permits.md`.
+
+| Original design | What is built | Why |
+|---|---|---|
+| `location_id` only | `interior_id`, with `location_id` derived | Decision 003: a permit belongs to one interior |
+| `authorized_person.{name, relationship, document_type, document_number_encrypted}` | a flat `visitor_name` | Data minimization. A document field that exists is one somebody eventually fills in |
+| `codes.qr` — a base64 PNG | not stored | The QR encodes the code and nothing else, so the browser draws it |
+| `codes.link` — a public share URL | not stored | A public page keyed by a code is an unauthenticated entrance, and it says where a named person is going |
+| `codes.numeric` derived from the id | `code`, from `crypto.randomInt` | That code alone opens a door. Anything predictable from a visible id is a way in |
+| `status: "expired"` | computed, never stored | Nothing runs to set it, so it would never arrive — and the delete guards would then block forever on a permit that ended last year |
+| `time_from` / `time_to` daily window | not stored | Needs each building's local time, which we do not keep |
+| `days_of_week`, `max_entries`, `notes` | not stored | No requirement demands them today |
+
+**The code.** Eight characters from `0123456789ABCDEFGHJKMNPQRSTVWXYZ` — 32
+symbols with no I, L, O or U, the letters a guard misreads in bad light. About
+1.1 × 10¹² possibilities. Shown as `4J04-4ZMF`; stored without the separator.
+Input is normalized before lookup: separators and spaces dropped, and I, L, O, U
+folded onto 1, 1, 0, V.
+
+**Why the dates are strings.** `valid_from` and `valid_to` are ISO 8601 in UTC
+rather than Firestore timestamps. In UTC that form sorts lexicographically
+exactly as it sorts chronologically, so the range queries below work on it
+directly, and the value carries its own timezone rather than depending on how a
+reader converts it. `created_at` and `revoked_at` stay server timestamps — they
+record when something happened here, not a moment a user chose.
+
+**Indexes needed** — declared in `../../firestore.indexes.json` and deployed
+2026-08-29. All three serve the same "is any permit still live?" question, which
+is equality filters plus a range on `valid_to`. **The query fails outright
+without them**, and the in-memory test double will not catch that:
+
+- `status + valid_to` (can this organization be deleted?)
+- `location_id + status + valid_to` (can this site be deleted?)
+- `interior_id + status + valid_to` (can this apartment be deleted?)
 
 ---
 

@@ -2,14 +2,11 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-28
-**Session closed:** 2026-08-27. Two units built (account screens, setup
-screens), three commits, two decisions answered by the Founder and one recorded
-as Decision 005, one new risk raised as D-006. Documents audited against the
-code at close: three documented rules were checked in the code and hold, and two
-missing documents that two roles had flagged are now on the map.
+**Last updated:** 2026-08-29
 
-**Last verified:** 2026-08-28 — backend typecheck clean, 122/122 tests pass; frontend typecheck clean, 22/22 tests pass, production build clean; the whole people flow driven in a real browser against live Firebase and live Firestore: a resident's account created by the administrator, the "set your password" email accepted by Firebase, the member list showing her with the email Firebase holds, an apartment handed over to her, and removing her correctly refused while she was still in charge of it.
+**Last verified:** 2026-08-29 — backend typecheck clean, 166/166 tests pass; frontend typecheck clean, 38/38 tests pass, production build clean; the permit flow driven in a real browser against live Firebase and live Firestore: a permit issued for apartment 302, its QR proved to encode the permit's own code, deleting that apartment correctly refused while the permit was live, and the permit revoked, with its code and QR disappearing. Two defects found by that live run and fixed (see below).
+
+**Previously verified:** 2026-08-28 — backend 122/122, frontend 22/22; the whole people flow driven in a real browser: a resident's account created by the administrator, the member list showing her with the email Firebase holds, an apartment handed over to her, and removing her correctly refused while she was still in charge of it.
 
 **Previously verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
 
@@ -26,15 +23,16 @@ missing documents that two roles had flagged are now on the map.
 🟢 **The product is visible in a browser for the first time** (Camino B: Build first, validate after)
 
 ```
-Completed:       Setup half of the product on the server (sign-in,
-                 organizations, locations, interiors + limits, people),
-                 and the screens people actually see
-                 (122 backend tests + 22 frontend tests pass)
-In Progress:     Week 1 — entry permits next, now unblocked
+Completed:       The setup half (sign-in, organizations, sites, interiors
+                 + limits, people) and now the issuing half: a resident
+                 creates an entry permit, gets a QR and a code, and can
+                 revoke it
+                 (166 backend tests + 38 frontend tests pass)
+In Progress:     Nothing. The next unit is checking a permit at a door
 Blocked:         0 · 2 decisions waiting on Founder (D-005, D-006),
                  neither blocking today
 Critical Risk:   None open
-Next:            Entry permits (QR), then validating a scan at the door
+Next:            Validating a scan at the door, and recording the entry
 ```
 
 **Found at session close (2026-08-27): a second program was listening on the
@@ -42,7 +40,57 @@ API's port** (a WSL forwarder on 3001), answering some requests instead of our
 backend and producing confusing failures. Not a fault in our code. How to spot
 it and how to work around it is written in the developer guide.
 
-**Latest Update (2026-08-28): a resident can now have a real account, and the
+**Latest Update (2026-08-29): a resident can now issue an entry permit, and
+the visitor gets a QR code.** This is the half of the product that makes money.
+Recorded as Decision 007.
+
+- **Type a name, press one button.** The form arrives already filled in for the
+  common case — from this hour, for one day, at the apartment the person is in
+  charge of. Creating the permit lands straight on the code, because sending it
+  to the visitor is the whole reason for making one.
+- **The code is a real credential, and is now treated like one.** The written
+  plan would have built it out of the permit's own identifier — visible in the
+  web address. Anyone who saw one permit could have worked out the code for
+  another. It is now randomly generated, from 32 characters chosen so that a
+  guard reading one aloud in bad light cannot produce a different one.
+- **A guard who types "O" instead of zero still gets in.** The four letters
+  people confuse are folded onto the digits they look like before the code is
+  checked. Turning away a visitor who is holding a valid code is a failure of
+  ours, not theirs.
+- **The QR is drawn on the resident's own phone.** Nothing is sent anywhere and
+  no picture is stored. It was proved — not assumed — to contain exactly the
+  permit's code.
+- **A permit cannot be quietly edited.** To change one you revoke it and issue
+  another, so the history says what actually happened. The Spanish label for
+  that is *Anular*. Revoking keeps the record: a permit that once opened a door
+  is part of the audit trail.
+- **Security staff cannot see or create permits.** A guard checks a code that is
+  put in front of them; a guard who could list a building's permits would see
+  who is expected where, all day.
+- ⚠️ **A fault was found that would have arrived at a customer.** Deleting an
+  apartment, a site or an organization is refused while a permit is still live.
+  As written, "still live" meant "not revoked" — so one permit that finished
+  last year would have blocked its apartment for ever, and taken the plan place
+  with it. Now a finished permit stops blocking anything.
+- ⚠️ **A fault found only by using it: the database was missing three indexes.**
+  Every test passed while the real thing failed. The indexes were written down
+  in the repository but had never been sent to Google. They are deployed now,
+  and the developer guide says that writing one down is not the same as
+  deploying it.
+- ⚠️ **A second fault found by using it: two buttons meant opposite things.**
+  The confirmation asked "¿Cancelar este permiso?" with *Cancelar* (go back)
+  next to *Cancelar el permiso* (do it). The action is now *Anular*, everywhere.
+- **What is deliberately not built**, all your calls this session: no shareable
+  link for the visitor, no daily time window (only from-one-moment-to-another),
+  and no email when someone enters. Each is written down in Decision 007 with
+  the reason, and marked in the requirements so nobody thinks it exists.
+- ⚠️ **Test data:** the test building now has two permits for apartment 302 —
+  one live ("Domicilio Rappi"), one revoked. Delete them whenever you like.
+- Verified: 166 backend tests, 38 frontend tests, typecheck and production build
+  all clean, plus the whole flow driven by hand in a browser against the live
+  database.
+
+**Previous Update (2026-08-28): a resident can now have a real account, and the
 building administrator creates it.** This was the last thing standing between
 the product and the part that makes money — entry permits. Your decision this
 session, recorded as Decision 006.
@@ -431,7 +479,8 @@ works end to end on the server.
 - [x] Interior endpoints + global 10-interior quota enforced in a transaction (403)
 - [x] Member endpoints — add a person (account created), list, remove
       (Decision 006) + 4 isolation tests
-- [ ] Authorization creation + QR/numeric code generation
+- [x] Permit endpoints — issue, list, view, revoke, with a random code
+      (Decision 007) + 4 isolation tests + 3 composite indexes deployed
 - [ ] Validation endpoint (scan QR, check validity, log event)
 - [ ] Unit + integration tests for all critical flows
 - [ ] Cloud Run deployment pipeline ready
@@ -446,7 +495,10 @@ works end to end on the server.
 - [x] Admin dashboard: org switcher, location CRUD, interior CRUD, plan usage
 - [x] People screen: add a person with a role, list them, remove them, and
       hand an apartment over to someone else
-- [ ] Responsable experience: create auth, display QR
+- [x] Permit screens: issue a permit, list them, show the QR and the code,
+      copy it, download it, revoke it
+- [ ] Responsable experience: a home of their own (today they arrive through
+      the organization list and the administrator's tab bar)
 - [ ] Security experience: QR scan + validation result
 - [ ] Entry history view
 - [ ] PWA setup (manifest, service worker, offline read-only)
@@ -569,6 +621,16 @@ works end to end on the server.
 - ✅ ~~A resident's account cannot be linked to their apartment~~ — closed
   2026-08-28 by Decision 006. An administrator creates the person's account,
   and every apartment always has one designated. Entry permits are unblocked.
+- 🟡 **Nothing limits how many permits a customer may issue.** The free plan
+  caps sites and interiors, but permits are uncounted — and they are the record
+  that actually accumulates and costs money to keep. No customer exists, so
+  nothing is being abused. It belongs with D-005, which asks the same kind of
+  question about free organizations.
+- 🟡 **A green test suite does not prove a Firestore query runs.** The in-memory
+  test double answers queries that real Firestore refuses without a composite
+  index. This was found on 2026-08-29 when deleting an apartment failed against
+  the live database while all 166 tests passed. The developer guide now makes
+  deploying the index part of adding the query, but nothing enforces it.
 - 🟡 **Nothing limits how many accounts one organization may create.** The free
   plan caps apartments at 10, which bounds how many responsables a free
   customer needs — but not how many people they may add. No customer can abuse
@@ -716,6 +778,28 @@ Blocks:         Nothing today. Blocks opening signup to the public.
 
 ## Approved Decisions
 
+### Decision 007: What an entry permit is, and what its code is ✅ APPROVED (2026-08-29)
+
+Four scope calls, all yours, plus five corrections the roles made to a
+specification written before Decisions 003, 005 and 006.
+
+- **Build the issuing side only** this session; checking at a door is next.
+- **Add a QR library** (~20KB) rather than sending permit codes to an outside
+  QR service. Nothing leaves the resident's phone.
+- **No shareable link for the visitor.** A public page keyed by a permit code
+  is a new unauthenticated entrance, and it says where a named person is going.
+- **No daily time window** ("only 14:00–17:00 each day"). It needs each
+  building's local time, which we do not store. A permit runs from one moment
+  to another moment.
+- **No email when someone enters.** We can send no email of our own, so this
+  needs a paid service, a new supplier, and a privacy decision. Revisit after
+  customers say whether they want it.
+
+The corrections: a permit points at an apartment not a site; the code is random,
+never derived from the permit's id; the QR image is not stored; "finished" is
+worked out from the dates rather than stored; and there are no identity-document
+fields at all. Full reasoning in `docs/decisions/007-entry-permits.md`.
+
 ### Decision 006: A responsable is an account, created by the administrator ✅ APPROVED (2026-08-28)
 
 The person in charge of an apartment is a real account, not typed text, and only
@@ -845,6 +929,9 @@ Blocker:        Data model + MVP scope locked until this approved
 ## Technical Decisions
 
 ### Active Decisions
+
+- Entry permits: random 8-character codes, QR drawn in the browser, expiry
+  computed not stored, no share link, no daily window (Decision 007)
 
 - **GCP Cloud Stack** — Firestore, Cloud Run, Firebase Auth, KMS
 - **Sign-in in the browser** — Firebase Auth Web SDK; our API never sees a password (Decision 002)
@@ -982,32 +1069,35 @@ When you restart, check:
 
 ## Where to pick up
 
-**A customer can now be set up end to end in a browser: account, organization,
-site, apartments. What is still missing is the half that makes money — issuing
-an entry permit and checking it at a door.**
+**A permit can now be issued and revoked. What is missing is the other end of
+it: a guard checking the code at a door.** That is the last piece before the
+product does, end to end, the thing it exists to do.
 
-**Nothing is blocking entry permits any more.** A resident can have an account,
-created by the administrator, and every apartment has one designated person
-(Decision 006).
+**The next unit — checking a permit at a door:**
 
-**Entry permits, in order:**
-
-1. Create a permit for a visitor: their name, which apartment they are coming
-   to, and when it is valid. Generate the QR and a fallback numeric code for
-   when a camera will not read it. Revoke a permit.
-2. Validate a scan at the door and record the entry.
+1. A guard scans the QR, or types the eight characters, and is told in one
+   glance whether the person may enter: who they are, which apartment, and
+   until when. A refusal says which of the reasons it is — revoked, finished,
+   not started yet, wrong entrance, or no such code.
+2. Every check is recorded, allowed or refused. That log is the audit trail the
+   whole product rests on.
 
 Already settled, needing no new decision:
 
-- A permit belongs to exactly one interior (Decision 003).
-- A permit stores the visitor's name and nothing else about them (Decision 005).
-- Who may create one: the interior's responsable, and an admin. Security staff
-  may not. Both now exist as real accounts (Decision 006), so this is
-  buildable as written.
+- The endpoint contract is drafted in `docs/architecture/api.md` under
+  "Validation Endpoint", still marked NOT BUILT. **It needs one correction
+  before it is built:** a permit belongs to an interior, so a scan is checked
+  against that interior's site, not against a `location_id` on the permit.
+- `normalizeCode()` in `backend/src/lib/permits.ts` already turns whatever a
+  guard types into the stored form. Use it — it is what lets someone type "O"
+  for a zero and still get in.
+- Security staff already have real accounts and the `security` role
+  (Decision 006). They are deliberately refused everywhere else.
 
 **Also worth doing soon, cheaply:** open the screens on a real phone. They are
-built phone-first but have only ever been seen on a desktop, and security staff
-will use this at a gate.
+built phone-first but have only ever been seen on a desktop, and this is the
+screen a resident uses in a hurry. It was attempted on 2026-08-29 by resizing
+the browser and the window would not resize, so it is still unchecked.
 
 ---
 
@@ -1049,11 +1139,23 @@ will use this at a gate.
   half was wrong, and password recovery never reveals whether an account exists.
 - A test account exists in Firebase (`prueba.desarrollo@zeker-test.com`) from
   verifying the sign-in flow. Nothing depends on it.
+- **A permit's code is a credential.** It is generated with `crypto.randomInt`
+  from an alphabet with no I, L, O or U, and is never derived from the permit's
+  id — that id is visible in the web address. Do not "simplify" this.
+- **A permit's `status` is only `active` or `revoked`.** Whether it has expired
+  is worked out from `valid_to` at read time. The three delete guards go
+  through `hasLivePermit()` in `backend/src/lib/permits.ts`, which checks both;
+  a guard that looked at `status` alone would block an apartment for ever.
+- **A query that combines an equality filter with a range needs a composite
+  index in `firestore.indexes.json`, deployed.** The test double does not need
+  one and will not warn you. Deploy with
+  `firebase deploy --only firestore:indexes`, and wait: a new index says
+  `CREATING` for a few minutes and the query fails until it says `READY`.
 
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-28
+**Last updated:** 2026-08-29
 **Approval:** ⏳ Two cards waiting — D-005 (free organizations per person) and
 D-006 (verifying that whoever registers a building actually runs it). Neither
 blocks work today; both block opening the product to the public.

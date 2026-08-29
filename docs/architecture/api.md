@@ -743,164 +743,193 @@ legitimately have elsewhere. What is removed is this organization's membership.
 
 ## Authorization Endpoints
 
-> ⛔ **NOT BUILT. This section is a specification, not a description.**
-> Nothing below this line exists in the backend — `backend/src/routes/index.ts`
-> mounts only `/health`, `/auth` and `/orgs` (which mounts locations and
-> interiors beneath it). The Authorization, Validation and Access Events
-> sections that follow are the agreed contract for work not yet started. Do not
-> build a frontend against them.
+> ✅ **BUILT (2026-08-29).** Mounted at `/orgs/{orgId}/authorizations`.
 >
-> One part is already settled and differs from an earlier draft: a permit
-> carries the visitor's name and **no phone number**
-> (`../decisions/005-no-visitor-phone-number.md`).
+> The shape below **replaces an earlier draft** that was written before
+> Decisions 003, 005 and 006 and contradicted all three. Every departure is
+> recorded in `../decisions/007-entry-permits.md`. The main ones:
+>
+> - a permit points at an **interior**, not a location (Decision 003);
+> - the code is **randomly generated**, never derived from the permit id;
+> - the **QR image is not stored** — the browser draws it from the code;
+> - **"expired" is computed** from the dates, never stored;
+> - there are **no identity-document fields**, not even empty ones
+>   (Decision 005, `../security/data-minimization.md`).
+
+**Who may do what.** Every route runs `requireOrgMember` first — since Decision
+004 that check is the only thing keeping one customer's permits away from
+another's.
+
+| Role | Issue | See | Revoke |
+|------|-------|-----|--------|
+| `admin` | any interior | all of the organization's | any |
+| `responsable` | only interiors they are in charge of | only theirs | only theirs |
+| `security` | no (403) | no (403) | no (403) |
+
+Security staff are excluded deliberately: at a gate they check a code that is
+put in front of them, and a guard who can list every permit in a building can
+see who is expected where, all day.
+
+**What a permit is right now** (`state`) is derived at read time, never stored:
+
+| `state` | Meaning |
+|---------|---------|
+| `scheduled` | `valid_from` has not arrived yet |
+| `active` | now is inside the window, and it is not revoked |
+| `expired` | `valid_to` has passed |
+| `revoked` | it was revoked, whatever the dates say |
+
+The stored `status` field is only `active` or `revoked` and is not returned.
+
+---
 
 ### POST /orgs/{orgId}/authorizations
 
-Create authorization permit.
+Issue a permit. Administrators, and the responsable of the interior.
 
 **Request:**
 ```json
 {
-  "location_id": "loc_entrance_1",
-  "authorized_person": {
-    "name": "María García López",
-    "relationship": "grandmother"
-  },
-  "authorization_details": {
-    "purpose": "school_pickup",
-    "valid_from": "2026-08-19T00:00:00Z",
-    "valid_to": "2026-08-20T23:59:59Z",
-    "time_from": "14:00",
-    "time_to": "17:00"
-  }
+  "interior_id": "int_a1b2c3",
+  "visitor_name": "Ana Ruiz Peña",
+  "purpose": "visitor",
+  "valid_from": "2026-08-29T22:00:00.000Z",
+  "valid_to": "2026-08-30T22:00:00.000Z"
 }
 ```
+
+`purpose` is optional and defaults to `visitor`; the values are `visitor`,
+`pickup`, `provider`, `employee`, `other`. `valid_from` and `valid_to` are
+ISO 8601. Any other field is rejected — the schema is strict, so an identity
+document cannot slip in.
 
 **Response (201):**
 ```json
 {
-  "id": "auth_p1k2p9m",
+  "id": "auth_Qh1hK6tqoFcRHSYXhyGn",
   "org_id": "org_abc123",
-  "location_id": "loc_entrance_1",
-  "authorized_person": {
-    "name": "María García López",
-    "relationship": "grandmother"
-  },
-  "authorization_details": {
-    "purpose": "school_pickup",
-    "valid_from": "2026-08-19T00:00:00Z",
-    "valid_to": "2026-08-20T23:59:59Z",
-    "time_from": "14:00",
-    "time_to": "17:00"
-  },
-  "codes": {
-    "qr": "data:image/png;base64,iVBORw0KG...",
-    "numeric": "P1K2-P9M7",
-    "link": "https://zeker.app/v/auth_p1k2p9m"
-  },
-  "status": "active",
-  "created_at": "2026-08-18T10:00:00Z"
+  "interior_id": "int_a1b2c3",
+  "interior_number": "302",
+  "location_id": "loc_torre_1",
+  "visitor_name": "Ana Ruiz Peña",
+  "purpose": "visitor",
+  "valid_from": "2026-08-29T22:00:00.000Z",
+  "valid_to": "2026-08-30T22:00:00.000Z",
+  "code": "4J04-4ZMF",
+  "state": "active",
+  "created_by": "user_xyz789",
+  "created_at": "2026-08-29T22:19:41.000Z",
+  "revoked_at": null,
+  "revoked_by": null
 }
 ```
 
+`interior_number` is resolved from the interior, not stored on the permit — the
+same rule as an interior's `responsable_name` (Decision 006).
+
+`code` is shown grouped as `XXXX-XXXX` for reading aloud. It is stored without
+the separator, and the QR encodes those eight characters. Guards' input is
+normalized before checking: separators and spaces are dropped, and I, L, O and U
+are folded onto 1, 1, 0 and V, so a guard who reads a zero as the letter O still
+gets in.
+
 **Errors:**
-- `400` — Dates invalid (valid_to before valid_from)
-- `403` — User not admin/responsable of org
+- `400 invalid_request` — a field is missing or unknown; the dates are not ISO
+  8601; `valid_to` is not after `valid_from`; `valid_to` is in the past; or the
+  permit would last more than 365 days
+- `403 forbidden` — a responsable issuing for an interior they are not in
+  charge of, or security staff
+- `404 not_found` — no such interior in this organization, or the caller is not
+  a member of the organization at all
+- `409 conflict` — a unique code could not be generated after five attempts.
+  In a space of 10¹² this means the random source is broken, not bad luck;
+  refusing is safer than reusing a code
 
 ---
 
 ### GET /orgs/{orgId}/authorizations
 
-List authorizations for org.
+List permits. An administrator sees the organization's; a responsable sees only
+those of the interiors they are in charge of.
 
 **Query params:**
-- `status` — "active" | "revoked" | "expired" (optional, default: all)
-- `location_id` — Filter by location (optional)
+- `interior_id` — narrow to one interior (optional). A responsable asking for an
+  interior that is not theirs gets `403`, rather than an empty list, so the
+  screen can say why
+- `state` — `scheduled` | `active` | `expired` | `revoked` (optional). An
+  unrecognised value is `400`, not silently ignored
 
 **Response (200):**
 ```json
 {
-  "authorizations": [
-    {
-      "id": "auth_p1k2p9m",
-      "authorized_person": {
-        "name": "María García López"
-      },
-      "location_id": "loc_entrance_1",
-      "valid_from": "2026-08-19T00:00:00Z",
-      "valid_to": "2026-08-20T23:59:59Z",
-      "status": "active",
-      "created_at": "2026-08-18T10:00:00Z"
-    }
-  ]
+  "authorizations": [ { "...": "one object per permit, as above" } ],
+  "request_id": "req_..."
 }
 ```
+
+Ordered so that what is usable now comes first — `active`, then `scheduled`,
+then `expired`, then `revoked` — and within each group the most recent first.
 
 ---
 
 ### GET /orgs/{orgId}/authorizations/{authId}
 
-Get authorization details.
+One permit, including its code. Same rule as the list.
 
-**Response (200):**
-```json
-{
-  "id": "auth_p1k2p9m",
-  "org_id": "org_abc123",
-  "authorized_person": {
-    "name": "María García López",
-    "relationship": "grandmother"
-  },
-  "codes": {
-    "qr": "data:image/png;base64,iVBORw0KG...",
-    "numeric": "P1K2-P9M7"
-  },
-  "status": "active",
-  "created_by": "user_xyz789",
-  "created_at": "2026-08-18T10:00:00Z"
-}
-```
-
----
-
-### PUT /orgs/{orgId}/authorizations/{authId}
-
-Update authorization (extend dates, change times, etc.).
-
-**Request:**
-```json
-{
-  "authorization_details": {
-    "valid_to": "2026-08-25T23:59:59Z"
-  }
-}
-```
-
-**Response (200):**
-```json
-{
-  "id": "auth_p1k2p9m",
-  "updated_at": "2026-08-18T12:00:00Z"
-}
-```
+**Errors:** `403` for a responsable looking at another interior's permit;
+`404` when it does not exist.
 
 ---
 
 ### DELETE /orgs/{orgId}/authorizations/{authId}
 
-Revoke authorization.
+Revoke. The record is kept and marked, never removed — a permit that once opened
+a door is part of the audit trail.
 
 **Response (200):**
 ```json
-{
-  "message": "Authorization revoked",
-  "revoked_at": "2026-08-18T12:00:00Z"
-}
+{ "id": "auth_Qh1hK6tqoFcRHSYXhyGn", "state": "revoked", "revoked": true }
 ```
+
+Revoking an already-revoked permit succeeds and changes nothing, including who
+revoked it. Pressing the button twice is not an error.
+
+**Errors:** `403` for security staff or another interior's responsable;
+`404` when it does not exist.
+
+> **There is no `PUT`.** The earlier draft had one, for extending a permit's
+> dates. It is not built: revoking and issuing again is simpler to explain, and
+> it leaves an audit trail that says what actually happened rather than showing
+> a permit whose validity changed after the fact.
+
+---
+
+### Indexes this section needs
+
+The three delete guards (organization, location, interior) ask "is any permit
+still live here?", which is an equality filter plus a range on `valid_to`.
+Firestore needs a composite index for that, and **the query fails outright
+without one**. All three are declared in `../../firestore.indexes.json`:
+
+| Collection | Fields |
+|------------|--------|
+| `authorizations` | `status`, `valid_to` |
+| `authorizations` | `location_id`, `status`, `valid_to` |
+| `authorizations` | `interior_id`, `status`, `valid_to` |
+
+Deploy them with `firebase deploy --only firestore:indexes` — see
+`developer-guide.md`. They were deployed on 2026-08-29.
 
 ---
 
 ## Validation Endpoint
+
+> ⛔ **NOT BUILT. This section is a specification, not a description.**
+> Checking a permit at a door is the next unit of work. The contract below
+> still needs one correction before it is built: a permit belongs to an
+> **interior**, so a scan is checked against the interior's location, and the
+> code is normalized before lookup (drop separators; fold I, L, O, U onto
+> 1, 1, 0, V) — see `../decisions/007-entry-permits.md`.
 
 ### POST /orgs/{orgId}/validate
 
@@ -946,6 +975,10 @@ Scan QR code and validate authorization (security personnel).
 ---
 
 ## Access Events Endpoint
+
+> ⛔ **NOT BUILT. This section is a specification, not a description.**
+> Nothing writes an access event yet; the first writer will be the validation
+> endpoint above.
 
 ### GET /orgs/{orgId}/events
 
