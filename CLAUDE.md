@@ -1,15 +1,20 @@
 # CLAUDE.md — Zeker Project
 
-This project uses the **Mantis AI Software Development Operating Framework** (in `../mantis/`).
+This project uses the **Mantis AI Software Development Operating Framework**, checked out at `mantis/` inside this repository.
 
 ## Load at session start
 
-The framework lives in the parent folder and is loaded automatically by CLAUDE.md in this project:
+The framework files live one level down, in `mantis/mantis/` — `mantis/` is the
+framework's own repository and `mantis/mantis/` is its content directory:
 
-- `../mantis/mantis.md` — base framework
-- `../mantis/roles.md` — role catalog & activation
-- `../mantis/execution.md` — unit cycle & autonomy tiers
-- `../mantis/preferences.md` — communication defaults (managerial register, Spanish UI default)
+- `mantis/mantis/mantis.md` — base framework
+- `mantis/mantis/roles.md` — role catalog & activation
+- `mantis/mantis/execution.md` — unit cycle & autonomy tiers
+- `mantis/mantis/delivery-framework.md` — branch model, gates to production (Spanish)
+- `mantis/mantis/lifecycle-gates.md` — company stages and business gates
+- `mantis/mantis/preferences.md` — communication defaults (managerial register, Spanish UI default)
+
+`mantis/CLAUDE.md` is the framework's own orientation file and is worth reading too.
 
 **In this session:** Camino B (build first, validate after) with freemium GCP strategy.
 
