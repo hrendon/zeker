@@ -131,18 +131,24 @@ these units, so the product could not deliver what it sells without them.
 
 ### Acceptance Criteria
 
-- [x] Security UI: full-screen input for QR scan
-- [x] Scan reads QR code (via device camera or manual input)
-- [x] System validates authorization in real-time:
-  - Authorization exists?
-  - Not revoked?
-  - Dates in range?
-  - Location matches?
-  - Current time in allowed window?
+- [x] Security UI: one screen, phone-first, nothing else on it — built
+      2026-08-30 at `/organizaciones/{orgId}/porteria` (Decision 008)
+- [x] Scan reads QR code (device camera **and** manual input; the typed field
+      is always available, because a refused camera permission must never
+      become a visitor who cannot get in)
+- [x] System validates authorization in real-time, in this fixed order:
+      no such code → revoked → not started → finished → wrong entrance.
+      The permit's own state is settled before the entrance, so a revoked
+      permit never produces "try the other gate"
 - [x] Response within 2 seconds
-- [x] Clear success (green): name, location, allowed time
-- [x] Clear failure (red): reason (expired, wrong location, revoked, etc.)
-- [x] Event logged (entry)
+- [x] Clear success (green): name, interior, purpose, valid until
+- [x] Clear failure (red): the reason in words, plus who was turned away when
+      the code matched a real permit — and for a wrong entrance, the name of
+      the right one, so the guard can redirect rather than refuse
+- [x] Event logged (entry). Every check is recorded, allowed or refused
+- [ ] ⚠️ **Not verified against a real phone camera.** The QR-reading library
+      was proved to decode exactly the QR this product draws, and the typed
+      fallback was driven by hand, but no camera has yet read a real permit
 - [ ] ⚠️ **Email on entry — not built.** The product can send no email of its
       own; Firebase Auth sends only password emails. This needs a paid
       notification service, a new supplier, and a privacy decision about telling

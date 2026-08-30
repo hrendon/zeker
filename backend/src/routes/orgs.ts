@@ -20,6 +20,7 @@ import { locationsRouter } from './locations.js'
 import { interiorsRouter } from './interiors.js'
 import { membersRouter } from './members.js'
 import { permitsRouter } from './permits.js'
+import { validateRouter } from './validate.js'
 import { hasLivePermit } from '../lib/permits.js'
 
 export const orgsRouter: Router = Router()
@@ -30,6 +31,7 @@ orgsRouter.use('/:orgId/locations', locationsRouter)
 orgsRouter.use('/:orgId/interiors', interiorsRouter)
 orgsRouter.use('/:orgId/members', membersRouter)
 orgsRouter.use('/:orgId/authorizations', permitsRouter)
+orgsRouter.use('/:orgId/validate', validateRouter)
 
 const CreateOrgSchema = z
   .object({

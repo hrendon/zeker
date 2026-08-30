@@ -31,6 +31,7 @@ Map of authoritative sources for project knowledge.
 | — 005 | `decisions/005-no-visitor-phone-number.md` | A permit stores no phone number; nothing needs KMS encryption | Security + Product Owner |
 | — 006 | `decisions/006-members-and-responsable-accounts.md` | A responsable is an account created by the administrator | Product Owner + Architect + Security |
 | — 007 | `decisions/007-entry-permits.md` | What an entry permit is, and why its code is random | Founder + Architect + Security |
+| — 008 | `decisions/008-checking-a-permit-at-a-door.md` | Checking a permit at a door, and what a check leaves behind | Founder + Architect + Security |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |

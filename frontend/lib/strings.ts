@@ -96,6 +96,7 @@ export const es = {
     interiors: 'Interiores',
     members: 'Personas',
     permits: 'Permisos',
+    gate: 'Portería',
     changeOrg: 'Cambiar organización',
   },
 
@@ -297,6 +298,48 @@ export const es = {
     backToList: 'Volver a los permisos',
     filterAll: 'Todos',
     forInterior: 'Interior',
+  },
+
+  gate: {
+    title: 'Portería',
+    subtitle: 'Lea el código QR de la visita, o escriba el número.',
+
+    entrance: 'Entrada donde está usted',
+    entranceHint: 'Un permiso sirve solo en la entrada para la que se hizo.',
+    entranceNone: 'Esta organización todavía no tiene sedes. Pídale una al administrador.',
+    entranceChange: 'Cambiar de entrada',
+
+    scan: 'Leer el código QR',
+    scanning: 'Buscando el código…',
+    scanStop: 'Detener la cámara',
+    cameraDenied:
+      'No tenemos permiso para usar la cámara. Actívelo en el navegador, o escriba el número.',
+    cameraFailed: 'No pudimos abrir la cámara. Escriba el número.',
+    cameraLive: 'Apunte la cámara al código QR de la visita.',
+
+    codeLabel: 'Número del permiso',
+    codePlaceholder: 'A1B2-C3D4',
+    codeHint: 'Ocho caracteres. No importan mayúsculas, guiones ni espacios.',
+    codeRequired: 'Escriba o lea un código.',
+    submit: 'Verificar',
+    submitting: 'Verificando…',
+    again: 'Verificar otro',
+
+    allowed: 'Puede entrar',
+    denied: 'No puede entrar',
+
+    // Each refusal says which one it is. A guard who only hears "no" cannot
+    // explain anything to the person standing in front of them.
+    reasonInvalidCode: 'Ese código no existe. Revise que esté bien escrito.',
+    reasonRevoked: 'El permiso fue anulado por quien lo creó.',
+    reasonNotStarted: 'El permiso todavía no empieza.',
+    reasonExpired: 'El permiso ya terminó.',
+    reasonWrongLocation: 'Ese permiso no es para esta entrada.',
+    rightEntrance: 'Es para',
+
+    goingTo: 'Va a',
+    validUntil: 'Vale hasta',
+    recorded: 'Queda registrado.',
   },
 
   usage: {

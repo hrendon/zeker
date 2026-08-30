@@ -41,21 +41,48 @@ Security policy on what personal data we collect, store, and why.
     from the end date, so nothing has to run to keep it true (Decision 007)
   - Retention: Indefinite
 
-**Audit Trail:**
+**Audit Trail** (one record per check at a door, Decision 008):
 - Access event timestamp
   - Why: Know when entry occurred
   - Storage: Plain text
-  - Retention: 90 days (then auto-delete)
+  - Retention: 90 days if allowed, 30 if refused (then auto-delete)
 
-- Entry/exit action type
+- Action type
   - Why: Distinguish entry from exit
-  - Storage: Plain text (enum)
-  - Retention: 90 days
+  - Storage: Plain text (enum). Only `entry` is written — exits are not
+    recorded in the MVP (Decision 008)
+  - Retention: With the event
 
-- Authorization ID (reference)
-  - Why: Link event to authorization
-  - Storage: Plain text (foreign key)
-  - Retention: 90 days
+- Result, and the reason for a refusal
+  - Why: The answer the guard was given, which is the point of the record
+  - Storage: Plain text (enum)
+  - Retention: With the event
+
+- Permit ID and interior ID (references)
+  - Why: Link the check to the permit, and to where the visitor was going
+  - Storage: Plain text (foreign keys). **The visitor's name is deliberately
+    not copied here** — the permit holds it, and a second copy in a second
+    collection is what this policy exists to prevent (Decision 008)
+  - Retention: With the event
+
+- The code someone submitted, **only when it matched no permit**
+  - Why: With no permit to point at, it is the only evidence of what was
+    attempted. When a permit *was* found, its id is the reference and the code
+    is not copied — a live door code has no business in a second collection
+  - Storage: Plain text
+  - Retention: 30 days (it is always on a refusal)
+
+- Who made the check
+  - Why: Accountability — a guard's decisions at a gate are auditable
+  - Storage: Plain text (user id)
+  - Retention: With the event
+
+> **Not stored on a check: the guard's internet address, and what kind of device
+> they used.** Both were in the original data model. They describe the guard,
+> not the visitor, and across every scan of a shift they become a location trail
+> of a customer's own staff — something we would then have to disclose, defend
+> and protect, for an investigation nobody has asked for. Founder decision,
+> 2026-08-30 (Decision 008).
 
 **User Account:**
 - Email address

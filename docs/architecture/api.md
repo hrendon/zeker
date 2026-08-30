@@ -924,60 +924,104 @@ Deploy them with `firebase deploy --only firestore:indexes` — see
 
 ## Validation Endpoint
 
-> ⛔ **NOT BUILT. This section is a specification, not a description.**
-> Checking a permit at a door is the next unit of work. The contract below
-> still needs one correction before it is built: a permit belongs to an
-> **interior**, so a scan is checked against the interior's location, and the
-> code is normalized before lookup (drop separators; fold I, L, O, U onto
-> 1, 1, 0, V) — see `../decisions/007-entry-permits.md`.
+> ✅ **BUILT** on 2026-08-30. See `../decisions/008-checking-a-permit-at-a-door.md`.
 
 ### POST /orgs/{orgId}/validate
 
-Scan QR code and validate authorization (security personnel).
+Checks one entry permit at one entrance, and records the check.
+
+**Who may call it:** security staff, and administrators. A responsable is
+refused with 403. Anyone outside the organization gets 404, like every other
+organization-scoped route.
 
 **Request:**
 ```json
 {
-  "location_id": "loc_entrance_1",
-  "code": "P1K2-P9M7"  // or full auth_id
+  "location_id": "loc_xmRXT7S30maPtKnJstgG",
+  "code": "Z6XF-H2B8"
 }
 ```
 
-**Response (200) — Valid:**
+`code` is normalized before lookup: separators and spaces are dropped, and
+I, L, O and U are folded onto 1, 1, 0 and V, so a guard who reads a zero as an
+"O" still gets in (`backend/src/lib/permits.ts`, `normalizeCode`). The entrance
+is checked against the `location_id` the permit copied from its interior when it
+was created (Decision 003) — there is no second lookup.
+
+**A refusal is a 200, not an error.** "This person may not enter" is a correct
+answer to the question the guard asked. Anything other than 200 means the
+request itself was broken.
+
+**Response (200) — allowed:**
 ```json
 {
   "result": "allowed",
-  "authorization": {
-    "id": "auth_p1k2p9m",
-    "visitor_name": "María García López",
+  "permit": {
+    "id": "auth_lbqq9thDHLRipL41BymE",
+    "visitor_name": "Ana Ruiz",
+    "interior_id": "int_F2pPeLgP1yF2FfzCioyB",
     "interior_number": "302",
     "purpose": "pickup",
-    "valid_to": "2026-08-20T17:00:00.000Z"
+    "valid_from": "2026-08-30T19:00:00.000Z",
+    "valid_to": "2026-08-31T19:00:00.000Z"
   },
-  "event_id": "event_20260818_001"
+  "event_id": "event_43A7mW3TICIFxENnZUts",
+  "request_id": "req_abc123xyz"
 }
 ```
 
-**Response (200) — Invalid:**
+**Response (200) — denied:**
 ```json
 {
   "result": "denied",
-  "reason": "expired",  // "expired", "revoked", "not_started", "wrong_location", "invalid_code"
-  "event_id": "event_20260818_002"
+  "reason": "wrong_location",
+  "permit": { "...": "same shape as above; omitted when nothing matched" },
+  "expected_location": "Puerta trasera",
+  "event_id": "event_iu6e4MvtFYNZWNdD9BrJ",
+  "request_id": "req_abc123xyz"
 }
 ```
 
+`reason` is one of `invalid_code`, `revoked`, `not_started`, `expired`,
+`wrong_location`, **evaluated in that order**. The permit's own state is settled
+before the entrance is considered, so a revoked permit never produces "try the
+other gate".
+
+`permit` is present whenever the code matched a real permit, including on a
+refusal — a guard turning someone away can then say who, and which interior. It
+is absent for `invalid_code`, where nothing is known. **The code is never
+returned**: the guard already has it, and echoing a live credential into a second
+screen only creates another place it can leak.
+
+`expected_location` appears only for `wrong_location`, and holds the name of the
+entrance the permit *is* for, so the guard can redirect the visitor rather than
+turn them away.
+
 **Errors:**
-- `400` — Missing location_id or code
-- `404` — Authorization not found
+- `400 invalid_request` — missing `location_id` or `code`, or an unknown field
+- `403 forbidden` — a responsable, or any role other than security/admin
+- `404 not_found` — no such entrance, or the caller is not a member of the org
+- `409 conflict` — that entrance has been retired (`enabled: false`)
+
+No event is written for any of these: a record has to say truthfully where the
+check happened.
+
+**Rate limit:** 100 per minute per user, not the general 60.
+
+**No composite index is needed.** The code is found by a single-field equality
+match, which Firestore indexes on its own.
 
 ---
 
 ## Access Events Endpoint
 
-> ⛔ **NOT BUILT. This section is a specification, not a description.**
-> Nothing writes an access event yet; the first writer will be the validation
-> endpoint above.
+> ⚠️ **PARTLY BUILT.** The validation endpoint above **writes** access events
+> as of 2026-08-30; their stored shape is in `data-model.md`. The `GET` endpoint
+> below is **not built** — nothing reads them yet. It is the next unit, and the
+> shape below still needs correcting first: a stored event has no `visitor_name`
+> (it points at the permit, which holds the name), its `auth_id` is stored as
+> `permit_id`, and `action` is always `entry` — exits are not recorded. See
+> `../decisions/008-checking-a-permit-at-a-door.md`.
 
 ### GET /orgs/{orgId}/events
 

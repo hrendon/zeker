@@ -212,6 +212,23 @@ Two things follow:
   `firebase firestore:indexes --pretty` stops saying `CREATING`, the query
   still fails.
 
+### The same trap, one level up: retention policies
+
+A Firestore **TTL policy** is configured per collection group in Google Cloud,
+not in any file in this repository. Writing an `expires_at` field on every
+document does not switch it on, and nothing in the tests or the code will tell
+you it is off — the documents simply accumulate for ever.
+
+```bash
+gcloud firestore fields ttls update expires_at   --collection-group=access_events --project zeker-505918 --enable-ttl
+gcloud firestore fields list --collection-group=access_events   # is it ENABLED?
+```
+
+⚠️ **`access_events` carries `expires_at` since 2026-08-30, and its policy is
+not enabled yet.** Until it is, no check is ever deleted, which contradicts the
+90/30-day retention this product promises in
+`../security/data-minimization.md`.
+
 ---
 
 ## Frontend

@@ -200,7 +200,9 @@ Firebase's, outside our trust boundary.
 
 - **Admin:** Can create org, locations, view all events, manage users, see reports
 - **Responsable:** Can create authorizations, view their own history, revoke
-- **Security:** Can only scan/validate, read-only access to authorizations
+- **Security:** Can only check a code at a door (`POST /validate`). Deliberately
+  cannot list, see or create permits — someone who could would know who is
+  expected where, all day (Decisions 007, 008)
 - **Owner:** Can delete org, change billing (not in MVP)
 
 The role is **per organization**, stored in `users/{uid}.orgs[]` as
@@ -356,9 +358,13 @@ DELETE /orgs/{id}/authorizations/{aid}  — Revoke (the record is kept)
        (there is deliberately no PUT — revoke and reissue instead,
         so the history says what actually happened. See decisions/007)
 
+POST   /orgs/{id}/validate    — Check one permit at one entrance, and
+                                record the check. Security + admin only.
+                                A refusal is a 200, not an error.
+                                See decisions/008
+
 --- not built yet ---
-POST   /orgs/{id}/validate    — Scan QR, validate
-GET    /orgs/{id}/events      — Access events
+GET    /orgs/{id}/events      — Read the checks that /validate writes
 ```
 
 Everything above `not built yet` is implemented and covered by tests. `api.md`

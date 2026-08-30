@@ -295,37 +295,73 @@ without them**, and the in-memory test double will not catch that:
 
 ### `orgs/{orgId}/access_events/{eventId}`
 
-Immutable log of entry/exit attempts (audit trail).
+> ✅ **BUILT** on 2026-08-30 (Decision 008). Written by
+> `POST /orgs/{orgId}/validate`. Nothing reads them yet.
+
+Immutable log of entry attempts — the audit trail the whole product rests on.
+One document per check, allowed or refused.
 
 ```firestore
 {
-  "id": "event_20260818_001",         // eventId
+  "id": "event_43A7mW3TICIFxENnZUts",
   "org_id": "org_abc123",
-  "auth_id": "auth_p1k2p9m",          // Reference to authorization
-  "location_id": "loc_entrance_1",    // Which entry point
-  "timestamp": 2026-08-18T15:30:45Z,  // When did it happen
-  "action": "entry",                  // "entry" | "exit"
-  "result": "allowed",                // "allowed" | "denied"
-  "deny_reason": null,                // If denied: "expired" | "revoked" | "not_started" | "wrong_location" | "invalid_code" | "error"
-  "security_personnel_id": "user3",   // Who scanned it
-  "metadata": {
-    "qr_scanned": "P1K2-P9M7",        // Code that was scanned
-    "ip_address": "203.0.113.45",
-    "device_type": "mobile",
-    "request_id": "req_abc123xyz"     // For debugging
-  }
+  "location_id": "loc_entrance_1",     // the entrance the guard was at
+  "permit_id": "auth_p1k2p9m",         // null when the code matched nothing
+  "interior_id": "int_302",            // copied from the permit; null likewise
+  "action": "entry",                   // only value today — see below
+  "result": "allowed",                 // "allowed" | "denied"
+  "deny_reason": null,                 // "invalid_code" | "revoked" | "not_started"
+                                       //   | "expired" | "wrong_location"
+  "scanned_code": null,                // only when nothing matched
+  "checked_by": "user3",               // the guard or administrator
+  "request_id": "req_abc123xyz",
+  "created_at": 2026-08-30T19:56:41Z,
+  "expires_at": 2026-11-28T19:56:41Z   // read by the Firestore TTL policy:
+                                       //   created_at + 90 days if allowed,
+                                       //   + 30 days if denied
 }
 ```
 
 **Constraints:**
-- Immutable: no updates after creation
-- Retention: auto-delete after 90 days (Firestore TTL policy)
-- Queryable by: org_id, timestamp, result
+- Immutable: nothing in the codebase updates an event after it is written. A log
+  that can be edited is not evidence.
+- Retention: 90 days for an entry, 30 for a refusal, by a Firestore TTL policy
+  on `expires_at` (`../security/data-minimization.md`).
 
-**Indexes needed:**
-- `org_id + timestamp` (recent events)
-- `org_id + auth_id + timestamp` (auth history)
-- `org_id + result` (success/failure counts)
+#### What is actually implemented, and what is not
+
+Four deliberate departures from the shape this document originally specified.
+Each is recorded in `../decisions/008-checking-a-permit-at-a-door.md`.
+
+1. **No `metadata.ip_address` and no `metadata.device_type`** (Founder decision,
+   2026-08-30). They describe the guard, not the visitor. Kept for 90 days across
+   every scan of a shift they become a location trail of a customer's own staff.
+   `checked_by` and `request_id` already answer "who did this" and "which request
+   was it".
+
+2. **No `visitor_name`.** The event points at the permit, and the permit holds
+   the name. Copying it here would put the same person's name in a second
+   collection — the same reason a responsable's name is not copied onto an
+   interior (Decision 006). A check that matched no permit correctly shows none.
+
+3. **`action` is always `entry`** (Founder decision, 2026-08-30). Exits are not
+   recorded in the MVP: it doubles the work at the gate and no customer has asked
+   for it. The field is kept so adding `exit` later is one line, not a migration.
+
+4. **`metadata.qr_scanned` became `scanned_code`, and is stored only when
+   nothing matched.** When a permit was found, `permit_id` identifies it and the
+   code is not copied — a live door code has no business being duplicated into a
+   second collection. When nothing matched, the characters submitted are the only
+   evidence of what was attempted.
+
+**Indexes needed:** none yet — nothing queries this collection. The entry-history
+screen will need `permit_id + created_at` and `location_id + created_at`; they
+are deliberately not declared until a query exists that uses them.
+
+⚠️ **The TTL policy is not enabled yet.** Every record carries `expires_at`, but
+writing the field is not the same as switching the policy on in Google Cloud —
+the same trap as declaring an index without deploying it. Until it is enabled,
+nothing deletes an old check. See `developer-guide.md` and `PROJECT_STATE.md`.
 
 ---
 
@@ -396,10 +432,16 @@ Log of notifications sent to user.
 
 ### Auto-Deletion
 
-- **Access Events:** TTL = 90 days (Firestore TTL policy)
+- **Access Events:** TTL = 90 days for an entry, 30 for a refusal.
+  Each event carries its own `expires_at`, written at creation, because a
+  Firestore TTL policy names one timestamp field and deletes the document when
+  that moment passes — it cannot add an offset itself, which is also what lets
+  one policy serve two different retention periods.
   ```
-  Set TTL field: access_events.created_at + 7776000 seconds (90 days)
+  gcloud firestore fields ttls update expires_at     --collection-group=access_events --enable-ttl
   ```
+  ⚠️ **Not enabled yet** (2026-08-30). The field is written; the policy is not
+  switched on, so nothing deletes an old check.
 
 - **Revoked Authorizations:** Keep 1 year for audit, then archive
   ```

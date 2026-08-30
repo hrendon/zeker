@@ -2,15 +2,23 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-29
-**Session closed:** 2026-08-29. One unit built (entry permits: issue, show the
-code, revoke), three commits, four scope questions answered by the Founder and
-recorded as Decision 007. Two defects were found by using the product rather
-than by testing it, and both were fixed. Documents were audited against the code
-at close and four contradictions corrected — see "Documentation corrected"
-below.
+**Last updated:** 2026-08-30
+**Session open:** 2026-08-30. One unit built — a guard checks a permit at a
+door, and every check is recorded. Three scope questions answered by the Founder
+and recorded as Decision 008.
 
-**Last verified:** 2026-08-29 — backend typecheck clean, 166/166 tests pass; frontend typecheck clean, 38/38 tests pass, production build clean; the permit flow driven in a real browser against live Firebase and live Firestore: a permit issued for apartment 302, its QR proved to encode the permit's own code, deleting that apartment correctly refused while the permit was live, and the permit revoked, with its code and QR disappearing. Two defects found by that live run and fixed (see below).
+**Last verified:** 2026-08-30 — backend typecheck clean, 188/188 tests pass;
+frontend typecheck clean, 45/45 tests pass, production build clean; the gate
+driven by hand in a real browser against live Firebase and live Firestore: a
+permit issued for apartment 302 and let in (code typed in lowercase with a
+space, and accepted), a code that matches nothing refused with "ese código no
+existe", the permit then revoked and the same code refused with "el permiso fue
+anulado" — and all three checks confirmed written to live Firestore with no
+guard device or connection data in them. The QR-reading library was separately
+proved to decode exactly the QR this product draws. **The phone camera itself is
+not yet verified** — see Known issues.
+
+**Previously verified:** 2026-08-29 — backend typecheck clean, 166/166 tests pass; frontend typecheck clean, 38/38 tests pass, production build clean; the permit flow driven in a real browser against live Firebase and live Firestore: a permit issued for apartment 302, its QR proved to encode the permit's own code, deleting that apartment correctly refused while the permit was live, and the permit revoked, with its code and QR disappearing.
 
 **Previously verified:** 2026-08-28 — backend 122/122, frontend 22/22; the whole people flow driven in a real browser: a resident's account created by the administrator, the member list showing her with the email Firebase holds, an apartment handed over to her, and removing her correctly refused while she was still in charge of it.
 
@@ -29,17 +37,77 @@ below.
 🟢 **The product is visible in a browser for the first time** (Camino B: Build first, validate after)
 
 ```
-Completed:       The setup half (sign-in, organizations, sites, interiors
-                 + limits, people) and now the issuing half: a resident
-                 creates an entry permit, gets a QR and a code, and can
-                 revoke it
-                 (166 backend tests + 38 frontend tests pass)
-In Progress:     Nothing. The next unit is checking a permit at a door
+Completed:       The product now does, end to end, the thing it exists to do.
+                 Set-up (sign-in, organizations, sites, interiors + limits,
+                 people), issuing (a permit, a QR and a code, revocable), and
+                 now the door: a guard checks a code and is told in one glance
+                 whether the person may enter — and every check is recorded
+                 (188 backend tests + 45 frontend tests pass)
+In Progress:     Nothing. The next unit is showing that record back:
+                 the entry history
 Blocked:         0 · 2 decisions waiting on Founder (D-005, D-006),
                  neither blocking today
 Critical Risk:   None open
-Next:            Validating a scan at the door, and recording the entry
+Next:            The entry history — who came in, when, and who was refused
 ```
+
+**Latest Update (2026-08-30): a guard can now check a permit at a door.**
+This is the last piece. From today the product does, end to end, the thing it
+exists to do — and it starts keeping the record that a security product is
+ultimately bought for. Recorded as Decision 008.
+
+- **One screen, and one answer.** The guard points the phone at the visitor's
+  QR, or types the eight characters, and gets a green "Puede entrar" with the
+  name, the apartment and how long it lasts — or a red "No puede entrar" that
+  says which reason it is.
+- **A refusal always says why.** Anulado, vencido, todavía no empieza, no
+  existe, or "no es para esta entrada". A guard who is only told "no" cannot
+  explain anything to the person standing in front of them, and that turns into
+  an argument at the gate. A refusal also still names who was turned away, when
+  the code was a real permit.
+- **A wrong entrance names the right one**, so the guard can send the visitor
+  to the correct gate instead of away.
+- ⚠️ **The order the reasons are checked is a safety decision, not a detail.**
+  The permit's own state is settled before the entrance is looked at, so a
+  permit that was anulado can never produce "try the other gate". Getting that
+  backwards would have a guard politely redirecting someone who must not be let
+  in anywhere.
+- **Every check is written down, allowed or refused.** That record is the audit
+  trail the whole product rests on, and it is what makes the next unit — the
+  entry history — possible. The record is never edited afterwards: a log that
+  can be changed is not evidence.
+- **The record keeps as little as it can.** Your call this session: not the
+  guard's internet address and not their device. Across every scan of a shift
+  those become a location trail of your customer's own staff — something we
+  would then have to explain to their lawyer, for an investigation nobody has
+  asked for. Nor is the visitor's name copied into it; the permit already holds
+  it. A check is deleted after 90 days, or 30 if it was a refusal.
+- **A code that opened a door is not copied anywhere.** The characters are kept
+  only when they matched nothing at all — then they are the only evidence of
+  what someone tried.
+- **The camera is a convenience, never the only way in.** The typed field is
+  always there. A cracked lens, a refused permission or a dead battery must not
+  become a visitor who cannot get in.
+- **A guard sees only the gate.** Their tab bar has one tab. They still cannot
+  list, see or create permits — that rule from last session is unchanged, and
+  this screen keeps it true by answering one code at a time and never listing.
+- **Exits are deliberately not recorded**, your call. It doubles the guard's
+  work at the gate and nobody has asked for it. The record has room for it.
+- ⚠️ **Not verified: a real phone camera.** The QR-reading library was proved to
+  decode exactly the QR this product draws, and the typed path was driven by
+  hand against the live database — but no camera has yet read a real permit.
+  This must happen before a guard uses it.
+- ⚠️ **Something is switched off in Google that needs switching on.** Each check
+  is stamped with the date it should be deleted, but the rule that actually
+  deletes it has not been enabled. Until it is, no check is ever deleted, which
+  contradicts what this product promises about keeping data. One command; it is
+  in the developer guide and in Known issues.
+- ⚠️ **Test data:** the test building has a permit "Prueba Portería" for
+  apartment 302, now anulado, and three checks in its history. Delete them
+  whenever you like.
+- Verified: 188 backend tests, 45 frontend tests, typecheck and production build
+  all clean, plus the gate driven by hand in a browser against the live
+  database, and the three resulting records read back out of it.
 
 **Found at session close (2026-08-27): a second program was listening on the
 API's port** (a WSL forwarder on 3001), answering some requests instead of our
@@ -507,7 +575,8 @@ works end to end on the server.
       (Decision 006) + 4 isolation tests
 - [x] Permit endpoints — issue, list, view, revoke, with a random code
       (Decision 007) + 4 isolation tests + 3 composite indexes deployed
-- [ ] Validation endpoint (scan QR, check validity, log event)
+- [x] Validation endpoint — check one permit at one entrance, and record the
+      check (Decision 008) + 22 tests, including an isolation test
 - [ ] Unit + integration tests for all critical flows
 - [ ] Cloud Run deployment pipeline ready
 
@@ -525,8 +594,10 @@ works end to end on the server.
       copy it, download it, revoke it
 - [ ] Responsable experience: a home of their own (today they arrive through
       the organization list and the administrator's tab bar)
-- [ ] Security experience: QR scan + validation result
-- [ ] Entry history view
+- [x] Security experience: the gate — camera scan, typed fallback, and a
+      green/red answer with the reason. A guard's tab bar shows only this
+- [ ] Entry history view — the next unit. Checks are being recorded from
+      2026-08-30, so the history exists before the screen that shows it
 - [ ] PWA setup (manifest, service worker, offline read-only)
 - [ ] E2E tests for critical flows
 
@@ -630,6 +701,29 @@ works end to end on the server.
 ---
 
 ## Known Issues
+
+- 🔴 **Nothing deletes an old check yet.** Every check written at a door is
+  stamped with the date it should be removed — 90 days for an entry, 30 for a
+  refusal — but the rule in Google that acts on that stamp has not been switched
+  on. Until it is, the record grows for ever, which contradicts what
+  `docs/security/data-minimization.md` promises and what a privacy policy will
+  have to say. One command, in `developer-guide.md`. **This is the same shape of
+  mistake as the missing indexes on 2026-08-29:** written down in the repository,
+  never actually applied to the live system.
+- 🟡 **The phone camera has never read a real permit.** The QR-reading library
+  was proved to decode exactly the QR this product draws, and the typed fallback
+  was driven by hand against the live database — but the camera path itself
+  (permission, video, frames) has only been opened, not used to decode. It needs
+  a real phone. This sits with the "never seen on a real phone" issue below and
+  should be closed in the same pass.
+- 🟡 **A guard's own view has not been seen.** The API rules for security staff
+  are covered by tests (a guard may check a code; a resident is refused; another
+  customer's guard gets 404), but nobody has signed in *as* a guard and looked at
+  the screen. What is unverified is the tab bar, which is convenience rather than
+  a control — the API refuses each screen on its own.
+- 🟡 **A permit at the wrong entrance has not been tried live.** The test
+  building has one site, and its free plan allows only one, so there is no second
+  gate to check against. Covered by tests, not by use.
 
 - ✅ ~~Nothing is saved in version history~~ — fixed 2026-08-25. Six commits now
   cover all the code and documents.
@@ -814,6 +908,32 @@ Blocks:         Nothing today. Blocks opening signup to the public.
 ```
 
 ## Approved Decisions
+
+### Decision 008: Checking a permit at a door ✅ APPROVED (2026-08-30)
+
+Three scope calls, all yours, plus the choices the roles made about what a
+check leaves behind.
+
+**Your calls:**
+1. **The camera now, with the typed code always beside it.** Building only the
+   typed field first was cheaper today; a guard typing eight characters per
+   visitor is the slow experience this product exists to remove, and the guard's
+   screen would have had to be designed twice. Camera-only was rejected — a
+   refused permission must never become a visitor who cannot get in.
+2. **Entries only, no exits.** Recording an exit means finding the visitor again
+   on the way out. It doubles the work at the gate and nobody has asked for it.
+   The record has room for it later.
+3. **Nothing about the guard's device or connection is kept.** Across a shift
+   those become a location trail of your customer's own staff.
+
+**What the roles decided, inside that:** a refusal is a successful answer and
+never an error; the reasons are evaluated permit-state-first so a revoked permit
+can never say "try the other gate"; the record points at the permit instead of
+copying the visitor's name; and a code is stored only when it matched nothing.
+
+Full record: `docs/decisions/008-checking-a-permit-at-a-door.md`
+
+---
 
 ### Decision 007: What an entry permit is, and what its code is ✅ APPROVED (2026-08-29)
 
@@ -1106,35 +1226,43 @@ When you restart, check:
 
 ## Where to pick up
 
-**A permit can now be issued and revoked. What is missing is the other end of
-it: a guard checking the code at a door.** That is the last piece before the
-product does, end to end, the thing it exists to do.
+**The product now does the whole thing: a resident issues a permit, and a guard
+checks it at a door.** What is missing is showing the record back — every check
+is being written down from 2026-08-30, and nothing displays it yet.
 
-**The next unit — checking a permit at a door:**
+**The next unit — the entry history:**
 
-1. A guard scans the QR, or types the eight characters, and is told in one
-   glance whether the person may enter: who they are, which apartment, and
-   until when. A refusal says which of the reasons it is — revoked, finished,
-   not started yet, wrong entrance, or no such code.
-2. Every check is recorded, allowed or refused. That log is the audit trail the
-   whole product rests on.
+1. A resident sees who came to their apartment, when, and who was refused. An
+   administrator sees the whole building. A guard sees none of it, for the same
+   reason they cannot list permits.
+2. Filters that a person actually wants: by date, by apartment, allowed or
+   refused.
 
 Already settled, needing no new decision:
 
-- The endpoint contract is drafted in `docs/architecture/api.md` under
-  "Validation Endpoint", still marked NOT BUILT. **It needs one correction
-  before it is built:** a permit belongs to an interior, so a scan is checked
-  against that interior's site, not against a `location_id` on the permit.
-- `normalizeCode()` in `backend/src/lib/permits.ts` already turns whatever a
-  guard types into the stored form. Use it — it is what lets someone type "O"
-  for a zero and still get in.
-- Security staff already have real accounts and the `security` role
-  (Decision 006). They are deliberately refused everywhere else.
+- The record's stored shape is in `docs/architecture/data-model.md` under
+  `access_events`, and it is what the code actually writes — verified against
+  live Firestore on 2026-08-30.
+- The `GET /orgs/{id}/events` contract is drafted in `docs/architecture/api.md`
+  and is **marked NOT BUILT.** It needs correcting before it is built: a stored
+  event has no `visitor_name` (it points at the permit, which holds the name),
+  its `auth_id` is stored as `permit_id`, and `action` is always `entry`.
+- **This unit will need composite indexes** on `access_events` — most likely
+  `permit_id + created_at` and `location_id + created_at`. They are deliberately
+  not declared yet because nothing queries the collection. Declare *and deploy*
+  them in the same change (see Known issues, and the developer guide).
+- A check points at a permit rather than copying the visitor's name, so the
+  history screen resolves names from the permits, one read for the whole list —
+  the same shape as `displayNames()` and `interiorNumbers()` already use.
 
-**Also worth doing soon, cheaply:** open the screens on a real phone. They are
-built phone-first but have only ever been seen on a desktop, and this is the
-screen a resident uses in a hurry. It was attempted on 2026-08-29 by resizing
-the browser and the window would not resize, so it is still unchecked.
+**Two things worth doing first, both cheap:**
+
+1. **Switch on the deletion rule in Google** for `access_events`. It is one
+   command and it is currently the only 🔴 on the issues list.
+2. **Open the screens on a real phone**, and read a real permit's QR with the
+   camera. The gate is the one screen that is definitely used on a phone, at a
+   gate, in a hurry. It was attempted on 2026-08-29 by resizing the browser and
+   the window would not resize, so it is still unchecked.
 
 ---
 
@@ -1183,6 +1311,20 @@ the browser and the window would not resize, so it is still unchecked.
   is worked out from `valid_to` at read time. The three delete guards go
   through `hasLivePermit()` in `backend/src/lib/permits.ts`, which checks both;
   a guard that looked at `status` alone would block an apartment for ever.
+- **A check at a door is never edited after it is written**, and there is no
+  code path that does. It is evidence. `backend/src/lib/events.ts` says why.
+- **The order the refusal reasons are evaluated is load-bearing** — no such
+  code, then revoked, then not started, then finished, then wrong entrance. The
+  permit's state is settled before the entrance, so a revoked permit can never
+  tell a guard to try another gate. There is a test named for exactly this; do
+  not "tidy" the order.
+- **A refusal is a 200.** Only a broken request is a 4xx on the gate endpoint.
+  The guard's screen relies on that to tell "this visitor may not enter" apart
+  from "our system is down".
+- **A Firestore TTL policy is not in this repository.** Writing `expires_at` on
+  a document does not enable deletion; the policy is switched on once per
+  collection group in Google Cloud, and nothing in the tests will tell you it is
+  off. Same trap as an undeployed index, one level up.
 - **A query that combines an equality filter with a range needs a composite
   index in `firestore.indexes.json`, deployed.** The test double does not need
   one and will not warn you. Deploy with
@@ -1192,7 +1334,7 @@ the browser and the window would not resize, so it is still unchecked.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-29
+**Last updated:** 2026-08-30
 **Approval:** ⏳ Two cards waiting — D-005 (free organizations per person) and
 D-006 (verifying that whoever registers a building actually runs it). Neither
 blocks work today; both block opening the product to the public.

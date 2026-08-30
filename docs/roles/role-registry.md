@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-29
+**Last updated:** 2026-08-30
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -28,6 +28,9 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ A responsable is an account created by the administrator (2026-08-28, Decision 006)
 - ✅ What an entry permit is: no share link, no daily time window, no entry
   emails, and a QR library added (2026-08-29, Decision 007)
+- ✅ Checking a permit at a door: camera now with a typed fallback, entries
+  only (no exits), and no guard device or connection data kept
+  (2026-08-30, Decision 008)
 - ✅ Build the sign-in screens before the permit endpoints (2026-08-26)
 - ✅ Build the setup screens now; make customer calls in parallel (2026-08-27)
 - ✅ No data-fetching library — keep it simple (2026-08-27)
@@ -390,5 +393,5 @@ flagged the absence of their own artifact as a finding on 2026-08-26.
 ---
 
 **Owner:** All roles collectively
-**Last updated:** 2026-08-29
+**Last updated:** 2026-08-30
 **Related:** `mantis/roles.md` §5 (Role Activation Protocol)

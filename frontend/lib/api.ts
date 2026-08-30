@@ -393,3 +393,57 @@ export const permitsApi = {
       { method: 'DELETE' },
     ),
 }
+
+// ---------------------------------------------------------------------------
+// Checking a permit at a door
+// ---------------------------------------------------------------------------
+
+/** Why a check was refused. Mirrors `backend/src/lib/events.ts`. */
+export type DenyReason =
+  | 'invalid_code'
+  | 'revoked'
+  | 'not_started'
+  | 'expired'
+  | 'wrong_location'
+
+/** What the guard is told about the visitor. Never includes the code itself. */
+export interface CheckedPermit {
+  id: string
+  visitor_name: string
+  interior_id: string
+  interior_number: string
+  purpose: PermitPurpose
+  valid_from: string
+  valid_to: string
+}
+
+/**
+ * The answer to one check.
+ *
+ * A refusal arrives as a successful response, not as an error: "this person
+ * may not enter" is a correct answer to the question the guard asked. Anything
+ * that throws is a fault of ours, and the screen says so differently.
+ */
+export type CheckResult =
+  | { result: 'allowed'; permit: CheckedPermit; event_id: string }
+  | {
+      result: 'denied'
+      reason: DenyReason
+      /** Absent when the code matched nothing — then nothing is known. */
+      permit?: CheckedPermit
+      /** Only for a wrong entrance: the name of the right one. */
+      expected_location?: string
+      event_id: string
+    }
+
+/**
+ * The gate.
+ *
+ * Security staff and administrators only. It answers one code at a time and
+ * never lists anything — a guard who could list a building's permits would
+ * know who is expected where, all day.
+ */
+export const checksApi = {
+  check: (orgId: string, input: { location_id: string; code: string }) =>
+    request<CheckResult>(`/orgs/${orgId}/validate`, { method: 'POST', body: omitBlank(input) }),
+}
