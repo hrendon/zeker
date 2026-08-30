@@ -3,6 +3,12 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-29
+**Session closed:** 2026-08-29. One unit built (entry permits: issue, show the
+code, revoke), three commits, four scope questions answered by the Founder and
+recorded as Decision 007. Two defects were found by using the product rather
+than by testing it, and both were fixed. Documents were audited against the code
+at close and four contradictions corrected — see "Documentation corrected"
+below.
 
 **Last verified:** 2026-08-29 — backend typecheck clean, 166/166 tests pass; frontend typecheck clean, 38/38 tests pass, production build clean; the permit flow driven in a real browser against live Firebase and live Firestore: a permit issued for apartment 302, its QR proved to encode the permit's own code, deleting that apartment correctly refused while the permit was live, and the permit revoked, with its code and QR disappearing. Two defects found by that live run and fixed (see below).
 
@@ -89,6 +95,26 @@ Recorded as Decision 007.
 - Verified: 166 backend tests, 38 frontend tests, typecheck and production build
   all clean, plus the whole flow driven by hand in a browser against the live
   database.
+
+**Documentation corrected at session close (2026-08-29).** The audit compared
+every architecture and security document against the code that now exists:
+
+- `architecture.md` still described a permit holding the visitor's **phone
+  number, encrypted** — a field Decision 005 removed on 2026-08-26 and which was
+  missed when that decision was recorded. It also listed an endpoint that does
+  not exist (`PUT` on a permit), was missing the endpoint that does
+  (`GET` one permit), and had never been given the people endpoints built on
+  2026-08-28. All corrected.
+- `security/data-minimization.md` had no entry for the permit's **code**, which
+  is the credential that opens a door, and still listed an optional free-text
+  "relationship notes" field on a permit. That field does not exist and will
+  not: a free-text box on a permit is where a cédula number eventually gets
+  typed.
+- The not-yet-built validation and entry-history sections of `api.md` described
+  the old permit shape. They are the contract the next unit builds from, so
+  they now match what a permit actually is.
+- Both remaining "not built" sections of `api.md` are labelled as such, so no
+  one builds a screen against them by mistake.
 
 **Previous Update (2026-08-28): a resident can now have a real account, and the
 building administrator creates it.** This was the last thing standing between

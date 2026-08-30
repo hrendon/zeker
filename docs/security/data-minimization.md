@@ -16,19 +16,29 @@ Security policy on what personal data we collect, store, and why.
   - Storage: Plain text, required
   - Retention: Until authorization expires + 1 year (audit)
 
-- Location ID
-  - Why: Specify which location this authorization applies to
-  - Storage: Plain text (non-sensitive)
+- Interior ID (and the location ID copied from it)
+  - Why: Which apartment the visitor is coming to, and therefore which
+    entrance the permit is checked against (Decision 003)
+  - Storage: Plain text (non-sensitive on its own)
   - Retention: Indefinite
+
+- Entry code (8 random characters)
+  - Why: It is what admits the visitor at the door
+  - Storage: Plain text. It is a short-lived credential, not a secret to be
+    hashed: the guard's device must be able to look a permit up by it
+  - Note: **never written to logs.** The audit trail records the permit's id,
+    never its code — logs are read by more people than permits are
+  - Retention: With the permit
 
 - Valid dates/times
   - Why: Check if authorization is currently valid
   - Storage: Plain text (timestamps)
   - Retention: Indefinite
 
-- Authorization status (active/revoked/expired)
+- Authorization status (active/revoked)
   - Why: Determine if authorization is usable
-  - Storage: Plain text (enum)
+  - Storage: Plain text (enum). "Expired" is **not** stored — it is computed
+    from the end date, so nothing has to run to keep it true (Decision 007)
   - Retention: Indefinite
 
 **Audit Trail:**
@@ -188,11 +198,10 @@ Security policy on what personal data we collect, store, and why.
    - ~~How: AES-256-GCM (authenticated encryption)~~
    - ~~Access: Only admin of org or user themselves~~
 
-3. **Optional: Relationship Notes**
-   - Field: `authorization_details.notes`
-   - When: Contains PII (e.g., "brother of student John")
-   - How: AES-256 if contains identifying info
-   - Access: Admin only
+3. ~~**Optional: Relationship Notes**~~ — **the field does not exist**
+   (Decision 007). A free-text note on a permit is where an identity-document
+   number eventually gets typed. A permit carries the visitor's name, where
+   they are going, when, and a purpose chosen from a list. Nothing else.
 
 ### Encryption in Transit
 

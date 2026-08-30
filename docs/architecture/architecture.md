@@ -123,17 +123,17 @@ Every collection scoped by `orgId`:
   (no email stored: Firebase Auth holds it and sends it verified
    with every request — see data-model.md)
   
-/authorizations/{authId}
-  /orgId: string (partition key)
-  /locationId: string
-  /authorized_person_name: string
-  /authorized_person_phone: string (encrypted)
+/orgs/{orgId}/authorizations/{authId}
+  /interior_id: string   — the apartment being visited (Decision 003)
+  /location_id: string   — copied from the interior; it can never change
+  /visitor_name: string  — the ONLY thing kept about the visitor (Decision 005)
+  /purpose: string
   /created_by: userId
-  /valid_from: timestamp
-  /valid_to: timestamp
-  /status: "active" | "revoked"
-  /qr_code: string (base64)
-  /numeric_code: string (8-char)
+  /valid_from, /valid_to: ISO 8601 string, UTC (range-queried, so not a timestamp)
+  /status: "active" | "revoked"   — never "expired"; that is computed from the dates
+  /code: string (8 chars, random, unique in the org)
+  (no phone, no identity document, and no stored QR image — the browser
+   draws the QR from the code. See data-model.md and decisions/007)
   
 /accessEvents/{eventId}
   /orgId: string (partition key)
@@ -345,14 +345,25 @@ GET    /orgs/{id}/interiors/{iid}  — Get one
 PUT    /orgs/{id}/interiors/{iid}  — Update
 DELETE /orgs/{id}/interiors/{iid}  — Delete
 
-POST   /orgs/{id}/authorizations    — Create auth
-GET    /orgs/{id}/authorizations    — List auths
-PUT    /orgs/{id}/authorizations/{aid}  — Update
-DELETE /orgs/{id}/authorizations/{aid}  — Revoke
+POST   /orgs/{id}/members     — Add a person, creating their account (Decision 006)
+GET    /orgs/{id}/members     — List the people in this org (admins only)
+DELETE /orgs/{id}/members/{uid}    — Remove the membership, not the account
 
+POST   /orgs/{id}/authorizations    — Issue a permit
+GET    /orgs/{id}/authorizations    — List permits (?interior_id= ?state=)
+GET    /orgs/{id}/authorizations/{aid}  — Get one, with its code
+DELETE /orgs/{id}/authorizations/{aid}  — Revoke (the record is kept)
+       (there is deliberately no PUT — revoke and reissue instead,
+        so the history says what actually happened. See decisions/007)
+
+--- not built yet ---
 POST   /orgs/{id}/validate    — Scan QR, validate
 GET    /orgs/{id}/events      — Access events
 ```
+
+Everything above `not built yet` is implemented and covered by tests. `api.md`
+is the full contract; this list exists so the shape of the API is visible in
+one screen.
 
 ---
 

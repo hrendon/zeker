@@ -306,7 +306,7 @@ Immutable log of entry/exit attempts (audit trail).
   "timestamp": 2026-08-18T15:30:45Z,  // When did it happen
   "action": "entry",                  // "entry" | "exit"
   "result": "allowed",                // "allowed" | "denied"
-  "deny_reason": null,                // If denied: "expired" | "revoked" | "wrong_location" | "outside_hours" | "invalid_qr" | "error"
+  "deny_reason": null,                // If denied: "expired" | "revoked" | "not_started" | "wrong_location" | "invalid_code" | "error"
   "security_personnel_id": "user3",   // Who scanned it
   "metadata": {
     "qr_scanned": "P1K2-P9M7",        // Code that was scanned

@@ -949,11 +949,10 @@ Scan QR code and validate authorization (security personnel).
   "result": "allowed",
   "authorization": {
     "id": "auth_p1k2p9m",
-    "authorized_person": {
-      "name": "María García López"
-    },
-    "purpose": "school_pickup",
-    "valid_until": "2026-08-20T17:00:00Z"
+    "visitor_name": "María García López",
+    "interior_number": "302",
+    "purpose": "pickup",
+    "valid_to": "2026-08-20T17:00:00.000Z"
   },
   "event_id": "event_20260818_001"
 }
@@ -963,7 +962,7 @@ Scan QR code and validate authorization (security personnel).
 ```json
 {
   "result": "denied",
-  "reason": "expired",  // "expired", "revoked", "wrong_location", "outside_hours", "invalid_code"
+  "reason": "expired",  // "expired", "revoked", "not_started", "wrong_location", "invalid_code"
   "event_id": "event_20260818_002"
 }
 ```
@@ -1003,7 +1002,7 @@ List access events (entry/exit log).
       "timestamp": "2026-08-18T15:30:45Z",
       "action": "entry",
       "result": "allowed",
-      "authorized_person": "María García López"
+      "visitor_name": "María García López"
     },
     {
       "id": "event_20260818_002",
