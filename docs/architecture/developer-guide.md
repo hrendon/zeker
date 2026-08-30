@@ -174,6 +174,32 @@ Google Cloud Logging expects, so levels and messages display correctly.
 
 ---
 
+## Watching the business
+
+```bash
+cd backend && npm run report
+```
+
+One page: how many customers, which segment, how many permits, how many checks
+at a door, why people were turned away, and who has outgrown the free plan.
+
+**It is an operator tool, not part of the product**, and that is deliberate. It
+reads every customer's data, which is precisely what the API is built never to
+allow — since Decision 004 the backend is the only thing keeping one customer
+out of another's records, and a route that could read across customers would put
+a hole in the single wall the whole product rests on.
+
+So it reads Firestore directly, as whoever runs it, through Application Default
+Credentials. Access is governed by Google IAM: remove someone's project access
+and the report stops working, with nothing to revoke inside Zeker and no
+privileged account that could be stolen. It counts, and never prints a visitor's
+name, a resident's name or a permit code.
+
+Speed, error rate, cost and the audit trail are not in the database; the report
+ends with the Google Cloud links that hold them.
+
+---
+
 ## Database rules and indexes
 
 The rules in force are `firestore.rules` at the repository root, tracked in git.

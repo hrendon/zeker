@@ -1133,6 +1133,20 @@ Blocker:        Data model + MVP scope locked until this approved
 
 ## Metrics We Care About
 
+**How to see them:** `cd backend && npm run report` prints the ones that live in
+the database — customers, segment, permits, checks at a door, refusal reasons,
+and who has outgrown the free plan. Speed, error rate and cost are not in the
+database; the report ends with the Google Cloud links that hold them.
+
+That report is an **operator tool, not a product feature**, and there is
+deliberately no "platform administrator" account. Roles in Zeker are per
+organization; there is no global role, and no route in the API can read across
+customers (Decision 004). The report reads Firestore directly as whoever runs
+it, through their own Google credentials — so access is governed by Google IAM
+rather than by a privileged Zeker account that could be stolen or misused.
+Added 2026-08-30.
+
+
 ### User Acquisition
 
 - Organizations created (total, weekly)
