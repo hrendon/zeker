@@ -652,6 +652,17 @@ works end to end on the server.
   that actually accumulates and costs money to keep. No customer exists, so
   nothing is being abused. It belongs with D-005, which asks the same kind of
   question about free organizations.
+- 🟡 **Unresolved contradiction: the delivery rules say one thing, the repository
+  does another.** `mantis/mantis/delivery-framework.md` §2 requires short-lived
+  branches merged by pull request and forbids pushing straight to the main
+  branch; §4 additionally requires a security sign-off before any merge. Every
+  commit in this repository has gone directly to `master`, and
+  `branching-strategy.md`, which that document names as the place to record the
+  chosen variant, has never been written. On 2026-08-29 the Founder chose to
+  merge directly again and declined to change the rule, so the gap stands. It
+  costs nothing today with one person and no production traffic; it matters
+  before anyone else commits, or before there is a deployment pipeline to
+  protect.
 - 🟡 **A green test suite does not prove a Firestore query runs.** The in-memory
   test double answers queries that real Firestore refuses without a composite
   index. This was found on 2026-08-29 when deleting an apartment failed against
