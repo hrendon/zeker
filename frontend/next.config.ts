@@ -2,6 +2,11 @@ import type { NextConfig } from 'next'
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Cloud Run runs this as a container, so the build must produce a server that
+  // can start on its own. `standalone` writes one, together with only the
+  // dependencies it actually reaches — without it the image would have to carry
+  // the whole node_modules tree.
+  output: 'standalone',
   // The browser only ever talks to Firebase Auth and to our own API. Nothing
   // else is allowed to load, so a script injected into a page cannot phone home.
   async headers() {

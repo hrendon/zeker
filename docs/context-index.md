@@ -32,6 +32,7 @@ Map of authoritative sources for project knowledge.
 | — 006 | `decisions/006-members-and-responsable-accounts.md` | A responsable is an account created by the administrator | Product Owner + Architect + Security |
 | — 007 | `decisions/007-entry-permits.md` | What an entry permit is, and why its code is random | Founder + Architect + Security |
 | — 008 | `decisions/008-checking-a-permit-at-a-door.md` | Checking a permit at a door, and what a check leaves behind | Founder + Architect + Security |
+| — 009 | `decisions/009-frontend-hosting.md` | The frontend runs on Cloud Run, not Vercel (supersedes part of 001) | Founder + Architect |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
