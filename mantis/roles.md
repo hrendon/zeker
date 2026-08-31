@@ -90,6 +90,7 @@ distribution-strategy.md → CCO / VP of Sales     (Growth Marketer, Partnership
 product-market-fit.md    → Product Owner         (Customer Discovery & Validation Advisor consulted)
 interface-audit.md       → Interface & Experience Auditor
 decision-audit.md        → Decision & Outcomes Auditor
+indicators.md            → each owning role, for its own indicator(s) (reviewed by Decision & Outcomes Auditor)
 ```
 
 When two roles appear to claim the same concern:
@@ -516,10 +517,12 @@ Owns: `interface-audit.md` — what was reviewed, against which standard, what p
 Boundary: does not design the interface (UI/UX Designer) or build it (Frontend Developer) — it reviews what they produced, after the fact, the same way External Auditor reviews Finance's numbers without preparing them. Does not run structured user research with real users (UX Researcher) — it applies known usability standards, it does not observe live behavior.
 
 ### Decision & Outcomes Auditor
-Mission: independently checks whether strategic and administrative decisions delivered what they predicted, using each domain's own indicators.
-Scope: reviewing DECISIONs recorded by strategic/administrative roles (Product Owner, CCO, CMO, COO, CFO, and others) against the outcome each decision predicted at the time (Section 8's Predicted Outcome & Indicator field), using the indicator that role's domain already tracks (retention for Product, CAC/LTV for Commercial, burn/runway for Finance, and so on).
-Owns: `decision-audit.md` — the decision reviewed, its predicted outcome, the indicator used, the actual result, and the gap between them.
-Boundary: does not make the decisions it reviews (the owning strategic role) and does not define what a metric means (Data Analyst / Data Scientist owns metric semantics) — it checks the predicted-versus-actual gap on record, plainly, whether or not the outcome is flattering.
+Mission: independently checks whether strategic and administrative decisions and targets are actually holding up, using each domain's own indicators — both one-off (a specific decision) and ongoing (is the company still on target).
+Scope: two related checks, not two separate jobs:
+1. **Per-decision**: reviewing DECISIONs recorded by strategic/administrative roles (Product Owner, CCO, CMO, COO, CFO, and others) against the outcome each decision predicted at the time (Section 8's Predicted Outcome & Indicator field), using the indicator that role's domain already tracks (retention for Product, CAC/LTV for Commercial, burn/runway for Finance, and so on).
+2. **Ongoing internal control**: on a recurring cadence (every Checkpoint and every gate — `mantis.md` §17, `lifecycle-gates.md` §5), reviewing `indicators.md` — the live scoreboard every owning role keeps of its own core indicator(s) versus target — and flagging plainly what is stale, missing, or has been off-target long enough to matter. This is what turns individual decision reviews into an actual internal-control framework instead of isolated after-the-fact checks.
+Owns: `decision-audit.md` — the decision reviewed, its predicted outcome, the indicator used, the actual result, and the gap between them. Also holds review (not authorship) rights over `indicators.md` — see Section 3.
+Boundary: does not make the decisions it reviews (the owning strategic role) and does not define what a metric means or maintain the numbers day to day (Data Analyst / Data Scientist owns metric semantics; each owning role keeps its own entry in `indicators.md` current) — it checks the predicted-versus-actual and target-versus-actual gaps on record, plainly, whether or not the outcome is flattering.
 
 ---
 
@@ -558,6 +561,7 @@ Certain active roles therefore carry a standing duty to scrutinize the human's d
 * **QA Engineer** — what is shipping unverified because verification was inconvenient?
 * **COO / Head of Operations** — what only works because one specific person does it manually, and what happens the week that person is unavailable?
 * **General Counsel** — what commitments, contracts, or obligations were entered without review?
+* **Decision & Outcomes Auditor** — is `indicators.md` actually current, or are targets being assumed met because nobody checked? Every stale or missing entry is itself a finding.
 
 How this duty operates:
 
@@ -644,6 +648,7 @@ Produce `roles/role-registry.md` from the combined evidence and answers. Mark ro
 
 * `roles.md` — this file (L1): the role protocol and catalog.
 * `roles/role-registry.md` — project-specific (L2): which roles are active, who holds them, and since when.
+* `indicators.md` — project-specific (L2/L3): the company's live indicator scoreboard, one entry per owning role with a strategic or operational concern worth tracking. Not every role needs an entry, and not from day one — a pre-revenue Stage 1 company (`lifecycle-gates.md` §2) has little worth tracking yet; entries accumulate as gates clear and there is something real to measure. Each entry states: the indicator, its current target, the current value, when it was last updated, and a status (on track / at risk / missed). Kept current by the owning role for that indicator, not by Decision & Outcomes Auditor — that role reviews it (Section 4, Independent Audit), it does not author it, the same independence principle as everywhere else in this section.
 
 Decision records reuse the base framework's `decisions/` — see Section 8.
 

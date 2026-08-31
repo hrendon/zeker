@@ -1,6 +1,6 @@
 # AI Software Development Operating Framework
 
-**Version:** 1.1.0 — see `mantis/CHANGELOG.md`.
+**Version:** 1.2.0 — see `mantis/CHANGELOG.md`.
 
 ## 1. Purpose
 
@@ -868,6 +868,7 @@ At checkpoint:
 2. promote accepted requirements and decisions
 3. update affected semantic artifacts
 4. update working state
+5. if `indicators.md` exists (`roles.md` §10), check whether anything from this checkpoint moves an indicator, and whether Decision & Outcomes Auditor's review of it (`roles.md` §4, Independent Audit) is due
 5. record important completed work when historical continuity is useful
 6. identify unresolved issues
 7. remove obsolete temporary working information

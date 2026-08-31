@@ -261,6 +261,12 @@ MVP — Core workflow
 - Dashboard loading state
 - Mobile navigation
 
+## Indicators
+- MRR: $4,200 (target $5,000) — 🟡 at risk
+- W4 retention: 38% (target 40%) — 🟢 on track
+- Runway: 7 months (target 6+) — 🟢 on track
+See `indicators.md` (`roles.md` §10) for the full scoreboard, history, and who owns each entry. Omit this section entirely until there is at least one real indicator worth tracking (`lifecycle-gates.md` §2) — an empty scoreboard invented to fill the template is the same failure as any other fabricated evidence (`mantis.md` §33).
+
 ## Pending decisions
 - D-007 — Database strategy
   Options: A) PostgreSQL  B) DynamoDB
@@ -286,6 +292,8 @@ MVP — Core workflow
 "Technical decisions" is a live summary, not a duplicate source — full rationale still lives in `decisions/` (`mantis.md` §21); this section just lists what's currently active.
 
 **"Pending decisions" is the single queue of everything waiting on the human.** One card per decision: the options, a labeled recommendation, cost impact, reversibility, and how long it has been waiting. Every 🟡/🔴 approval request is raised here — never only scattered through conversation, where it competes with everything else for attention and is lost when the session ends. Answering a card is all the human has to do; a resolved card becomes a record in `decisions/` and leaves the queue. The queue empty means: nothing is blocked on you.
+
+**"Indicators" is the at-a-glance status of `indicators.md`** (`roles.md` §10), not a duplicate source — the full scoreboard, targets, and history stay in that file; this section mirrors the current line for whichever indicators are active, so the internal-control picture is visible without opening a second file. Each owning role keeps its own entry current; Decision & Outcomes Auditor (`roles.md` §4, Independent Audit) reviews it at every Checkpoint (`mantis.md` §17) and gate (`lifecycle-gates.md` §5) and flags anything stale, missing, or off-target long enough to matter.
 
 Progress is tracked per feature group, not just as a single percentage:
 

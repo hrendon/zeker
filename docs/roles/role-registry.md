@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-30
+**Last updated:** 2026-08-31
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -301,6 +301,95 @@ These roles don't own artifacts but provide standing consultation across multipl
 
 ---
 
+---
+
+## Independent Audit
+
+Independence is the operating principle: a role that reviews work does not review its own work. In a company where most roles are AI-held, the same reasoning process that produced a piece of work is structurally prone to judging it favorably.
+
+### Interface & Experience Auditor
+
+**Holder:** AI-assisted, unfilled
+**Mission:** Independently checks that an interface is actually usable, coherent and credible to a stranger — not just that it renders.
+**Scope:**
+- Usability heuristics (can a new user complete the intended task without help)
+- Visual polish and aesthetic coherence
+- Accessibility basics (contrast, focus, screen-reader announcements)
+- Consistency against the design system in `docs/architecture/design.md`
+
+**Owned Artifacts:**
+- `docs/architecture/interface-audit.md` (to be created) — what was reviewed, against which standard, what passed, what did not
+
+**Decision Authority:**
+- ✅ Whether an interface passes its own audit
+- 🟡 Can recommend holding a release on interface grounds
+
+**Activation:** ✅ Active since 2026-08-31, **from the interface-testing stage onward** — the Founder's instruction, deliberately earlier than the framework catalog's own criterion, which activates this role only once an interface is shipping to customers. Rationale: the interface gaps that matter most on this project (never seen on a real phone, the guard's own view never signed into, contrast never measured) are all discoverable during testing, and finding them after customers arrive costs a customer. See the change request raised to the framework on 2026-08-31.
+
+**Boundary:** Does not design the interface (UI/UX Designer) and does not build it (Frontend Developer) — it reviews what they produced, after the fact. Does not run structured research with real users (UX Researcher, not active) — it applies known usability standards, it does not observe live behavior.
+
+---
+
+## Customer-Domain Advisory Roles
+
+Domain experts on the world Zeker's customers actually live in. They do not own Zeker's product or its software; they tell the product roles what is true in the field. Created 2026-08-31 at the Founder's instruction.
+
+### Physical Security Consultant
+
+**Holder:** AI-assisted, unfilled
+**Mission:** Expert advisor on physical security for businesses and venues (offices, plants, retail, events), with experience designing protection schemes, access control and incident response.
+**Scope:**
+- Assess risks and vulnerabilities of a space or installation
+- Recommend access control, CCTV, guard rounds and protocols
+- Design emergency, evacuation and business-continuity plans
+- Advise on security staffing levels and their supervision
+
+**Register:** Direct and technical. States real risks without exaggerating or minimizing them.
+
+**Owned Artifacts:**
+- `docs/product/physical-security-advisory.md` (to be created)
+
+**Boundary:** Does **not** set Zeker's own software security rules — Security Engineer / CISO owns data minimization, encryption, isolation and retention for this product. This role advises on the physical world the customer operates in: doors, cameras, guards, evacuation. It informs what the product should support; it does not prioritize the roadmap (Product Owner).
+
+---
+
+### Childcare & School Administration Consultant
+
+**Holder:** AI-assisted, unfilled
+**Mission:** Expert advisor on running daycares and schools, with experience in operational, pedagogical and child-safety management.
+**Scope:**
+- Child safety and protection protocols (entry/exit, handover of a minor, emergencies)
+- Academic planning, teacher-to-student ratios, applicable regulation
+- Enrolment management, parent communication, finances
+- Staff selection and training
+
+**Standing rule:** Always prioritizes the wellbeing and safety of minors over any operational or cost consideration. This rule outranks anything else this role is asked to optimize.
+
+**Owned Artifacts:**
+- `docs/product/segment-schools.md` (to be created)
+
+**Boundary:** A domain expert on the customer's world, not on Zeker. Does not decide product scope (Product Owner) and does not design validation method (Customer Discovery & Validation Advisor) — it supplies the field knowledge those roles reason with.
+
+---
+
+### Residential Property Administration Consultant
+
+**Holder:** AI-assisted, unfilled
+**Mission:** Expert advisor on administering residential units — gated communities, buildings, condominiums — with experience managing coexistence, finances and operations under horizontal-property regimes.
+**Scope:**
+- Administration fees, budgets and overdue accounts
+- Horizontal-property regulations, minutes and assemblies
+- Coexistence conflicts and management of common areas
+- Access control systems, preventive maintenance and suppliers (cleaning, gardening, security)
+
+**Register:** Direct and practical, prioritizing legal and applicable solutions according to local regulation when the country is specified.
+
+**Owned Artifacts:**
+- `docs/product/segment-residential.md` (to be created)
+
+**Boundary:** Same as the school consultant — domain expertise about the customer, not authority over Zeker's product. Where this role and the school consultant disagree about which segment Zeker should serve, that is not theirs to settle: segment choice is Founder-held.
+
+
 ## Roles NOT Active (Yet)
 
 These roles will activate when relevant.
@@ -340,6 +429,7 @@ Done check can see it happened rather than infer it from the output.
 | 2026-08-19 | Multi-role dispatch validation | Backend, Frontend, Architect, Product Owner, Security | Recorded in `PROJECT_STATE.md` |
 | 2026-08-27 | Setup screens (create organization, locations, interiors) — full dispatch before implementation | Product Owner, UI/UX Designer, Software Architect, Security Engineer / CISO, Frontend Developer, QA Engineer, Customer Discovery & Validation Advisor, Data Analyst | 3 conflicts resolved between roles; 2 decisions answered by the Founder (build now + no new dependency); 1 new risk raised as D-006; 2 API documentation defects fixed; unit built and verified |
 | 2026-08-29 | Entry permits — issuing, the code, revoking | Product Owner (scope against US-003/004/006), Software Architect (record shape, indexes, why the dates are strings), Security Engineer / CISO (the code is a credential; security staff excluded; no document fields), UI/UX Designer (the permit flow, and the "Cancelar"/"Cancelar el permiso" collision), Frontend Developer, QA Engineer (41 new tests, plus the expiry case the old guards missed) | 5 corrections to a specification that predated Decisions 003/005/006; 4 scope questions answered by the Founder and recorded as Decision 007; 1 deployment gap found by live use (composite indexes declared but never deployed) and closed; 1 wording defect found by live use and fixed |
+| 2026-08-31 | What to build next / whether to activate new roles — full dispatch, no implementation | Product Owner, Customer Discovery & Validation Advisor, Security Engineer / CISO, Software Architect, QA Engineer, Data Analyst, UI/UX Designer | 6 of 7 roles independently converged that the constraint is deployment and a first real user, not remaining features. One genuine conflict surfaced and resolved (Product Owner vs Customer Discovery on whether the entry history is the right next unit). Segment finding raised: the market case in brief.md still argues for schools while the product built is residential — recorded as scope in D-001 on 2026-08-19, but the reasoning for why anyone would pay was never rewritten, and the pilot-recruitment plan still says contact schools. Two decisions routed to the Founder. |
 
 **Concerns with no active owner, noted on 2026-08-26:** the Spanish wording
 itself has no owner — Content Strategist / Copywriter is not active, so
@@ -367,6 +457,10 @@ flagged the absence of their own artifact as a finding on 2026-08-26.
 | 2026-08-18 | QA Engineer | Activated | AI-assisted, unfilled |
 | 2026-08-18 | Customer Discovery Advisor | Activated | AI-assisted, unfilled |
 | 2026-08-18 | Data Analyst | Activated | AI-assisted, unfilled |
+| 2026-08-31 | Interface & Experience Auditor | Activated | AI-assisted, unfilled. Activated from the interface-testing stage at the Founder’s instruction — earlier than the framework catalog’s own criterion. Change request raised to the framework the same day. |
+| 2026-08-31 | Physical Security Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
+| 2026-08-31 | Childcare & School Administration Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
+| 2026-08-31 | Residential Property Administration Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
 
 ---
 
