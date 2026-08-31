@@ -759,7 +759,7 @@ works end to end on the server.
   nothing is being abused. It belongs with D-005, which asks the same kind of
   question about free organizations.
 - 🟡 **Unresolved contradiction: the delivery rules say one thing, the repository
-  does another.** `mantis/mantis/delivery-framework.md` §2 requires short-lived
+  does another.** `mantis/delivery-framework.md` §2 requires short-lived
   branches merged by pull request and forbids pushing straight to the main
   branch; §4 additionally requires a security sign-off before any merge. Every
   commit in this repository has gone directly to `master`, and

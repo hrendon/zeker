@@ -29,7 +29,7 @@ the outcome.
 **1. How much to build in one pass.** ✅ The creation side only — issue, list,
 show the code, revoke. Checking a permit at a door is the next unit. Building
 both at once was available and rejected: one unit is finished and verified
-before the next starts (`../../mantis/mantis/execution.md` §3).
+before the next starts (`../../mantis/execution.md` §3).
 
 **2. How the QR is drawn.** ✅ A small library (`qrcode`, ~20KB) draws it in the
 browser. A free external QR service needed no dependency but would have sent
