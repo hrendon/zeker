@@ -7,23 +7,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
-# Next bakes NEXT_PUBLIC_* values into the browser bundle at build time, not at
-# run time. Passing them as Cloud Run environment variables would do nothing —
-# by then the strings are already compiled in. So they arrive as build args.
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_FIREBASE_API_KEY
-ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
-ARG NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-ARG NEXT_PUBLIC_FIREBASE_APP_ID
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
-    NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY \
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN \
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID \
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET \
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID \
-    NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
+# Next compiles NEXT_PUBLIC_* values into the browser bundle during this build,
+# not at run time — setting them on Cloud Run afterwards would do nothing. They
+# come from the tracked `.env.production`, which `next build` reads on its own.
+# They are deliberately NOT build arguments: `gcloud run deploy --source` passes
+# none, so every one of them would arrive empty and silently overwrite the real
+# values, producing an app that builds cleanly and cannot sign anyone in.
 RUN npm run build
 
 # Runtime stage — the standalone server only: no sources, no dev dependencies.

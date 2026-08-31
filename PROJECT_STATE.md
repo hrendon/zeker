@@ -2,7 +2,23 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-30
+**Last updated:** 2026-08-31
+
+**Deployed 2026-08-31 — the product runs outside this computer for the first time.**
+Frontend: https://zeker-web-880033266233.us-central1.run.app
+API: https://zeker-api-880033266233.us-central1.run.app
+Both on Cloud Run, us-central1 (Decision 009 — Cloud Run instead of Vercel).
+Verified live: `/health` and `/health/ready` return 200 and reach Firestore; the
+browser bundle carries the right API address and Firebase config; CORS accepts the
+deployed frontend and refuses both a foreign origin and the old localhost value;
+Firestore rules released; three composite indexes READY; the `access_events` TTL
+policy enabled and verified ACTIVE.
+
+**Not yet done, and deliberately:** the Firebase browser key is not yet restricted
+to this domain, and the smoke test has not been run by hand. **The URL must not be
+publicised until D-006 is answered** — anyone who has it can create an
+organization, and nothing checks they run a real building (Security Engineer,
+2026-08-31).
 **Session closed:** 2026-08-30. One unit built (a guard checks a permit at a
 door, and every check is recorded), two commits, three scope questions answered
 by the Founder and recorded as Decision 008. A platform report was added
@@ -52,7 +68,9 @@ In Progress:     Nothing. The next unit is showing that record back:
 Blocked:         0 · 2 decisions waiting on Founder (D-005, D-006),
                  neither blocking today
 Critical Risk:   None open
-Next:            The entry history — who came in, when, and who was refused
+Next:            Restrict the Firebase key to the deployed domain, then run the
+                 smoke test by hand — including the phone pass a guard would do.
+                 After that, the entry history — who came in, when, who was refused
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**
@@ -706,14 +724,16 @@ works end to end on the server.
 
 ## Known Issues
 
-- 🔴 **Nothing deletes an old check yet.** Every check written at a door is
-  stamped with the date it should be removed — 90 days for an entry, 30 for a
-  refusal — but the rule in Google that acts on that stamp has not been switched
-  on. Until it is, the record grows for ever, which contradicts what
-  `docs/security/data-minimization.md` promises and what a privacy policy will
-  have to say. One command, in `developer-guide.md`. **This is the same shape of
-  mistake as the missing indexes on 2026-08-29:** written down in the repository,
-  never actually applied to the live system.
+- ✅ ~~Nothing deletes an old check yet~~ — **closed 2026-08-31.** The Firestore
+  TTL policy on `access_events.expires_at` is enabled and verified `state: ACTIVE`
+  against the live project. An entry now deletes itself after 90 days and a
+  refusal after 30, which is what `docs/security/data-minimization.md` promises.
+  It had been written in the repository since 2026-08-30 and never applied — the
+  same shape of mistake as the missing indexes on 2026-08-29.
+- 🟡 **Superseded note, kept for the pattern:** the original entry read that every
+  check was stamped with a removal date that nothing acted on. Declaring
+  infrastructure in the repository is not deploying it; this has now happened
+  twice, and both times the tests stayed green throughout.
 - 🟡 **The phone camera has never read a real permit.** The QR-reading library
   was proved to decode exactly the QR this product draws, and the typed fallback
   was driven by hand against the live database — but the camera path itself
