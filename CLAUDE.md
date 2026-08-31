@@ -1,24 +1,14 @@
 # CLAUDE.md — Zeker Project
 
-This project uses the **Mantis AI Software Development Operating Framework**, checked out at `mantis/` inside this repository.
+This project uses the **Mantis AI Software Development Operating Framework**.
 
-## Load at session start
+Load `mantis/orientation.md` at session start — it activates the framework and points to everything else. That file is framework-owned and updates automatically with the rest of `mantis/`; this file does not, and never will as part of a framework update.
 
-The framework files live one level down, in `mantis/mantis/` — `mantis/` is the
-framework's own repository and `mantis/mantis/` is its content directory:
-
-- `mantis/mantis/mantis.md` — base framework
-- `mantis/mantis/roles.md` — role catalog & activation
-- `mantis/mantis/execution.md` — unit cycle & autonomy tiers
-- `mantis/mantis/delivery-framework.md` — branch model, gates to production (Spanish)
-- `mantis/mantis/lifecycle-gates.md` — company stages and business gates
-- `mantis/mantis/preferences.md` — communication defaults (managerial register, Spanish UI default)
-
-`mantis/CLAUDE.md` is the framework's own orientation file and is worth reading too.
+## Project-specific instructions
 
 **In this session:** Camino B (build first, validate after) with freemium GCP strategy.
 
-## Non-negotiables for this project
+### Non-negotiables for this project
 
 - Data minimization: never store ID documents, photos, biometrics
 - Encryption: sensitive data encrypted at rest (GCP KMS)
@@ -27,7 +17,7 @@ framework's own repository and `mantis/mantis/` is its content directory:
 - Privacy: comply with Ley 1581/2016 (Colombia), GDPR-adjacent in other markets
 - Stack: GCP free tier, Vercel, Firestore, Firebase Auth, Next.js PWA
 
-## Structure
+### Structure
 
 - `docs/` — all project documentation
   - `product/` — brief, vision, requirements
@@ -36,13 +26,26 @@ framework's own repository and `mantis/mantis/` is its content directory:
   - `decisions/` — decisions log
   - `roles/` — role registry
 - `PROJECT_STATE.md` — current progress & next steps
+- `mantis/` — the framework, vendored (see "Updating the framework" below)
 - Backend code (Node/Express) — to be created
 - Frontend code (Next.js + React) — to be created
 
-## Active roles
+### Active roles
 
 See `docs/roles/role-registry.md`
 
-## Orientation
+### Updating the framework
 
-Read `PROJECT_STATE.md` first for current status and what's next.
+The framework is vendored into this repository: `mantis/` and the Mantis parts of
+`.claude/` are framework-owned, everything else is project-owned. Update with:
+
+```
+git fetch upstream && git checkout upstream/main -- mantis/ .claude/
+```
+
+`upstream` is https://github.com/hrendon/mantis.git. The checkout writes only
+upstream's paths, so it never touches this file, `docs/`, project code, or the
+project's own skills and settings in `.claude/`. Review and commit like any change.
+
+**Never edit files under `mantis/`** — an update overwrites them. Project-specific
+deviations from the framework go in this file, or in `docs/decisions/`.
