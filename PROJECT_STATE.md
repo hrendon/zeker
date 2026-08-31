@@ -3,9 +3,13 @@
 Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-30
-**Session open:** 2026-08-30. One unit built — a guard checks a permit at a
-door, and every check is recorded. Three scope questions answered by the Founder
-and recorded as Decision 008.
+**Session closed:** 2026-08-30. One unit built (a guard checks a permit at a
+door, and every check is recorded), two commits, three scope questions answered
+by the Founder and recorded as Decision 008. A platform report was added
+afterwards, deliberately as an operator tool rather than as a privileged account
+inside the product. Documents were audited against the code at close; the
+endpoint, the stored record and the requirements all match what was built, and
+one small contradiction introduced this session is recorded below.
 
 **Last verified:** 2026-08-30 — backend typecheck clean, 188/188 tests pass;
 frontend typecheck clean, 45/45 tests pass, production build clean; the gate
@@ -721,6 +725,14 @@ works end to end on the server.
   customer's guard gets 404), but nobody has signed in *as* a guard and looked at
   the screen. What is unverified is the tab bar, which is convenience rather than
   a control — the API refuses each screen on its own.
+- 🟢 **The two sides disagree about one field's type.** The gate endpoint types a
+  permit's `purpose` as free text; the browser types it as one of five known
+  values and looks up a Spanish label with no fallback. An unexpected value would
+  render an empty row on the guard's screen. It cannot happen today — the API
+  refuses any other value when a permit is created — so this is a loose contract,
+  not a live fault. Found by the close audit on 2026-08-30. Fix both sides
+  together: `backend/src/routes/validate.ts` (`PermitSummary.purpose`) and
+  `purposeLabel()` in `frontend/lib/permits.ts`.
 - 🟡 **A permit at the wrong entrance has not been tried live.** The test
   building has one site, and its free plan allows only one, so there is no second
   gate to check against. Covered by tests, not by use.
@@ -1232,8 +1244,9 @@ When you restart, check:
 
 - [ ] Read this file first (current state)
 - [ ] Check `docs/context-index.md` (know where to find docs)
-- [ ] Check Pending decisions above — D-005 is waiting, not blocking
+- [ ] Check Pending decisions above — D-005 and D-006 are waiting, not blocking
 - [ ] Read "Where to pick up" below
+- [ ] `cd backend && npm run report` — one page on how the platform is doing
 - [ ] Update this file when work is done
 
 ---
