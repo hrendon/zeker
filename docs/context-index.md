@@ -24,7 +24,9 @@ Map of authoritative sources for project knowledge.
 | Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
 | **Decisions** | | | |
 | Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A |
+| Interface audit | `architecture/interface-audit.md` | Independent review of whether the interface works for a stranger | Interface & Experience Auditor |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
+| — audit | `decisions/decision-audit.md` | Did decisions deliver what they predicted | Decision & Outcomes Auditor |
 | — 001 | `decisions/001-freemium-gcp-stack.md` | Freemium model + GCP stack | Commercial + Architect |
 | — 002 | `decisions/002-client-side-firebase-auth.md` | How users sign in; the API never sees a password | Architect + Security |
 | — 003 | `decisions/003-interiors-and-plan-quotas.md` | Interiors as a real level; plan-based limits | Architect + Product Owner |
