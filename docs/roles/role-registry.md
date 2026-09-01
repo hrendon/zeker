@@ -441,12 +441,23 @@ Strategist / Copywriter (the content that earns the ranking). **No new SEO role
 is being created** — adding one would duplicate scope under a different name,
 which is the failure that step of the protocol exists to prevent.
 
-- **Content Strategist / Copywriter** — owns `content-calendar.md`: content that
-  drives inbound interest, and landing-page copy. **Its trigger has arguably
-  already fired for an unrelated reason:** this registry has recorded since
-  2026-08-26 that the product's Spanish interface copy has no owning role and is
-  written by whoever builds the screen. Activating it early would give that copy
-  an owner. Awaiting the Founder's call.
+- **Content Strategist / Copywriter** — ✅ **ACTIVATED 2026-08-31**, ahead of the
+  other marketing roles and for a different reason. This registry has recorded
+  since 2026-08-26 that the product's Spanish interface copy had no owning role
+  and was written by whoever happened to build the screen. It now has one.
+  Its immediate scope is that copy, not campaigns: every word a resident, an
+  administrator or a guard reads. The catalog scope it will grow into — blog,
+  landing-page copy, `content-calendar.md` — waits for the market-ready trigger
+  above with the rest of marketing.
+  **First task already on the board:** the wording that tells a person their
+  account email may land in spam (see PROJECT_STATE.md's red issue), and a pass
+  over the refusal messages a guard reads at a gate.
+
+- **Payment / Fintech Specialist** and **Risk & Fraud Analyst** — registered
+  2026-08-31, activation deferred. Framework 1.4.0 adds both for products that
+  process payments, and they activate once the product actually does. Decision
+  011 puts billing before market, so their trigger is the start of that work,
+  not its completion.
 
 ### Other roles not yet active
 

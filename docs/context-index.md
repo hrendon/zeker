@@ -37,6 +37,7 @@ Map of authoritative sources for project knowledge.
 | — 008 | `decisions/008-checking-a-permit-at-a-door.md` | Checking a permit at a door, and what a check leaves behind | Founder + Architect + Security |
 | — 009 | `decisions/009-frontend-hosting.md` | The frontend runs on Cloud Run, not Vercel (supersedes part of 001) | Founder + Architect |
 | — 010 | `decisions/010-target-segment.md` | The market is residential and business complexes, not schools | Founder |
+| — 011 | `decisions/011-billing-before-market.md` | Billing and subscriptions must exist before going to market | Founder |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
