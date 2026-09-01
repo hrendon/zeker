@@ -9,6 +9,7 @@ import { ApiError, toSpanish } from '@/lib/errors'
 import { membersApi, type AssignableRole, type Member, type Org } from '@/lib/api'
 import { checkEmail, checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
+import { memberLabel } from '@/lib/members'
 
 /**
  * The people who belong to one organization (Decision 006).
@@ -172,7 +173,7 @@ function MembersScreen({ org }: { org: Org }) {
               {members.map((member) => (
                 <ListRow
                   key={member.user_id}
-                  title={`${member.first_name} ${member.last_name}`.trim()}
+                  title={memberLabel(member)}
                   subtitle={`${roleLabel(member.role)} · ${member.email ?? es.members.noEmail}`}
                   actions={
                     admin && member.role !== 'admin'

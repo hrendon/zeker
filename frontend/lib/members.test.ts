@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { checkEmail, checkRequiredText } from './validate'
 import { ApiError, toSpanish } from './errors'
 import { es } from './strings'
+import { memberLabel } from './members'
 
 /**
  * The people screen's pure logic (Decision 006). Whether a list renders or a
@@ -64,5 +65,35 @@ describe('what the screens promise about stored data', () => {
     // Decision 002 and 006: Firebase holds the email, our database does not.
     expect(es.members.privacyNote).toContain('Firebase')
     expect(es.members.emailHint).toContain('contraseña')
+  })
+})
+
+describe('what to call a person on screen', () => {
+  it('uses the name when there is one', () => {
+    expect(memberLabel({ first_name: 'María', last_name: 'Gómez', email: 'm@example.com' })).toBe(
+      'María Gómez',
+    )
+  })
+
+  it('falls back to the email when the account has no name', () => {
+    // Found in live use on 2026-08-31: an account created by signing up carries
+    // no name until someone fills one in, so building the label from the name
+    // alone produced an empty string. In the responsable selector that rendered
+    // as a blank option — one that works when chosen but shows nothing.
+    expect(memberLabel({ first_name: '', last_name: '', email: 'hola@example.com' })).toBe(
+      'hola@example.com',
+    )
+    expect(memberLabel({ first_name: '  ', last_name: '  ', email: 'hola@example.com' })).toBe(
+      'hola@example.com',
+    )
+  })
+
+  it('never returns an empty string, even with no name and no email', () => {
+    // Whatever it returns, something has to be visible: an option a person
+    // cannot see is an option they cannot choose.
+    expect(memberLabel({ first_name: '', last_name: '', email: null })).toBe(
+      es.common.unnamedPerson,
+    )
+    expect(memberLabel({ first_name: '', last_name: '', email: null })).not.toBe('')
   })
 })

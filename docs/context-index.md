@@ -23,6 +23,7 @@ Map of authoritative sources for project knowledge.
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
 | Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
 | **Decisions** | | | |
+| Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
 | — 001 | `decisions/001-freemium-gcp-stack.md` | Freemium model + GCP stack | Commercial + Architect |
 | — 002 | `decisions/002-client-side-firebase-auth.md` | How users sign in; the API never sees a password | Architect + Security |

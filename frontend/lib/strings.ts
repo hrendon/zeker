@@ -21,6 +21,9 @@ export const es = {
     back: 'Volver',
     signOut: 'Cerrar sesión',
     signingOut: 'Cerrando sesión…',
+    showPassword: 'Mostrar la contraseña',
+    hidePassword: 'Ocultar la contraseña',
+    unnamedPerson: 'Persona sin nombre',
   },
 
   signIn: {
@@ -279,6 +282,7 @@ export const es = {
     stateRevoked: 'Anulado',
 
     codeTitle: 'Código de entrada',
+    open: 'Ver el permiso',
     codeHint: 'Muestre el código QR en la portería. Si la cámara no lo lee, dicte el número.',
     qrAlt: 'Código QR del permiso de entrada',
     copyCode: 'Copiar el número',

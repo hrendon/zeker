@@ -23,6 +23,7 @@ import {
 } from '@/lib/api'
 import { checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
+import { memberLabel } from '@/lib/members'
 
 /**
  * The apartments, warehouse bays and zones inside a site, each with the person
@@ -379,7 +380,7 @@ function InteriorsScreen({ org }: { org: Org }) {
                     <option value="">{es.interiors.responsableNobody}</option>
                     {(members ?? []).map((member) => (
                       <option key={member.user_id} value={member.user_id}>
-                        {`${member.first_name} ${member.last_name}`.trim()}
+                        {memberLabel(member)}
                       </option>
                     ))}
                   </select>
@@ -488,7 +489,7 @@ function InteriorsScreen({ org }: { org: Org }) {
             >
               {(members ?? []).map((member) => (
                 <option key={member.user_id} value={member.user_id}>
-                  {`${member.first_name} ${member.last_name}`.trim()}
+                  {memberLabel(member)}
                 </option>
               ))}
             </select>

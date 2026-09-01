@@ -182,7 +182,7 @@ function PermitsScreen({ org }: { org: Org }) {
                   dimmed={permit.state === 'expired' || permit.state === 'revoked'}
                   actions={[
                     {
-                      label: es.permits.codeTitle,
+                      label: es.permits.open,
                       onSelect: () =>
                         router.push(`/organizaciones/${org.id}/permisos/${permit.id}`),
                     },

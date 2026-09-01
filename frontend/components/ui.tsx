@@ -59,19 +59,28 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   const errorId = `${id}-error`
   const hintId = `${id}-hint`
 
+  // A password typed on a phone is typed blind, and a wrong character is
+  // indistinguishable from a wrong password. The toggle lives here rather than
+  // on each screen so every password field in the product behaves the same.
+  const isPassword = props.type === 'password'
+  const [revealed, setRevealed] = useState(false)
+
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-[var(--color-ink)]">
         {label}
       </label>
+      <div className="relative">
       <input
         {...props}
+        type={isPassword && revealed ? 'text' : props.type}
         id={id}
         ref={ref}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         className={[
           'mt-1.5 block h-11 w-full rounded-lg border bg-white px-3 text-base',
+          isPassword ? 'pr-24' : '',
           'text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)]',
           'disabled:cursor-not-allowed disabled:bg-[var(--color-canvas)]',
           error
@@ -79,6 +88,21 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
             : 'border-[var(--color-line)] focus:border-[var(--color-brand)]',
         ].join(' ')}
       />
+      {isPassword ? (
+        <button
+          type="button"
+          onClick={() => setRevealed((shown) => !shown)}
+          disabled={props.disabled}
+          // The state is carried by aria-pressed, so the label stays constant
+          // and a screen reader announces the change rather than a new control.
+          aria-pressed={revealed}
+          aria-controls={id}
+          className="absolute right-1 top-1.5 flex h-11 min-w-[44px] items-center rounded-lg px-3 text-sm font-medium text-[var(--color-brand)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {revealed ? es.common.hidePassword : es.common.showPassword}
+        </button>
+      ) : null}
+      </div>
       {error ? (
         <p id={errorId} className="mt-1.5 text-sm text-[var(--color-danger)]">
           {error}
