@@ -151,6 +151,25 @@ which is how a test proves that a refused request wrote nothing.
 
 ---
 
+## Before any of this works on the Founder's machine
+
+`gcloud` fails on this machine with `CERTIFICATE_VERIFY_FAILED` unless Avast is
+told to leave Google alone. **Avast One's Web Shield decrypts and re-encrypts
+HTTPS to scan it**, and signs it with its own root certificate. Windows trusts
+that certificate, so `git` works (it uses the Windows store via schannel);
+`gcloud` bundles its own certificate list, does not know it, and refuses.
+
+Pointing `gcloud` at a bundle containing Avast's certificate **does not work** —
+the certificate declares itself a CA without marking that declaration critical,
+which RFC 5280 requires and modern OpenSSL enforces. It is malformed, not merely
+unknown.
+
+**The fix is exceptions in Avast** (Settings → Exceptions → Website/URL):
+`*googleapis.com*`, `*google.com*`, `*firebase.tools*`, `*run.app*`. Narrower and
+safer than turning HTTPS scanning off entirely. Verified working 2026-08-31.
+
+---
+
 ## Deployment (Cloud Run)
 
 `backend/Dockerfile` builds in two stages, so the shipped image has no compiler
@@ -250,10 +269,14 @@ gcloud firestore fields ttls update expires_at   --collection-group=access_event
 gcloud firestore fields list --collection-group=access_events   # is it ENABLED?
 ```
 
-⚠️ **`access_events` carries `expires_at` since 2026-08-30, and its policy is
-not enabled yet.** Until it is, no check is ever deleted, which contradicts the
-90/30-day retention this product promises in
-`../security/data-minimization.md`.
+✅ **Enabled on 2026-08-31 and verified `state: ACTIVE`.** Checks now delete
+themselves — 90 days for an entry, 30 for a refusal — which is what
+`../security/data-minimization.md` promises.
+
+It sat declared-but-not-enabled for a day, which is the second time
+infrastructure written into this repository was never applied to the live
+system (composite indexes were the first, on 2026-08-29). **A third would be a
+systemic problem, not a mistake.**
 
 ---
 

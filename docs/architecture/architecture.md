@@ -12,7 +12,7 @@ Technical decisions, stack, and deployment model.
 | Cloud Run | 2M req/month, 360k cpu-sec | ✅ Sufficient | $0.000025 per cpu-sec after |
 | Firebase Auth | 100 users simultaneous | ✅ Covers schools | $0.005 per user after |
 | Cloud KMS | 20k ops/month free | ✅ For key ops | $0.03 per 10k ops after |
-| Vercel (Next.js) | Hobby plan unlimited | ✅ Frontend | $0 forever |
+| Cloud Run (frontend) | 2M requests/month free | ✅ Frontend, since Decision 009 | scales to zero when idle |
 | Cloud Storage | 5GB free | ✅ Backups | $0.020 per GB after |
 
 **Assumption:** Staying under these limits during MVP validation (projected: <100 daily users).
@@ -44,7 +44,8 @@ State:          TanStack Query (React Query) + Zustand
 Forms:          React Hook Form + Zod
 QR Generation:  qrcode.js (client-side)
 PWA:            next-pwa (offline support)
-Hosting:        Vercel
+Hosting:        Cloud Run, us-central1 (Decision 009 — Vercel was the original
+                choice and was not used)
 ```
 
 ### Shared
@@ -295,12 +296,22 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=zeker-505918.firebaseapp.com
 - `roles/cloudkms.cryptoKeyEncrypterDecrypter` — Cloud KMS encrypt/decrypt
 - These are set up by `scripts/setup-gcp.ps1` during infrastructure initialization
 
-### Frontend (Next.js + Vercel)
+### Frontend (Next.js on Cloud Run)
+
+Deployed the same way as the API, from `frontend/`:
 
 ```bash
-vercel deploy
-# Auto-builds on git push, env vars configured in Vercel dashboard
+gcloud run deploy zeker-web --source . --region us-central1   --service-account zeker-web@zeker-505918.iam.gserviceaccount.com   --allow-unauthenticated
 ```
+
+The service account has **no roles at all**, deliberately: the page server makes
+no Google API calls, so there is nothing for it to be granted.
+
+`NEXT_PUBLIC_*` values are compiled into the browser bundle by `next build` and
+come from the tracked `frontend/.env.production`. They are **not** Cloud Run
+environment variables and **not** Docker build arguments — passing them either
+way arrives empty and silently overwrites the real values, producing a build
+that succeeds and an app nobody can sign in to.
 
 ### Database (Firestore)
 

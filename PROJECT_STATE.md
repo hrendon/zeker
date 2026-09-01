@@ -4,21 +4,32 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-08-31
 
-**Deployed 2026-08-31 — the product runs outside this computer for the first time.**
+**Session closed 2026-08-31. The product left this computer for the first time.**
+
 Frontend: https://zeker-web-880033266233.us-central1.run.app
 API: https://zeker-api-880033266233.us-central1.run.app
 Both on Cloud Run, us-central1 (Decision 009 — Cloud Run instead of Vercel).
-Verified live: `/health` and `/health/ready` return 200 and reach Firestore; the
-browser bundle carries the right API address and Firebase config; CORS accepts the
-deployed frontend and refuses both a foreign origin and the old localhost value;
-Firestore rules released; three composite indexes READY; the `access_events` TTL
-policy enabled and verified ACTIVE.
 
-**Not yet done, and deliberately:** the Firebase browser key is not yet restricted
-to this domain, and the smoke test has not been run by hand. **The URL must not be
-publicised until D-006 is answered** — anyone who has it can create an
-organization, and nothing checks they run a real building (Security Engineer,
-2026-08-31).
+**Verified live, not merely deployed:** `/health` and `/health/ready` return 200
+and reach Firestore; the browser bundle carries the right API address and Firebase
+config; CORS accepts the deployed frontend and refuses both a foreign origin and
+the old localhost value; Firestore rules released; three composite indexes READY;
+the `access_events` TTL policy enabled and verified ACTIVE; the Firebase browser
+key restricted to two APIs and to the deployed domain only.
+
+**The Founder used it and it worked:** a permit issued and a visit approved at the
+gate, on the real URL, using the typed code. **The camera has still never decoded
+a real permit** — Decision 009's own predicted outcome, still unmet.
+
+**Found by that first real use, and nothing else could have found it:** every API
+call returned 401 because the Cloud Run service account had no Firebase Auth
+permission. The 188 backend tests passed throughout. Fixed by granting
+`roles/firebaseauth.admin` — the backend does not only read from Firebase Auth,
+it creates accounts (Decision 006) and revokes sessions.
+
+**Still not done, deliberately:** the smoke test has not been run by hand, and
+**the URL must not be publicised until D-006 is answered** — anyone who has it can
+create an organization, and nothing checks they run a real building.
 **Session closed:** 2026-08-30. One unit built (a guard checks a permit at a
 door, and every check is recorded), two commits, three scope questions answered
 by the Founder and recorded as Decision 008. A platform report was added
@@ -653,38 +664,19 @@ works end to end on the server.
    - ✅ ADC (Application Default Credentials) documented
    - ⚠️ Vercel connection: TODO (Week 1, non-blocking for local dev)
 
-3. **Backend MVP** (7-10 days)
-   - [ ] Node/Express app scaffolded
-   - [ ] Firestore queries + mutations
-   - [ ] Firebase Auth integration
-   - [ ] Security rules written + tested
-   - [ ] Encryption middleware (at-rest)
-   - [ ] Endpoints: auth, orgs, locations, authorizations, validate, events
-   - [ ] Error handling + validation
-   - [ ] Logging + monitoring
+3. ✅ **Backend MVP** — built and deployed. 188 tests pass. *(This section was
+   left unchecked until 2026-08-31 while the work was finished; corrected at
+   session close.)*
 
-4. **Frontend MVP** (7-10 days)
-   - [ ] Next.js + React scaffolded
-   - [ ] Three experiences: Admin, Responsable, Security
-   - [ ] Auth flow (signup, login, logout)
-   - [ ] Admin: Create org, add locations
-   - [ ] Responsable: Create auth, generate QR, revoke
-   - [ ] Security: Scan QR, validate, register entry
-   - [ ] Basic notifications (email on entry)
-   - [ ] PWA setup (offline read cache)
+4. ✅ **Frontend MVP** — built and deployed. 48 tests pass. Note: "basic
+   notifications (email on entry)" was listed here as a target and was
+   **deliberately dropped by Decision 007** — it is not pending, it is out.
 
-5. **Testing** (2-3 days)
-   - [ ] Manual smoke tests (each flow)
-   - [ ] Org isolation test (user A can't see user B data)
-   - [ ] QR generation + scan flow
-   - [ ] Authorization validity checks (date, time, location)
-   - [ ] Deployment smoke test (staging environment)
+5. ⚠️ **Testing** — automated coverage is done; **manual verification on a real
+   phone has never happened.** That is the next unit of work.
 
-6. **Launch** (0.5 day)
-   - [ ] Deploy backend to Cloud Run
-   - [ ] Deploy frontend to Vercel
-   - [ ] Configure custom domain (optional)
-   - [ ] Monitor for errors in production
+6. ✅ **Launch (infrastructure)** — deployed 2026-08-31. Custom domain still
+   open; monitoring and alerts still not configured.
 
 ### Phase 2: Customer Validation (Weeks 5-8)
 
@@ -1264,18 +1256,23 @@ Added 2026-08-30.
 
 ## Success Criteria for MVP
 
-MVP is "done" when:
+**⚠️ This checklist was written on 2026-08-19 and its ticks were never
+maintained. Corrected 2026-08-31 against what is actually true.**
 
-- ✅ Can create org, locations, authorizations in < 5 minutes
-- ✅ Can scan QR and register entry in < 2 seconds
-- ✅ All user stories pass acceptance criteria
-- ✅ No data leaks between orgs
-- ✅ 10+ successful authorizations created by test users
-- ✅ Security sign-off: encryption + isolation + privacy rules verified
-- ✅ Deployed to production (Cloud Run + Vercel)
-- ✅ Monitoring + alerts configured
-- ✅ Privacy policy & ToS written + approved
-- ✅ Ready for 5-10 beta customers
+| | |
+|---|---|
+| ✅ | Create org, locations and permits in under 5 minutes |
+| ✅ | Scan a QR or type a code and register an entry |
+| ✅ | No data leaks between organizations (16 tests; **never proven live**) |
+| ✅ | Deployed to production (Cloud Run, 2026-08-31) |
+| ❌ | **Privacy policy and terms — do not exist.** Legally required before the first real customer, not before public launch (Security Engineer, 2026-08-31) |
+| ❌ | **Threat model — does not exist** |
+| ❌ | **Monitoring and alerts — not configured** |
+| ❌ | **10+ permits created by real test users — nobody outside this project has used it** |
+| ❌ | **Ready for 5–10 pilot customers** — blocked by D-006 and by the items above |
+
+**The MVP is functionally complete and is not launch-ready.** Those are different
+statements, and this section previously conflated them.
 
 ---
 
@@ -1294,115 +1291,70 @@ When you restart, check:
 
 ## Where to pick up
 
-**The product now does the whole thing: a resident issues a permit, and a guard
-checks it at a door.** What is missing is showing the record back — every check
-is being written down from 2026-08-30, and nothing displays it yet.
+**Read this first: nothing below is a feature. The next unit of real work is the
+entry history, and three things come before it in sequence — not in priority.**
 
-**The next unit — the entry history:**
+### 1. The phone pass (blocked nothing else; blocks knowing anything)
 
-1. A resident sees who came to their apartment, when, and who was refused. An
-   administrator sees the whole building. A guard sees none of it, for the same
-   reason they cannot list permits.
-2. Filters that a person actually wants: by date, by apartment, allowed or
-   refused.
+The only step that can settle four open questions at once, and none of them can
+be answered from a desk:
+
+- Does the camera decode a real permit? (Decision 009's unmet prediction)
+- What does a guard actually see, signed in as a guard, on the device they will
+  use standing at a gate?
+- **How slow is it really?** The Founder reported it as very slow on a phone. A
+  forced cold start measured **1.34 s** from a wired connection and 0.68 s warm —
+  which does not reproduce a phone on mobile data, and does not match the
+  Architect's estimate of 5–10 s, which did not survive checking. **The number is
+  unknown until someone measures it on the phone.**
+- Contrast in daylight, which Interface & Experience Auditor named its highest
+  risk: a ratio that passes at a desk can be unreadable in Bogotá sun.
+
+QA Engineer's step-by-step for this exists in the 2026-08-31 consultation.
+
+### 2. The spam issue (🔴 in Known Issues)
+
+Free part first: say on screen that the account email may land in spam. Content
+Strategist / Copywriter owns that wording and was activated for exactly this.
+The real fix needs a domain — see below.
+
+### 3. The brief is wrong on record
+
+Decision 010 set the market as residential and business complexes.
+`docs/product/brief.md` still argues schools, still grounds willingness-to-pay in
+parent pickup, and still says to recruit pilots from schools in Bogotá. **Product
+Owner rewrites it.** Until then the document explaining the business describes a
+different product.
+
+### Then: the entry history
+
+Product Owner's finding from 2026-08-31: **"nothing tells me this permit was
+already used" and "I can't see the history" are one unit, not two.** Both read the
+same `access_events` record; building one without the other writes the same query
+twice. Seeing which permits an interior has active is a *separate* concern —
+permits grouped by interior, closer to a filter on the existing list.
 
 Already settled, needing no new decision:
-
-- The record's stored shape is in `docs/architecture/data-model.md` under
-  `access_events`, and it is what the code actually writes — verified against
-  live Firestore on 2026-08-30.
-- The `GET /orgs/{id}/events` contract is drafted in `docs/architecture/api.md`
-  and is **marked NOT BUILT.** It needs correcting before it is built: a stored
-  event has no `visitor_name` (it points at the permit, which holds the name),
+- The stored shape is in `docs/architecture/data-model.md` under `access_events`,
+  verified against live Firestore.
+- `GET /orgs/{id}/events` is drafted in `docs/architecture/api.md` and **marked
+  NOT BUILT.** It needs correcting first: a stored event has no `visitor_name`,
   its `auth_id` is stored as `permit_id`, and `action` is always `entry`.
-- **This unit will need composite indexes** on `access_events` — most likely
-  `permit_id + created_at` and `location_id + created_at`. They are deliberately
-  not declared yet because nothing queries the collection. Declare *and deploy*
-  them in the same change (see Known issues, and the developer guide).
-- A check points at a permit rather than copying the visitor's name, so the
-  history screen resolves names from the permits, one read for the whole list —
-  the same shape as `displayNames()` and `interiorNumbers()` already use.
+- **It needs composite indexes** on `access_events`, most likely
+  `permit_id + created_at` and `location_id + created_at`. **Declare and deploy
+  them in the same change.** Declaring is not deploying — that has now cost this
+  project twice.
+- Security Engineer's rule for the screen: an administrator sees the whole
+  organization; a responsable sees only the interiors they are responsible for,
+  never another apartment's; a guard sees none of it; a non-member gets 404.
 
-**Two things worth doing first, both cheap:**
+### Waiting on the Founder
 
-1. **Switch on the deletion rule in Google** for `access_events`. It is one
-   command and it is currently the only 🔴 on the issues list.
-2. **Open the screens on a real phone**, and read a real permit's QR with the
-   camera. The gate is the one screen that is definitely used on a phone, at a
-   gate, in a hurry. It was attempted on 2026-08-29 by resizing the browser and
-   the window would not resize, so it is still unchecked.
-
----
-
-**What a new session needs to know that is not obvious from the code:**
-
-- Since Decision 004, **backend code is the only thing keeping customers
-  separate.** Every org-scoped route mounts `requireOrgMember` or
-  `requireOrgAdmin` and ships with a test proving another customer gets 404.
-- The built code deliberately **stores less** than `data-model.md` originally
-  specified — no user email or phone, no organization address or phone, no staff
-  names on locations, and no visitor phone on a permit. Each is marked in
-  `data-model.md` under "What is actually implemented", with the reason.
-- Anything the plan limits is created through `createCounted()` in
-  `backend/src/lib/quota.ts`, never by writing the document directly.
-- The API returns error **codes**; `frontend/lib/errors.ts` is the only place a
-  code becomes Spanish. No English may reach a customer's screen.
-- All user-facing text lives in `frontend/lib/strings.ts`. Text written inside a
-  component is a bug, because it is what makes a second language expensive.
-- **Nothing about a customer goes in browser storage.** Which organization is
-  being viewed comes from the web address. A person can be an administrator of
-  one building and a plain member of another, so anything kept across a switch
-  could put one customer's data on another customer's screen.
-- Since Decision 006, an interior's responsable is **an account, never typed
-  text**, and the name shown comes from that account. `displayNames()` in
-  `backend/src/lib/users.ts` resolves a whole list in one read; do not
-  denormalize the name back onto the interior.
-- Adding a person answers the same way whether or not the account already
-  existed. That is deliberate anti-enumeration, not an oversight — do not
-  "improve" it by reporting which happened.
-- Every organization-scoped screen goes through `OrgGate` in
-  `frontend/components/OrgShell.tsx`. It waits for the sign-in session to be
-  restored before asking the API — skipping that gives a false "your session
-  ended" on any direct page load — and it turns the API's deliberately vague
-  404 into "not found or no access" without revealing which.
-- A refusal that is a plan limit and a refusal that is a permission problem are
-  both 403. Branch on the error **code**, never the status.
-- `docs/architecture/design.md` holds the screen conventions. Two of them look
-  cosmetic but are security and must not be softened: sign-in never says which
-  half was wrong, and password recovery never reveals whether an account exists.
-- A test account exists in Firebase (`prueba.desarrollo@zeker-test.com`) from
-  verifying the sign-in flow. Nothing depends on it.
-- **A permit's code is a credential.** It is generated with `crypto.randomInt`
-  from an alphabet with no I, L, O or U, and is never derived from the permit's
-  id — that id is visible in the web address. Do not "simplify" this.
-- **A permit's `status` is only `active` or `revoked`.** Whether it has expired
-  is worked out from `valid_to` at read time. The three delete guards go
-  through `hasLivePermit()` in `backend/src/lib/permits.ts`, which checks both;
-  a guard that looked at `status` alone would block an apartment for ever.
-- **A check at a door is never edited after it is written**, and there is no
-  code path that does. It is evidence. `backend/src/lib/events.ts` says why.
-- **The order the refusal reasons are evaluated is load-bearing** — no such
-  code, then revoked, then not started, then finished, then wrong entrance. The
-  permit's state is settled before the entrance, so a revoked permit can never
-  tell a guard to try another gate. There is a test named for exactly this; do
-  not "tidy" the order.
-- **A refusal is a 200.** Only a broken request is a 4xx on the gate endpoint.
-  The guard's screen relies on that to tell "this visitor may not enter" apart
-  from "our system is down".
-- **A Firestore TTL policy is not in this repository.** Writing `expires_at` on
-  a document does not enable deletion; the policy is switched on once per
-  collection group in Google Cloud, and nothing in the tests will tell you it is
-  off. Same trap as an undeployed index, one level up.
-- **A query that combines an equality filter with a range needs a composite
-  index in `firestore.indexes.json`, deployed.** The test double does not need
-  one and will not warn you. Deploy with
-  `firebase deploy --only firestore:indexes`, and wait: a new index says
-  `CREATING` for a few minutes and the query fails until it says `READY`.
-
----
-
-**Owner:** All roles collectively
-**Last updated:** 2026-08-30
-**Approval:** ⏳ Two cards waiting — D-005 (free organizations per person) and
-D-006 (verifying that whoever registers a building actually runs it). Neither
-blocks work today; both block opening the product to the public.
+- **A domain.** Recommended: register the name now (cheap, and the only thing
+  here that cannot be recovered if someone else takes it); configure it later, as
+  one piece, together with the verified email sender. 🟡 Budget Gate.
+- **D-005** — how many free organizations one person may create. **Now blocking**,
+  because Decision 011 puts billing before market and there is no upgrade path
+  out of a free plan whose boundary was never drawn.
+- **D-006** — whether we verify that whoever registers a building actually runs
+  it. Blocks publicising the URL.

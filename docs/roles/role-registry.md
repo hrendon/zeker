@@ -496,11 +496,14 @@ Done check can see it happened rather than infer it from the output.
 | 2026-08-29 | Entry permits — issuing, the code, revoking | Product Owner (scope against US-003/004/006), Software Architect (record shape, indexes, why the dates are strings), Security Engineer / CISO (the code is a credential; security staff excluded; no document fields), UI/UX Designer (the permit flow, and the "Cancelar"/"Cancelar el permiso" collision), Frontend Developer, QA Engineer (41 new tests, plus the expiry case the old guards missed) | 5 corrections to a specification that predated Decisions 003/005/006; 4 scope questions answered by the Founder and recorded as Decision 007; 1 deployment gap found by live use (composite indexes declared but never deployed) and closed; 1 wording defect found by live use and fixed |
 | 2026-08-31 | What to build next / whether to activate new roles — full dispatch, no implementation | Product Owner, Customer Discovery & Validation Advisor, Security Engineer / CISO, Software Architect, QA Engineer, Data Analyst, UI/UX Designer | 6 of 7 roles independently converged that the constraint is deployment and a first real user, not remaining features. One genuine conflict surfaced and resolved (Product Owner vs Customer Discovery on whether the entry history is the right next unit). Segment finding raised: the market case in brief.md still argues for schools while the product built is residential — recorded as scope in D-001 on 2026-08-19, but the reasoning for why anyone would pay was never rewritten, and the pilot-recruitment plan still says contact schools. Two decisions routed to the Founder. |
 
-**Concerns with no active owner, noted on 2026-08-26:** the Spanish wording
-itself has no owner — Content Strategist / Copywriter is not active, so
-interface copy is currently written by whoever builds the screen against the
-tone rules in `../architecture/design.md`. Regulatory & Data Privacy Counsel is
-also not active, and the privacy policy required before launch needs it.
+| 2026-08-31 | Deployment — what must be true before exposing this publicly, and how we would know it worked | Software Architect, Security Engineer / CISO, QA Engineer, Interface & Experience Auditor | Deployed to Cloud Run. Security's three preconditions met and verified. QA's smoke test defined but not yet run by hand. Interface Auditor defined its audit checklist — its first act as an activated role. |
+| 2026-08-31 | What to continue with, after the first real person used the deployed product | Product Owner, Interface & Experience Auditor, Customer Discovery & Validation Advisor, Software Architect, Decision & Outcomes Auditor | Two roles independently found the same standing gap: Decision 001 moved the market scope and the business case never moved with it — closed the same day by Decision 010. Interface Auditor found one root cause behind six separate reports. Product Owner consolidated three founder requests into one unit. **Software Architect's figures did not survive checking and were not passed on** (cold start measured 1.34 s against its 5–10 s estimate; its cost figure was ~10× high; it recommended reversing a decision made hours earlier and claimed that decision was unrecorded). Its one durable point was kept: bundle size has no owner, no limit and no monitoring. |
+
+**Concerns with no active owner, noted on 2026-08-26 — updated 2026-08-31:**
+- ✅ Spanish interface copy now has an owner: Content Strategist / Copywriter,
+  activated 2026-08-31.
+- ⚠️ Regulatory & Data Privacy Counsel is still not active, and the privacy
+  policy required before the first real customer needs it.
 
 **Owned artifacts that do not exist:** `customer-discovery.md` (Customer
 Discovery & Validation Advisor) and `analytics.md` (Data Analyst). Both roles
