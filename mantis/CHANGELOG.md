@@ -2,6 +2,25 @@
 
 Notable changes to the Mantis framework, most recent first. The current version is stated at the top of `mantis/mantis.md`. An adopting project can diff its vendored `mantis/` against `upstream/main` at any time to see what changed since it last updated.
 
+## 1.8.0 — 2026-08-31
+
+- New framework file `mantis/meetings.md`: a meeting cadence framework. Twenty-three meetings across eight cadences (daily → annual), each with attending roles named from `roles.md`, the artifacts it must read first, and what it must produce.
+- Defined the standard meeting contract — eight output types (decision, action, finding, risk, escalated blocker, parked topic, agreement, alignment) and a routing table sending each to its canonical home, so meetings feed the artifacts that already exist rather than creating a parallel record system. Meeting records (`docs/meetings/YYYY-MM-DD-<slug>.md`) are episodic L3; durable knowledge is promoted out of them per `mantis.md` §10.
+- Made cadence mechanical rather than aspirational, per §33's own rule: `mantis.md` §16.5 (Session Start) now raises overdue meetings, a declined meeting is recorded as skipped, and a pattern of skips is a Founder-Facing Audit finding.
+- Reconciled with `lifecycle-gates.md` §6 ("most gates are not meetings") rather than contradicting it: convening role-lenses is cheap in an AI-native company, the founder's attention is not — so meetings run and produce records, but route to the human only 🔴 decisions, escalations, and audit findings.
+- Honest dormancy: all-hands, offsite, climate survey, board meeting, and performance cycles are never simulated for a one-person company. Where a function has a real AI-native substitute (all-hands → the Continuity Principle) the framework names it; where it does not (offsite, board accountability), it says so plainly instead of pretending coverage.
+- Added `risks.md`, the risk register — closing a gap the Founder-Facing Audit Duty already assumed existed ("what exposure is accumulating that no one has decided to accept" had no register to accumulate in). Same ownership shape as `indicators.md`: each role owns its own entries.
+- `docs/meetings/` added to the allowed domain folders in the artifact-placement rule (`mantis.md` §20, `orientation.md`), which otherwise would have contradicted where meeting records go.
+
+## 1.7.0 — 2026-08-31
+
+- User validated a 14-role "who brings in money / manages money / builds the product / runs operations" list against the catalog. 9 of 14 already matched exactly (Founder/CEO, Account Executive, CMO, Customer Success Manager, CFO, Bookkeeper/Accountant, UI/UX Designer, COO, HR/People Manager + Recruiter). 5 were real roles under different, common titles the catalog didn't name — fixed by adding aliases/scope, not new roles, per the Role Creation Protocol's naming-mismatch check:
+  - Product Owner / Product Manager → added **(CPO)**.
+  - Software Architect → added **(CTO)**, with a boundary note for when a project outgrows the merged form.
+  - Chief Commercial Officer → added **CRO** and **Head of Growth** aliases; mission reworded to "owns the revenue number."
+  - Partnerships Manager → added **Business Development** alias; scope broadened to explicitly include licensing and new-market channel entry, which weren't named before.
+  - General Counsel → **intellectual property** (trademarks, copyright, trade secrets, patent strategy) added explicitly to scope; it existed only implicitly under "corporate risk management" before.
+
 ## 1.6.1 — 2026-08-31
 
 - Fix (found in post-change validation): the instructional paragraph about when to omit the Indicators section had been placed *inside* `PROJECT_STATE.md`'s template code block (`execution.md` §9), so copying the template would copy meta-instructions into a real status file. Moved the rule into the prose below the template, where the section's other guidance already lives; the template now holds only example lines.

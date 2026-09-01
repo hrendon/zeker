@@ -1,6 +1,6 @@
 # AI Software Development Operating Framework
 
-**Version:** 1.6.1 — see `mantis/CHANGELOG.md`.
+**Version:** 1.8.0 — see `mantis/CHANGELOG.md`.
 
 ## 1. Purpose
 
@@ -831,6 +831,8 @@ When tools allow, inspect relevant:
 
 Avoid manually stored duplicates of information that tools can reliably provide.
 
+Where `meetings.md` is in use, also check `docs/meetings/` for the last record of each active meeting and raise any whose cadence has elapsed (`meetings.md` §5). Overdue meetings are surfaced, most overdue first — not run automatically.
+
 ## 16.6 Determine session objective
 
 If the objective is already explicit, use it.
@@ -1082,6 +1084,11 @@ Significant decisions should capture:
 * status
 * date
 
+## Risk and Cadence
+
+risks.md (the risk register — `meetings.md` §6)
+meetings/ (one record per meeting occurrence — `meetings.md` §3.4)
+
 ## Go-to-Market
 
 landing-page.md (or the live page itself, once built — `roles.md`, Content Strategist / UI/UX Designer)
@@ -1143,7 +1150,7 @@ When an artifact is required:
 9. reference related canonical artifacts
 10. update the context index when appropriate
 
-**Artifact placement:** a new artifact is created in its domain folder under `docs/` (`product/`, `architecture/`, `security/`, `delivery/`, `business/`, `decisions/`, `roles/`, `working/`) — never in the repository root. The root holds exactly three markdown files: `README.md`, `CLAUDE.md`, and `PROJECT_STATE.md`. Record the new artifact's location in `context-index.md` (§6). In a project whose existing structure predates this layout, follow that project's recorded structure instead of mixing the two.
+**Artifact placement:** a new artifact is created in its domain folder under `docs/` (`product/`, `architecture/`, `security/`, `delivery/`, `business/`, `decisions/`, `roles/`, `meetings/`, `working/`) — never in the repository root. The root holds exactly three markdown files: `README.md`, `CLAUDE.md`, and `PROJECT_STATE.md`. Record the new artifact's location in `context-index.md` (§6). In a project whose existing structure predates this layout, follow that project's recorded structure instead of mixing the two.
 
 Documentation depth must be proportional to project complexity and risk.
 

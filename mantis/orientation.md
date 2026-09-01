@@ -11,6 +11,7 @@ The framework lives in `mantis/` and is L1 system memory (`mantis/mantis.md` §1
 - `mantis/execution.md` — unit cycle, autonomy tiers (🟢🟡🔴), PROJECT_STATE.md
 - `mantis/delivery-framework.md` — branch model, gates to production, data safety (Spanish)
 - `mantis/lifecycle-gates.md` — company stages and business gates (G0–G12)
+- `mantis/meetings.md` — meeting cadence, who attends, and where each output is recorded
 - `mantis/preferences.md` — how to communicate with the user (managerial register)
 
 ## Orientation
@@ -27,4 +28,4 @@ The framework lives in `mantis/` and is L1 system memory (`mantis/mantis.md` §1
 - Decisions belonging to Founder/CEO or Board are never made by the AI — present options and stop (`mantis/roles.md` §2).
 - 🟡/🔴-tier actions require human approval, raised as cards in PROJECT_STATE.md's Pending decisions queue.
 - Responses follow the managerial register: business language first, technical detail on request (`mantis/preferences.md`).
-- **New documents are never created in the repository root.** Every new `.md` goes in its domain folder under `docs/` (`product/`, `architecture/`, `security/`, `delivery/`, `business/`, `decisions/`, `roles/`, `working/`), and its location is recorded in `docs/context-index.md`. The root holds exactly three markdown files: `README.md`, `CLAUDE.md`, `PROJECT_STATE.md`.
+- **New documents are never created in the repository root.** Every new `.md` goes in its domain folder under `docs/` (`product/`, `architecture/`, `security/`, `delivery/`, `business/`, `decisions/`, `roles/`, `meetings/`, `working/`), and its location is recorded in `docs/context-index.md`. The root holds exactly three markdown files: `README.md`, `CLAUDE.md`, `PROJECT_STATE.md`.

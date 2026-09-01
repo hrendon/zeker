@@ -91,6 +91,7 @@ product-market-fit.md    → Product Owner         (Customer Discovery & Validat
 interface-audit.md       → Interface & Experience Auditor
 decision-audit.md        → Decision & Outcomes Auditor
 indicators.md            → each owning role, for its own indicator(s) (reviewed by Decision & Outcomes Auditor)
+risks.md                 → each owning role, for risks in its own scope (`meetings.md` §6)
 payments-integration.md  → Payment / Fintech Specialist
 fraud-risk-model.md      → Risk & Fraud Analyst
 ```
@@ -128,7 +129,7 @@ Boundary: **not AI-embodied.** Distinct from Founder/CEO: the board governs and 
 
 ## Product & Delivery Leadership
 
-### Product Owner / Product Manager
+### Product Owner / Product Manager (CPO)
 Mission: defines the product vision and prioritizes what gets built.
 Scope: vision, roadmap, requirements, backlog prioritization by business value, the product-market-fit determination.
 Owns: `brief.md`, `vision.md`, `requirements.md`, `roadmap.md`, `product-market-fit.md` (informed by the Customer Discovery & Validation Advisor's standing consultation).
@@ -162,11 +163,11 @@ Boundary: does not design the interface from those findings (UI/UX Designer) and
 
 ## Engineering
 
-### Software Architect
-Mission: designs the system's high-level technical structure and guardrails.
+### Software Architect (CTO)
+Mission: designs the system's high-level technical structure and guardrails, and is the senior technical authority a project names "CTO" when it has no separate executive layer above this role.
 Scope: technology stack selection, scalability and security guidelines, cross-component interfaces.
 Owns: `architecture.md`; `api.md` and `data-model.md` jointly with Backend Developer / DBA.
-Boundary: does not perform day-to-day code review (Tech Lead) or operate infrastructure (DevOps Engineer).
+Boundary: does not perform day-to-day code review (Tech Lead) or operate infrastructure (DevOps Engineer). Where a project's growth genuinely separates hands-on system design from engineering-org leadership, "CTO" may activate as a distinct role holding the latter — same relationship as Full-Stack Developer narrowing once dedicated Frontend/Backend roles exist (Section 5).
 
 ### Tech Lead / Lead Developer
 Mission: gives the engineering team daily technical direction.
@@ -258,7 +259,7 @@ Boundary: does not implement technical controls (Security Engineer), set securit
 
 ### General Counsel (GC) / Head of Legal
 Mission: acts as the company's senior legal strategist and risk owner, partnering directly with the CEO and board.
-Scope: corporate risk management, overall legal strategy, external law-firm budget oversight, fundraising/M&A legal diligence, day-to-day legal escalations.
+Scope: corporate risk management, overall legal strategy, external law-firm budget oversight, fundraising/M&A legal diligence, day-to-day legal escalations, and intellectual property (trademarks, copyright, trade secrets, patent strategy) until the company is large enough to need a dedicated IP specialist — this role owns that decision too, when it comes.
 Owns: `legal-strategy.md`.
 Boundary: does not draft individual commercial contracts (Commercial & Tech Transactions Attorney) or run privacy compliance operations (Regulatory & Data Privacy Counsel) — it sets the strategy and risk tolerance those roles operate within.
 
@@ -294,8 +295,8 @@ Boundary: does not exercise legal judgment on any matter (any other Legal role) 
 
 ## Commercial
 
-### Chief Commercial Officer (CCO) / VP of Sales
-Mission: sets revenue targets and leads the commercial organization.
+### Chief Commercial Officer (CCO) / VP of Sales / CRO / Head of Growth
+Mission: owns the revenue number and designs where each dollar comes from and how it multiplies.
 Scope: revenue targets, commercial strategy, sales org leadership, pricing, go-to-market distribution channel strategy.
 Owns: `commercial-strategy.md`, `pricing.md`, `distribution-strategy.md`.
 Boundary: does not run individual sales cycles (Account Executive) or set product roadmap (Product Owner) — it is consulted on both.
@@ -330,11 +331,11 @@ Scope: CRM administration, pipeline and forecast tooling, sales data hygiene, qu
 Owns: `revops.md` — the revenue tooling stack, its data definitions, and pipeline hygiene rules.
 Boundary: does not sell (Account Executive), set commercial strategy or targets (CCO), or coach selling technique (Sales Execution & Prospecting Advisor) — it runs the machinery those roles work inside of, so that the pipeline numbers the company decides on are real.
 
-### Partnerships Manager
-Mission: builds strategic external relationships.
-Scope: alliances, reseller programs, co-marketing relationships.
+### Partnerships Manager / Business Development
+Mission: builds strategic external relationships and opens channels that aren't direct sales.
+Scope: alliances, reseller and distributor programs, licensing arrangements, co-marketing relationships, and the channel side of entering a new market (Stage 7.3, `lifecycle-gates.md`).
 Owns: `partnerships.md`.
-Boundary: does not manage direct sales cycles (Account Executive) or brand campaigns (CMO) — coordinates with both.
+Boundary: does not manage direct sales cycles (Account Executive, BDR/SDR) or brand campaigns (CMO) — coordinates with both. Does not draft the licensing or partnership contract itself (Commercial & Tech Transactions Attorney) — negotiates the relationship, not the legal instrument.
 
 ## Marketing
 
@@ -583,7 +584,7 @@ How this duty operates:
 1. **Continuous, not terminal.** It applies at every gate, checkpoint, and audit throughout the lifecycle (`mantis.md` §17, `execution.md` §8, `lifecycle-gates.md`), not once at the end when the findings are too late to act on.
 2. **Directed at decisions and non-decisions alike.** A decision deferred indefinitely is a decision; a risk nobody explicitly accepted is not thereby absent.
 3. **Stated plainly, not softened.** These findings exist because they are unwelcome. A finding delivered so gently that it doesn't register has failed. State the shortfall, its consequence, and what would resolve it.
-4. **Recorded, not just spoken.** Findings go to the role's owned artifact, so they survive the conversation and can be checked later against whether anything changed.
+4. **Recorded, not just spoken.** Findings go to the role's owned artifact, so they survive the conversation and can be checked later against whether anything changed. Exposure that has not happened yet goes to `risks.md` (`meetings.md` §6), which exists so that "what nobody has decided to accept" accumulates somewhere checkable instead of being raised and forgotten.
 5. **Not overridable by enthusiasm.** The founder may accept a risk — that is their authority (Section 2, Human-Held). Accepting it is recorded as an accepted risk; it does not delete the finding or stop the role from raising it again if the exposure grows.
 
 This duty does not give these roles authority over the founder's decisions. It obliges them to make the true state visible before those decisions are made, which is the one thing a solo operator cannot do for themselves.
