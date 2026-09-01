@@ -12,15 +12,56 @@ A subscription nobody recorded is a subscription nobody cancels.
 
 ## Currently paying
 
-**Nothing.** Every service in use sits inside a free tier — a claim that is
-**asserted, not verified**; see `budget.md` and `risks.md` R-10.
+### 1. `zeker.com.co` — Cloudflare Registrar ✅ BOUGHT 2026-09-01
+
+**The project's first recurring cost.** The spend committee had deferred this
+pending two preconditions; the Founder overrode the deferral and bought. That is
+recorded here as what it is — **a purchase made ahead of the control, not one that
+passed it** — and the override was reasonable: a name someone else takes cannot be
+recovered, and `zeker.com` and every `.com` fallback were already gone.
+
+| Field | Value |
+|---|---|
+| Domain | `zeker.com.co` |
+| Registrar | Cloudflare Registrar |
+| Cost | **US$15/year ≈ 60,000 COP/year ≈ 5,000 COP/month** |
+| Share of ceiling | **25%** of 20,000 COP/month |
+| Bought | 2026-09-01 |
+| **Renews** | **2026-09-01 (annually) — set the reminder for 2026-07-18, 45 days ahead** |
+| Registrant of record | ⬜ **to verify in WHOIS** |
+| Account email | ⬜ **to record — and it must NOT be an address on this domain** |
+| Auto-renew | ⬜ **to verify ON, and that the card expires later than the renewal** |
+| 2FA + registrar lock | ⬜ to verify |
+| WHOIS privacy | ⬜ to verify (included free at Cloudflare — never pay separately) |
+| Status | 🟡 **Registered but not resolving.** See below |
+
+**Why `.com.co` and not the recommendation.** Procurement recommended `zeker.com`
+at US$10.44 (17% of the ceiling). It was not available, and neither were the
+`.com` fallbacks. `.com.co` at US$15 was the recorded next choice, and it carries a
+real advantage the recommendation already noted: it is unambiguously Colombian and
+keeps the clean name rather than an invented compound. **It costs 8 more percentage
+points of the ceiling than `.com` would have.** That is the whole delta.
+
+**Open right now: "Invalid nameservers."** Verified from outside on 2026-09-01 —
+`zeker.com.co` returns NXDOMAIN from both Google and Cloudflare public resolvers,
+which means the `.com.co` registry has no nameserver delegation for it yet. That is
+consistent with the message and is a **setup step, not a fault in the purchase.**
+Cloudflare Registrar requires the domain's DNS to be hosted at Cloudflare, so the
+zone has to exist and be active before the delegation is valid. See the steps in
+`PROJECT_STATE.md`.
+
+**Still unresolved and still blocking, unchanged by the purchase:** how the domain
+attaches to Cloud Run. The load-balancer path costs **3.6×–5× the entire ceiling**.
+Owner: Software Architect. Nothing should be pointed anywhere until that is settled.
+
+### 2. Everything else
+
+Inside a free tier — a claim that is **asserted, not verified**; see `budget.md`
+and `risks.md` R-10. `npm run costs` now measures how full each free tier is.
 
 ---
 
-## Proposal 1 — Domain name 🟡 AWAITING FOUNDER APPROVAL (Budget Gate)
-
-**Status: proposed, not bought.** Deferred by the spend committee on 2026-09-01
-pending two preconditions, which the Founder may override.
+## The purchase record that produced decision 1 above
 
 All prices below are **approximate market figures from knowledge, not checked
 quotes.** FX: 4,000 COP/USD, taken from `budget.md`'s own US$5 ≈ 20,000 COP.

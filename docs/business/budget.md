@@ -66,3 +66,65 @@ would be a 🔴 hard stop.
 **Open action:** the GCP billing alert created on 2026-08-19 has never been
 checked against this ceiling. It should be set to warn well below 20,000 COP so
 the alert arrives while there is still room, not after.
+
+---
+
+## Updated 2026-09-01 — the first MBR, and the first recurring cost
+
+**FP&A Manager was activated on 2026-09-01, effective 2026-08-19.** This file had
+named that role as the owner of monitoring since it was written, and the role did
+not exist: the project registry gated finance on revenue, contradicting the
+framework, which gates it on the first spend. **The ceiling had a number and no
+monitor for thirteen days.**
+
+### The claim above is UNVERIFIED, and is not repeated as fact
+
+The "cost today" table is a service-by-service inference, not an observation. **No
+billing report has been read since this project was created.** Recorded as
+`D-FPA-1` in `docs/meetings/2026-09-01-mbr-comite-gasto.md`: repeating an
+unverified claim in a finance artifact is how it becomes a fact by repetition.
+
+### Measured on 2026-09-01, for the first time
+
+    cd backend && npm run costs
+
+This reads how full each free tier is — the quantities that turn into charges.
+**It is not the bill**, and it says so; the invoice needs console access.
+
+| Surface | Measured | Note |
+|---|---|---|
+| Artifact Registry | **133.2 MB of ~500 MB (27%)** | Was 107.4 MB earlier the same day. **One deploy added ~26 MB — about 5% of the allowance.** At that rate ~14 more deploys fill it, with no customers involved |
+| Cloud KMS | 1 version ≈ **240 COP/month** | **Decision 005 left this key unused.** This would be the project's first charge, for a resource the product does not need |
+| Cloud Run egress | 2 services | Free tier is North-America egress; we serve Bogotá, which is South America and costs more. Scales with customers |
+| Billing alert | **The Budget API is not enabled** | Strong signal the 2026-08-19 alert is not real. Not proof |
+
+### The first recurring cost
+
+**`zeker.com.co`, Cloudflare, US$15/year ≈ 5,000 COP/month = 25% of the ceiling.**
+Bought 2026-09-01. Details and renewal controls in `vendors.md`.
+
+**The spend floor is no longer zero, permanently.** Until today, any non-zero charge
+was a signal. From now on ~5,000 COP/month is expected noise, which is exactly why
+the alert threshold matters and why it should have been set first.
+
+### The convention this file still lacks
+
+**How does an annual charge count against a monthly ceiling?** Amortized, the domain
+is 25% and fits. As cash, it is 3× the monthly ceiling in the month it is paid.
+Both readings are defensible from the text above and they give opposite answers.
+
+**Recommended, and the Founder's to accept:** amortize — the ceiling is a run-rate
+control on recurring commitments, not a cash-flow limit — **with a guardrail: any
+single cash outlay above 50,000 COP needs explicit approval regardless of how it
+amortizes.** Record the cash outlay separately from the run rate, so a month
+containing a renewal is not later misread as a breach.
+
+### What is still not known, and matters more than anything above
+
+1. **Is a US$300 free-trial credit active, and when does it expire?** If it is, real
+   spend is masked and there is a cliff on a date nobody has written down.
+2. **Does the 2026-08-19 alert have a threshold, a currency and a recipient?**
+   ⚠️ If the billing account is denominated in USD, the budget amount is **US$5**,
+   not 20,000 — entering "20000" would create a US$20,000 budget that never fires.
+
+Both need the console. Both are the Founder's to close.

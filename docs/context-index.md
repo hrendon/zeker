@@ -15,7 +15,8 @@ Map of authoritative sources for project knowledge.
 | Design (UX/UI) | `architecture/design.md` | Layout, language, components, accessibility, and the setup flow. The responsable and security experiences are still to be designed | UI/UX Designer |
 | Metrics | ⛔ not written | Metric definitions and what each one actually measures | Data Analyst |
 | Customer evidence | ⛔ not written | What was assumed, what was tested, what was learned | Customer Discovery & Validation Advisor |
-| Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code | Backend Developer |
+| Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code, plus `npm run report` (the business) and `npm run costs` (the money) | Backend Developer |
+| Cost watch | `../backend/scripts/cost-watch.ts` | How full each free tier is, against the ceiling. **Not the bill** — it says so itself | FP&A Manager |
 | **Security** | | | |
 | Data minimization | `security/data-minimization.md` | What we store, what we never store, minimization rules | Security Engineer |
 | Threat model | ⛔ not written | Threats, mitigations, assumptions | Security Engineer |

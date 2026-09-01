@@ -219,6 +219,34 @@ ends with the Google Cloud links that hold them.
 
 ---
 
+## Watching the money
+
+```bash
+cd backend && npm run costs
+```
+
+The other half of the page above. `npm run report` answers "how is the business
+doing"; this answers **"what is this costing, and what is about to start
+costing"** — how full each free tier is, checked against the 20,000 COP ceiling
+in `docs/business/budget.md`.
+
+**It is not the bill, and it says so in its own output.** Actual charges live in
+Cloud Billing, which needs console access or a BigQuery export this project does
+not have. What this measures is the *quantities that turn into charges*, which is
+what lets you see a free tier filling up before it overflows rather than after.
+
+Same trust model as the report: Application Default Credentials, governed by IAM,
+no privileged account inside Zeker. A surface it cannot read is printed as
+**unknown**, never as zero — a cost nobody could measure is the one most likely
+to surprise us.
+
+It exists because on 2026-09-01 the first monthly review found that `budget.md`'s
+claim that everything was inside a free tier had never once been checked, and
+that the role named as its owner had never been activated. A role recorded in a
+document does not read a bill.
+
+---
+
 ## Database rules and indexes
 
 The rules in force are `firestore.rules` at the repository root, tracked in git.
