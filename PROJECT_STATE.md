@@ -716,6 +716,34 @@ works end to end on the server.
 
 ## Known Issues
 
+- 🔴 **ROOT CAUSE FOUND 2026-09-01, and proved: the browser API key was locked to
+  one domain, and the password-reset page lives on a different one.**
+  The key's allowed referrer was `https://zeker-web-...run.app/*` **only**. Firebase's
+  password page runs on `https://zeker-505918.firebaseapp.com/__/auth/action` and
+  calls Identity Toolkit with that same key. Google refuses it, and Firebase's page
+  renders its generic *"expired or already used"* — because it collapses several
+  distinct API errors into one English sentence.
+  **Proved, not inferred.** The same request with the same fake code, from two
+  referrers:
+  - from the app's own domain → `400 INVALID_OOB_CODE` (the API works)
+  - from Firebase's reset page → `403 Requests from referer
+    https://zeker-505918.firebaseapp.com/__/auth/action are blocked.`
+  **The timeline is decisive.** The key was restricted at `2026-08-31T23:49:08Z`.
+  The Founder's account was created at `23:51:42Z` — **2 minutes 34 seconds later.**
+  Password recovery has therefore **never once worked in this product.** Sign-in
+  kept working because the app's own origin was on the list; only the reset page
+  was not.
+  **This is what the 2026-08-31 session recorded as a security win** — "the Firebase
+  browser key restricted to two APIs and to the deployed domain only." It was a real
+  hardening. It also silently closed the only door into the product, and **188 green
+  tests could not see it**, because no test leaves the app's own origin.
+  **Fix (30 seconds, needs Founder's console/CLI):** add
+  `https://zeker-505918.firebaseapp.com/*` to the key's allowed referrers. Still two
+  domains, both ours; the restriction stays meaningful.
+  **The durable fix removes the need for that exception:** our own `/auth/action`
+  page on the Cloud Run host, which is already an allowed referrer. Then
+  `firebaseapp.com` can be dropped from the list again.
+
 - 🔴 **The password link is dead when it is tapped — and it is how EVERY account
   gets in.** Found by the Founder on their own phone, 2026-09-01: reset requested,
   email received, link tapped, and Firebase's own page answered in English

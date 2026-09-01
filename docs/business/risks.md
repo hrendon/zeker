@@ -65,3 +65,12 @@ durable to land.
 Each role updates its own rows. A risk is not deleted when it stops being
 interesting — it is marked mitigated, or accepted with the acceptance recorded and
 dated. Reviewed at every weekly review, every MBR, and every gate.
+
+---
+
+## Added 2026-09-01, after the root cause of the lockout was proved
+
+| # | Risk | Impact | Owner | Mitigation / status |
+|---|---|---|---|---|
+| R-19 | **Hardening a control can silently close a door, and no test in this project can see it.** The browser API key was restricted to the deployed domain on 2026-08-31 — a correct, real security improvement. It also broke every password link the product will ever send, because Firebase's reset page lives on a different domain. **188 backend and 48 frontend tests stayed green, and always will: no test leaves the app's own origin.** | Password recovery has never once worked. Under Decision 006 that is the only door for every resident and every guard | Security Engineer / Software Architect | 🟡 Root cause proved 2026-09-01 by comparing the same API call from two referrers. **The general lesson is not the referrer list** — it is that every change to an access control needs a hand-run check of the flows that cross an origin boundary, because the suite structurally cannot |
+| R-20 | **Domain renewal has an owner but no mechanism.** Procurement / Vendor Manager is active and owns renewal tracking. **A role recorded in a document does not watch a calendar.** Until a real reminder exists outside this repository, the control is a note | Lapse costs 1.3×–2.5× the annual budget and kills onboarding silently — R-11 | Procurement / Vendor Manager | 🔴 **Open by construction until the domain is bought.** The reminder is set in the same sitting as the purchase, never "later" |
