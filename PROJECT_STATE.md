@@ -1432,23 +1432,56 @@ responsable, with the responsable proven unable to see another apartment's entri
 
 ---
 
-### Waiting on you
+### The single ordered list — updated 2026-09-01
 
-| | What | Blocks |
+Everything outstanding, in one sequence. Earlier records scattered these across two
+meeting records, four decisions and a risk register; this is the one place that says
+what happens next and in what order. **Y** = only the Founder can do it.
+
+#### Blocking — nothing else moves until these are done
+
+| # | Do | Who | Why it is first |
+|---|---|---|---|
+| 1 | **Fix the API key referrer.** Add `https://zeker-505918.firebaseapp.com/*` to the browser key's allowed list | **Y** — 30 s | Password recovery has never worked. No sign-in, no phone test, no demo, no discovery call |
+| 2 | Request a reset link and sign in | **Y** — 2 min | Proves 1 worked. If it still fails, stop and say so — the diagnosis was wrong |
+
+#### This week — the money, because it now has a deadline
+
+The US$300 credit **expires 2026-11-17** and is **shared with other projects**.
+Until then every "US$0.00" reading proves nothing.
+
+| # | Do | Who | Note |
+|---|---|---|---|
+| 3 | **Read the billing report grouped by SKU, with the credits column shown** | **Y** | The only thing that separates "inside Always Free" from "billed and credited to zero". Minutes |
+| 4 | **Create the budget alert on the BILLING ACCOUNT, not just this project** | **Y** | The credit is shared; a project-scoped alert watches the wrong pool. Threshold **25%**. ⚠️ **Check the account currency first — if it is USD the amount is US$5, not 20000** |
+| 5 | Cloudflare → Websites → Add a site → `zeker.com.co` → Free plan | **Y** | The domain is registered but has no DNS delegation; that is what "invalid nameservers" means |
+| 6 | The five domain controls, in one sitting: auto-renew on, card expiry after renewal, account email **not** on this domain, 2FA + registrar lock, WHOIS privacy on, registrant is you | **Y** | Lapse costs more than the annual budget. R-20 stays open until a reminder exists outside this repository |
+| 7 | Calendar reminder: **2027-07-18**, renewal 45 days out | **Y** | |
+
+#### Then — the work I do, in this order
+
+| # | Do | Depends on |
 |---|---|---|
-| **D-007** | The domain: `zeker.com` at Cloudflare, ~19% of the ceiling. **Check the load-balancer trap first — it would cost 3.6×–5× the whole ceiling** | The spam fix; a URL anyone can type |
-| **D-006** | Whether we verify that whoever registers a building runs it. Security Engineer answered *how*: manual approval is the only mechanism that proves anything; the other two are theater | Publicising the URL |
-| **D-008** | How someone asks about a paid plan — mailto, WhatsApp, or nothing | The second-organization screen |
-| **Billing** | Read the actual GCP bill by SKU, settle the free-trial-credit question, and set the alert at **25% (5,000 COP)** — ⚠️ check the account currency first | Knowing what this company spends |
-| **Convention** | Does an annual charge count against a monthly ceiling amortized, or as cash in the month paid? Both readings are defensible and they disagree | Approving D-007 cleanly |
+| 8 | Our own `/auth/action` page, in Spanish, on our host — removes the need for the referrer exception in step 1 | 2 |
+| 9 | Resend control and an "aún no ha entrado" state on the people screen; spam wording there | — |
+| 10 | Confirm the **free** path to attach the domain to Cloud Run (domain mapping vs. Firebase Hosting) | 5 |
+| 11 | Remove the unused KMS key (Decision 005 left it with no purpose) and add an Artifact Registry cleanup policy | 3 |
+| 12 | Cap member creation per organization | — |
+| 13 | Rewrite `brief.md` for the real segment | — |
+| 14 | The entry history, with its indexes **deployed** and proven live | 2 |
 
-### What the two meetings said that nothing else would have
+#### The phone test — as soon as step 2 lands
 
-> *"Zeker's cash exposure is genuinely trivial and genuinely unmeasured, and those
-> are two different statements that have been treated as one."*
+Runs whole once you can sign in. `TC-PHONE-01` has pass/fail lines now. Do it
+outdoors, on mobile data, at 50% brightness, with no traffic to the site for 20
+minutes beforehand or the speed measurement is meaningless.
 
-> *"This company's decision record is strong and its evidence record is empty, and
-> the two have been mistaken for each other."* Eleven decisions in thirteen days,
-> zero conversations with a buyer. **The tell: the one decision forced by contact
-> with the outside world — deploying — was the only one that produced a genuine
-> surprise.**
+#### Still yours to decide, not blocking today
+
+- **D-006** — do we verify that whoever registers a building runs it? Security
+  answered *how*: manual approval is the only mechanism that proves anything.
+- **D-008** — how does someone ask about a paid plan: mailto, WhatsApp, or nothing?
+- **The budget convention** — does an annual charge count amortized (25% of the
+  ceiling) or as cash in the month paid (3× the ceiling)? Both readings are
+  defensible from `budget.md` as written, and they disagree.
+

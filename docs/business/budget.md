@@ -121,8 +121,25 @@ containing a renewal is not later misread as a breach.
 
 ### What is still not known, and matters more than anything above
 
-1. **Is a US$300 free-trial credit active, and when does it expire?** If it is, real
-   spend is masked and there is a cliff on a date nobody has written down.
+1. ~~Is a US$300 free-trial credit active, and when does it expire?~~ **ANSWERED
+   2026-09-01 by the Founder: yes, and it expires 2026-11-17** — and it is
+   **shared with the Founder's other projects.**
+
+   This is now a dated event, not an unknown. Three consequences:
+   - **Every reading of "US$0.00" between now and 2026-11-17 proves nothing.** A
+     stack inside Always Free and a stack billed-then-credited-to-zero are
+     indistinguishable in a top-line total. They diverge on one day.
+   - **On 2026-11-17, whatever is silently being charged starts hitting the card**,
+     with no prior signal unless an alert exists first.
+   - **The credit is shared.** Another project can exhaust it before November, and
+     nothing in this repository knows those projects exist. The budget alert must
+     therefore be set **on the billing account, not only on this project**, or it
+     watches the wrong pool.
+
+   The distinguishing evidence takes minutes: the billing report grouped **by SKU**
+   with the **credits column shown**. Until someone reads it, the "everything is
+   free" claim above stays UNVERIFIED — not because it is doubted, but because the
+   only number that could confirm it is currently masked by design.
 2. **Does the 2026-08-19 alert have a threshold, a currency and a recipient?**
    ⚠️ If the billing account is denominated in USD, the budget amount is **US$5**,
    not 20,000 — entering "20000" would create a US$20,000 budget that never fires.
