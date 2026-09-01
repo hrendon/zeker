@@ -41,3 +41,12 @@ export const firebaseApp: FirebaseApp =
   getApps()[0] ?? initializeApp(firebaseConfig)
 
 export const auth: Auth = getAuth(firebaseApp)
+
+// Firebase sends the password-reset and "set your password" emails, and hosts
+// the page their link lands on. Both default to English, which broke the rule
+// in docs/architecture/developer-guide.md that no English ever reaches the
+// screen — the Founder hit it on 2026-09-01, locked out on their own phone by
+// an English page they had no way back from. This one line puts the email and
+// that page into Spanish. It does not make the page ours; that is a separate
+// unit (an /auth/action route on our own host).
+auth.languageCode = 'es'

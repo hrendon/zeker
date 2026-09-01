@@ -25,7 +25,14 @@ export default function ResetPasswordPage() {
     setBusy(true)
     setFormError(null)
     try {
-      await sendPasswordResetEmail(auth, email.trim())
+      // The link lands on Firebase's own page, not ours. Without a continue
+      // URL that page is a dead end: the person is told the link failed and
+      // has no way back, because the app's address is a Cloud Run hostname
+      // nobody types from memory. This gives that page a door back to Zeker.
+      await sendPasswordResetEmail(auth, email.trim(), {
+        url: `${window.location.origin}/entrar`,
+        handleCodeInApp: false,
+      })
       setSent(true)
     } catch (error) {
       // "No account with that email" is treated as success on purpose. Saying

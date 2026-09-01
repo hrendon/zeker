@@ -23,7 +23,14 @@ Map of authoritative sources for project knowledge.
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
 | Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
 | **Decisions** | | | |
-| Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A |
+| Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A Manager |
+| Indicators | `business/indicators.md` | The live scoreboard: target, current value, status. Each role owns its own rows. **UNMEASURED is a valid value; a guess is not** | Each owning role |
+| Risk register | `business/risks.md` | What has not happened, could, and would cost something. An accepted risk stays here with its acceptance recorded | Each owning role |
+| Vendors | `business/vendors.md` | Who we buy from, renewal dates, exit terms. Recorded **before** the card is charged | Procurement / Vendor Manager |
+| **Meetings** | | | |
+| Meeting records | `meetings/` | One file per occurrence, `YYYY-MM-DD-<slug>.md`. Episodic — durable knowledge is promoted out of them to the artifacts below | The convening role |
+| — 2026-09-01 | `meetings/2026-09-01-revision-semanal.md` | First weekly review: the locked-out Founder, the recovery path, D-005's consequences, the next unit | Product Owner + Architect + Security + QA + Interface Auditor |
+| — 2026-09-01 | `meetings/2026-09-01-mbr-comite-gasto.md` | First monthly review and spend committee: spend is unverified, eleven decisions audited, the domain deferred | FP&A + Procurement + Decision Auditor |
 | Interface audit | `architecture/interface-audit.md` | Independent review of whether the interface works for a stranger | Interface & Experience Auditor |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
 | — audit | `decisions/decision-audit.md` | Did decisions deliver what they predicted | Decision & Outcomes Auditor |
@@ -38,6 +45,8 @@ Map of authoritative sources for project knowledge.
 | — 009 | `decisions/009-frontend-hosting.md` | The frontend runs on Cloud Run, not Vercel (supersedes part of 001) | Founder + Architect |
 | — 010 | `decisions/010-target-segment.md` | The market is residential and business complexes, not schools | Founder |
 | — 011 | `decisions/011-billing-before-market.md` | Billing and subscriptions must exist before going to market | Founder |
+| — 012 | `decisions/012-one-free-organization.md` | One free organization per person, counted by who created it | Founder + Product Owner + Security |
+| — 013 | `decisions/013-meeting-cadence.md` | Which meetings Zeker holds, which are merged, and which are dormant | Founder + PM |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |

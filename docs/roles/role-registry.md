@@ -301,6 +301,69 @@ These roles don't own artifacts but provide standing consultation across multipl
 
 ---
 
+## Finance & Buying
+
+Both roles below were activated on 2026-09-01, and both are **backdated to
+2026-08-19** — the day the GCP project started incurring cost. The delay was
+caused by a rule in this registry that contradicted the framework; see the
+correction under "Roles NOT Active (Yet)".
+
+### Financial Planning & Analysis (FP&A) Manager
+
+**Holder:** AI-assisted, unfilled
+**Activation:** ✅ Active since 2026-09-01, **effective 2026-08-19**
+**Mission:** Know what this company is actually spending, rather than assuming it
+**Owns:** `docs/business/budget.md`, and the Business indicators in
+`docs/business/indicators.md`
+
+**Why now, and why backdated:** `roles.md` §5 activates this role at the project's
+*first cost-incurring service* — spend alone is enough, and a pre-revenue project
+normally has an active FP&A Manager and a real `budget.md`. That was 2026-08-19.
+`budget.md`, written 2026-08-31, already named this role as the owner of monitoring
+against the ceiling. **The artifact had a named owner who had never been appointed.**
+Recording today's date would hide a 13-day gap; the backdate is the honest record.
+
+**Scope:**
+- Aggregating spend and checking it against the ceiling in `budget.md`
+- The budget-vs-ceiling indicator and its alerting threshold
+- Forecasts, runway, and unit economics once there is anything to forecast
+- Ruling on whether a proposed recurring cost fits the ceiling
+
+**Boundary:** does not *incur or report* cost — DevOps Engineer reports
+infrastructure and usage cost, Procurement / Vendor Manager reports subscriptions.
+Neither is active, so FP&A reads the figures directly as an explicit recorded
+stopgap. Does not set capital strategy (CFO, not active) or hold the ceiling itself
+(the Founder does). Does not choose vendors.
+
+**Standing Consultation Trigger:**
+- Any Budget Gate item (`execution.md` §5)
+- Every Checkpoint and every gate — spend vs. ceiling is reviewed on that cadence
+- Any pricing decision, which needs a cost-per-customer figure underneath it
+
+### Procurement / Vendor Manager
+
+**Holder:** AI-assisted, unfilled
+**Activation:** ✅ Active since 2026-09-01, on the first purchase proposal
+**Mission:** Run the buying, and make sure we can always leave
+**Owns:** `docs/business/vendors.md`
+
+**Why now:** the domain purchase is the project's first vendor commitment. Without
+this role a subscription is bought by whoever happens to be at the keyboard, and
+nothing records when it renews, on whose card, or what it costs to leave.
+
+**Scope:**
+- Vendor selection and evaluation; renewal and contract tracking
+- Third-party spend reported to FP&A against `budget.md`
+- Vendor risk: lock-in, transfer-out terms, data handling, continuity
+
+**Boundary:** does not hold budget authority (FP&A / the Founder) and does not
+negotiate legal terms (Commercial & Tech Transactions Attorney, not active). Does
+not choose or clear the product's name — that is the Founder with Product Owner,
+and trademark clearance needs General Counsel, not active.
+
+**Standing Consultation Trigger:**
+- Any proposal to pay a third party, before the card is charged
+
 ---
 
 ## Independent Audit
@@ -461,9 +524,27 @@ which is the failure that step of the protocol exists to prevent.
 
 ### Other roles not yet active
 
-- **Finance / CFO:** When revenue > $0
-- **General Counsel:** When processing payments or mature enough
-- **Operations / COO:** When team > 3 people
+- **CFO / VP of Finance:** when there is capital strategy to set. Note that
+  **FP&A Manager does not wait for this** — it activated on spend, 2026-09-01.
+- **General Counsel:** when processing payments or mature enough. **Now has a
+  concrete first task waiting:** trademark and company-name clearance in Colombia
+  (SIC, RUES) before the domain purchase commits the name.
+- **Regulatory & Data Privacy Counsel:** flagged as needed since 2026-08-26 and
+  still not active. **The privacy policy is legally required under Ley 1581/2016
+  before the first real customer**, and it belongs to this role, not to Security
+  Engineer. This gap has now been carried across three sessions.
+- **Operations / COO:** when team > 3 people
+- **DevOps Engineer:** its cost-reporting duty under the Budget Gate is currently
+  unassigned; Software Architect absorbs deployment scope on this project.
+
+> **Correction, 2026-09-01.** This section previously read *"Finance / CFO: When
+> revenue > $0"*. That rule was wrong and it had a cost. `roles.md` §5 activates
+> FP&A Manager at the **first cost-incurring service**, states that spend alone is
+> enough, and says explicitly that a pre-revenue project normally has an active
+> FP&A Manager and a real `budget.md`. Because this registry said otherwise, the
+> ceiling set on 2026-08-31 had a number and no monitor, and no billing report was
+> read for 13 days. Found by FP&A Manager and, independently, by Decision &
+> Outcomes Auditor, in the same meeting. Both roles are now active and backdated.
 
 ---
 
@@ -529,6 +610,8 @@ flagged the absence of their own artifact as a finding on 2026-08-26.
 | 2026-08-31 | Physical Security Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
 | 2026-08-31 | Childcare & School Administration Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
 | 2026-08-31 | Residential Property Administration Consultant | Activated | AI-assisted, unfilled. Customer-domain advisory. |
+| 2026-09-01 | FP&A Manager | Activated | AI-assisted, unfilled. **Effective 2026-08-19**, the first cost-incurring service. Late because this registry gated finance on revenue, contradicting `roles.md` §5. |
+| 2026-09-01 | Procurement / Vendor Manager | Activated | AI-assisted, unfilled. Activated by the first purchase proposal (the domain). |
 
 ---
 

@@ -91,7 +91,13 @@ function MembersScreen({ org }: { org: Org }) {
       // password-recovery screen does. Our API sends no email of its own.
       let emailed = true
       try {
-        await sendPasswordResetEmail(auth, address)
+        // Same continue URL as the recovery screen, and it matters more here:
+        // this person has never seen Zeker, does not know its address, and is
+        // being asked to set a password for an account they did not create.
+        await sendPasswordResetEmail(auth, address, {
+          url: `${window.location.origin}/entrar`,
+          handleCodeInApp: false,
+        })
       } catch {
         // The person is a member either way. Telling the administrator the
         // truth beats a screen that claims an email was sent when it was not.

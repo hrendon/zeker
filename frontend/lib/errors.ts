@@ -58,6 +58,12 @@ const FIREBASE_MESSAGES: Record<string, string> = {
   'auth/user-disabled': es.errors.accountDisabled,
   'auth/network-request-failed': es.errors.network,
   'auth/requires-recent-login': es.errors.sessionExpired,
+  // Password links. Without these two, an expired link falls through to
+  // es.errors.unknown ("algo salió mal, intente de nuevo") — which for a dead
+  // link is untrue and sends the person into a retry loop against a link that
+  // will never work. Found on 2026-09-01 when the Founder was locked out.
+  'auth/expired-action-code': es.errors.expiredLink,
+  'auth/invalid-action-code': es.errors.invalidLink,
 }
 
 const API_MESSAGES: Record<string, string> = {

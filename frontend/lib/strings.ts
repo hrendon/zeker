@@ -379,6 +379,14 @@ export const es = {
       'Demasiados intentos. Espere unos minutos antes de volver a intentar.',
     accountDisabled: 'Esta cuenta está deshabilitada. Contacte al soporte.',
     sessionExpired: 'Su sesión terminó. Entre de nuevo.',
+    // A password link is good for about an hour, and asking for a new one
+    // cancels the previous one. Both facts were invisible until 2026-09-01,
+    // when the Founder was locked out by a dead link that explained neither.
+    // Wording to be reviewed by Content Strategist / Copywriter.
+    expiredLink:
+      'Ese enlace ya venció o fue reemplazado por uno más nuevo. Pida uno nuevo y ábralo dentro de la hora siguiente.',
+    invalidLink:
+      'Ese enlace no es válido. Puede que se haya cortado al copiarlo. Pida uno nuevo.',
     notAllowed: 'No tiene permiso para hacer esto.',
     notFound: 'No encontramos lo que buscaba.',
     invalidRequest: 'Los datos enviados no son válidos. Revíselos.',

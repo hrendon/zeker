@@ -716,6 +716,33 @@ works end to end on the server.
 
 ## Known Issues
 
+- 🔴 **The password link is dead when it is tapped — and it is how EVERY account
+  gets in.** Found by the Founder on their own phone, 2026-09-01: reset requested,
+  email received, link tapped, and Firebase's own page answered in English
+  *"Your request to reset your password has expired or the link has already been
+  used."* Locked out of their own product.
+  **This is a different and worse fault than the email landing in spam**, and the
+  two were previously recorded as one entry — which kept the free fix waiting
+  behind the paid one. They are now tracked separately (weekly review, 2026-09-01).
+  `frontend/app/recuperar/page.tsx` and the people screen make the **same call with
+  the same settings**, so this is not the Founder's inconvenience: under Decision
+  006 it is the only door for every resident and every guard.
+  **The deeper fault is a lifetime mismatch:** a reset code lives about an hour;
+  an invitation is opened whenever the invitee gets round to it. Decision 006's
+  onboarding is built on a credential whose lifetime is wrong for the job. The code
+  implements it faithfully — it is a design mismatch, not a bug.
+  **Fixed 2026-09-01, free:** the email and Firebase's page now render in Spanish
+  (`auth.languageCode`); both call sites pass a continue URL, so that page finally
+  has a door back into Zeker; and `auth/expired-action-code` /
+  `auth/invalid-action-code` now map to real Spanish instead of falling through to
+  *"algo salió mal, intente de nuevo"* — which for a dead link is untrue and sends
+  the person into a retry loop.
+  **Still open:** our own `/auth/action` page (unblocked, no domain needed); a
+  resend control and an "aún no ha entrado" state on the people screen; audit logs
+  so the next occurrence is diagnosable; and the reset-code lifetime, still UNKNOWN.
+  Reproduction protocol TC-AUTH-RESET-01 is written and needs the Founder's phone.
+
+
 - 🔴 **The email that lets a person into the product lands in spam.** Found by
   the Founder on 2026-08-31, on their own account: the password-reset email
   arrived, but in the spam folder, so it was never seen. This is not a personal
@@ -857,53 +884,90 @@ works end to end on the server.
 Everything waiting on the Founder. One card each. Answering these is all that is
 needed — an answered card becomes a record in `docs/decisions/` and leaves this queue.
 
-### D-005 — Nothing stops one person opening many free organizations
+### ✅ D-005 — ANSWERED 2026-09-01: one free organization per person
+
+The Founder chose Option A. Recorded in full as
+`docs/decisions/012-one-free-organization.md`, with its enforcement point, its three
+exits, and — recorded rather than smoothed over — Security Engineer's refusal to
+sign off on it being described as a defence against abuse. **It is an accounting
+control.** Nothing checks `email_verified`, so a second account costs eight seconds.
+
+**Enforcement ships with the billing unit, not before.** The two limits parked
+against this card are *not* closed by it, and are now more attractive: permits per
+organization and accounts per organization are both still uncounted.
+
+---
+
+### D-007 — What domain do we buy, and from whom? 🟡 Budget Gate
 
 ```
-Decision:       Should one person be limited in how many free organizations
-                they can create?
+Decision:       Buy zeker.com at Cloudflare Registrar, with auto-renewal, WHOIS
+                privacy included, and the account's contact email OFF the
+                domain being bought.
 
-Why it matters: The free plan gives each organization 1 location and 10
-                interiors. Nothing stops the same person creating ten free
-                organizations and getting ten times the free allowance. The
-                paid plans then sell something the free plan already gives
-                away. No customer exists yet, so nothing is being abused
-                today — but the hole is open the moment we launch.
+Cost:           ~US$10.44/year at cost (~COP 41,760); ~COP 45,100/year with
+                card and exchange friction. That is ~3,758 COP/month = ~19% of
+                the 20,000 COP ceiling. Approximate market prices, not quotes.
+                A verified email sender (Resend or Brevo) adds COP 0.
 
-                This was never decided because the approved plan describes
-                limits inside one organization, and separately requires that
-                one person can manage several organizations. Both are true;
-                nobody joined them up.
+Fits ceiling:   Yes, amortized. It would be the project's first recurring cost.
+                On a cash basis it is 2-3x the monthly ceiling in the month it
+                is paid -- which is a convention this budget has never stated.
+                See "What only you can answer" below.
 
-Option A:       One free organization per person. Additional organizations
-                require a paid plan, or an invitation from someone else who
-                already has one.
-                → Closes the hole. About half a day. It does slightly narrow
-                  what a new user can do on their own.
+Why it matters: It is the prerequisite for the red issue -- the email that lets
+                a person into the product lands in spam. Without our own domain
+                there is no verified sender, and every resident and every guard
+                the administrator adds can be locked out silently.
+                It is also, per the Interface Auditor, the only thing that makes
+                every other dead end recoverable: someone who can type zeker.com
+                can rescue themselves. Someone facing
+                zeker-web-880033266233.us-central1.run.app cannot.
 
-Option B:       Leave it open for now, revisit after talking to customers.
-                → Costs nothing today and keeps signup frictionless while we
-                  are trying to get anyone at all to use it. The hole stays.
+BEFORE PAYING:  1) Confirm zeker.com is free and NOT premium-priced. "Zeker" is
+                   a common Dutch word; premium means hundreds to thousands of
+                   dollars -- treat that as taken.
+                2) Confirm Cloud Run attaches by domain mapping or Firebase
+                   Hosting (free) and NOT by load balancer
+                   (~72,000-100,000 COP/month = 3.6x-5x the WHOLE ceiling).
+                   Owner: Software Architect.
+                3) Confirm you are the registrant of record.
 
-Option C:       Move the allowance to the person rather than the organization:
-                10 interiors in total across everything they manage.
-                → Most faithful to "10 interiors free", but it is the biggest
-                  change, and it complicates every limit check. ~2 days.
+If taken:       zekerapp.com -> zekeracceso.com -> zekeringreso.com -> zeker.com.co
 
-Recommendation: B for now, A before the first paid customer. While the goal is
-                to find out whether anyone wants this at all, friction at
-                signup costs more than the theoretical abuse. But this must be
-                answered before money changes hands, or the paid plans have
-                nothing to sell.
+Not recommended: .co (46.7% of the ceiling, for nothing in return) and
+                Squarespace/ex-Google Domains (Google sold its customer book
+                without consulting them -- a demonstrated continuity risk).
 
-Cost impact:    B = none today · A ≈ half a day · C ≈ 2 days
-Reversibility:  High for A and B · Medium for C (changes how limits are counted)
-Waiting since:  2026-08-25 (1 day)
-Blocks:         Nothing today. Blocks launching paid plans.
+Committee:      DEFERRED pending the billing alert and the annual-vs-monthly
+                convention -- but the Founder may override, and there is a real
+                argument for it: a name someone else takes cannot be recovered.
+                If overridden, it is recorded as a purchase made ahead of the
+                control, not one that passed it.
+
+Detail:         docs/business/vendors.md
+Owning role:    Procurement / Vendor Manager (activated 2026-09-01)
+Approver:       Founder
 ```
 
-*(When answered, this becomes `docs/decisions/006-...`. The file numbered 005 is
-the visitor phone-number decision, already answered on 2026-08-26.)*
+---
+
+### D-008 — How does someone ask about a paid plan? 🟢 small but blocking a screen
+
+```
+Decision:       When a person hits the one-free-organization limit, the third
+                way out is "ask about a paid plan". Zeker sends no email of its
+                own (Decision 007), so that resolves to a mailto, a WhatsApp
+                number, or nothing.
+
+Recommendation: Nothing, for now -- state plainly that paid plans are coming and
+                show no button. A button that leads nowhere is exactly the dead
+                end the limit's design was written to avoid. But it must be a
+                stated choice, not an omission.
+
+Waiting since:  2026-09-01
+Blocks:         The wording of the second-organization screen.
+```
 
 ---
 
@@ -1228,7 +1292,7 @@ Added 2026-08-30.
 
 | Risk | Severity | Mitigation | Status |
 |------|----------|-----------|--------|
-| No market demand | 🔴 Critical | Validate with 5-10 schools ASAP (week 5) | ⏳ Mitigating |
+| No market demand | 🔴 Critical | Validate with 5-10 residential/business complexes ASAP (Decision 010 — corrected 2026-09-01; this said 'schools' for a day after the segment changed) | ⏳ Mitigating |
 | Compliance violation | 🔴 Critical | Privacy lawyer review before launch | ⏳ Planning |
 | Data breach | 🔴 Critical | Least data possible is held: no ID documents, photos, addresses, emails or phone numbers anywhere (Decisions 002, 003, 005); audit logs enabled | ✅ Mitigated |
 | Multi-org isolation bug | 🔴 Critical | Clients cannot reach the database at all; backend checks org membership per request; 6 isolation tests run on every change | ✅ Tested (2026-08-25) |
@@ -1291,70 +1355,72 @@ When you restart, check:
 
 ## Where to pick up
 
-**Read this first: nothing below is a feature. The next unit of real work is the
-entry history, and three things come before it in sequence — not in priority.**
+**Updated 2026-09-01 by the first weekly review and the first MBR** (records in
+`docs/meetings/`). The board is now ordered around one fact rather than around
+feature appetite: **nobody could sign in, so nothing could be verified.**
 
-### 1. The phone pass (blocked nothing else; blocks knowing anything)
+### 1. Sign-in and account recovery, end to end — THE unit
 
-The only step that can settle four open questions at once, and none of them can
-be answered from a desk:
+Not a founder convenience. Decision 006 routes every resident and every guard through
+the same broken path. In scope: run TC-AUTH-RESET-01 on the phone; build our own
+`/auth/action` page; resend control and an "aún no ha entrado" state on the people
+screen; spam wording on the people screen; and drive the whole journey by hand in a
+real browser, including receiving and using the email. **Automated tests cannot see
+this failure; they never have.**
 
-- Does the camera decode a real permit? (Decision 009's unmet prediction)
-- What does a guard actually see, signed in as a guard, on the device they will
-  use standing at a gate?
-- **How slow is it really?** The Founder reported it as very slow on a phone. A
-  forced cold start measured **1.34 s** from a wired connection and 0.68 s warm —
-  which does not reproduce a phone on mobile data, and does not match the
-  Architect's estimate of 5–10 s, which did not survive checking. **The number is
-  unknown until someone measures it on the phone.**
-- Contrast in daylight, which Interface & Experience Auditor named its highest
-  risk: a ratio that passes at a desk can be unreadable in Bogotá sun.
+Explicitly out of scope: the custom domain and verified sender (🟡 Budget Gate,
+D-007); any change to how accounts are created; the entry history; D-005's
+enforcement code; the brief rewrite; the `purpose` contract mismatch.
 
-QA Engineer's step-by-step for this exists in the 2026-08-31 consultation.
+### 2. The phone pass — parallel with #3, needs your hands
 
-### 2. The spam issue (🔴 in Known Issues)
+TC-PHONE-01 now has pass/fail lines for all four questions, which the previous
+version lacked. **A test with no pass/fail line is a demo.** Preconditions that are
+easy to get wrong: mobile data on and Wi-Fi off; no traffic for 20 minutes
+beforehand so Cloud Run has scaled to zero, or step A measures nothing; outdoors, in
+sun, at 50% brightness — a pass at 100% but a fail at 50% is recorded as a fail.
 
-Free part first: say on screen that the account email may land in spam. Content
-Strategist / Copywriter owns that wording and was activated for exactly this.
-The real fix needs a domain — see below.
+Three of its four questions are blocked until #1 lands. The cold/warm load
+measurement is **not** blocked and takes three minutes.
 
-### 3. The brief is wrong on record
+### 3. The brief rewrite — parallel with #2, needs no code
 
-Decision 010 set the market as residential and business complexes.
-`docs/product/brief.md` still argues schools, still grounds willingness-to-pay in
-parent pickup, and still says to recruit pilots from schools in Bogotá. **Product
-Owner rewrites it.** Until then the document explaining the business describes a
-different product.
+Section-by-section specification produced by Product Owner on 2026-09-01 and recorded
+in the weekly review. **The re-opened finding:** Decision 010 was recorded on
+2026-08-31 and the finding was closed on the strength of that. A decision that
+supersedes a document does not change the document. The brief still argues schools.
 
-### Then: the entry history
+**What the rewrite will expose, and this is the point:** afterwards Zeker has no
+evidenced market case at all — a Founder decision and eight labelled assumptions. Two
+of them could invalidate everything built (`docs/business/risks.md` R-07, R-08).
 
-Product Owner's finding from 2026-08-31: **"nothing tells me this permit was
-already used" and "I can't see the history" are one unit, not two.** Both read the
-same `access_events` record; building one without the other writes the same query
-twice. Seeing which permits an interior has active is a *separate* concern —
-permits grouped by interior, closer to a filter on the existing list.
+### 4. The entry history
 
-Already settled, needing no new decision:
-- The stored shape is in `docs/architecture/data-model.md` under `access_events`,
-  verified against live Firestore.
-- `GET /orgs/{id}/events` is drafted in `docs/architecture/api.md` and **marked
-  NOT BUILT.** It needs correcting first: a stored event has no `visitor_name`,
-  its `auth_id` is stored as `permit_id`, and `action` is always `entry`.
-- **It needs composite indexes** on `access_events`, most likely
-  `permit_id + created_at` and `location_id + created_at`. **Declare and deploy
-  them in the same change.** Declaring is not deploying — that has now cost this
-  project twice.
-- Security Engineer's rule for the screen: an administrator sees the whole
-  organization; a responsable sees only the interiors they are responsible for,
-  never another apartment's; a guard sees none of it; a non-member gets 404.
+Unchanged, with one addition: Product Owner will not accept it as done until the
+composite indexes are **deployed and proven live**, for an administrator and for a
+responsable, with the responsable proven unable to see another apartment's entries.
 
-### Waiting on the Founder
+### 5. D-005 enforcement — ships with billing, not before
 
-- **A domain.** Recommended: register the name now (cheap, and the only thing
-  here that cannot be recovered if someone else takes it); configure it later, as
-  one piece, together with the verified email sender. 🟡 Budget Gate.
-- **D-005** — how many free organizations one person may create. **Now blocking**,
-  because Decision 011 puts billing before market and there is no upgrade path
-  out of a free plan whose boundary was never drawn.
-- **D-006** — whether we verify that whoever registers a building actually runs
-  it. Blocks publicising the URL.
+---
+
+### Waiting on you
+
+| | What | Blocks |
+|---|---|---|
+| **D-007** | The domain: `zeker.com` at Cloudflare, ~19% of the ceiling. **Check the load-balancer trap first — it would cost 3.6×–5× the whole ceiling** | The spam fix; a URL anyone can type |
+| **D-006** | Whether we verify that whoever registers a building runs it. Security Engineer answered *how*: manual approval is the only mechanism that proves anything; the other two are theater | Publicising the URL |
+| **D-008** | How someone asks about a paid plan — mailto, WhatsApp, or nothing | The second-organization screen |
+| **Billing** | Read the actual GCP bill by SKU, settle the free-trial-credit question, and set the alert at **25% (5,000 COP)** — ⚠️ check the account currency first | Knowing what this company spends |
+| **Convention** | Does an annual charge count against a monthly ceiling amortized, or as cash in the month paid? Both readings are defensible and they disagree | Approving D-007 cleanly |
+
+### What the two meetings said that nothing else would have
+
+> *"Zeker's cash exposure is genuinely trivial and genuinely unmeasured, and those
+> are two different statements that have been treated as one."*
+
+> *"This company's decision record is strong and its evidence record is empty, and
+> the two have been mistaken for each other."* Eleven decisions in thirteen days,
+> zero conversations with a buyer. **The tell: the one decision forced by contact
+> with the outside world — deploying — was the only one that produced a genuine
+> surprise.**
