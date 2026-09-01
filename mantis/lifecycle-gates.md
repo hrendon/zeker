@@ -101,10 +101,12 @@ Stages decompose into substages. Each substage names the transition it performs,
 |---|---|---|---|
 | 2.1 Solution concept | Validated problem → solution concept | Product Owner, UI/UX Designer, Software Architect | Is it compelling and technically plausible? |
 | 2.2 Prototype / blueprint | Concept → prototype, mockup, or service simulation | UI/UX Designer, Frontend Developer, COO | Does it solve the problem without unnecessary complexity? |
-| 2.3 Customer validation | Prototype → observed reactions, intent, pre-orders, pilots | UX Researcher, Account Executive, Customer Discovery Advisor | Proceed, modify, or kill |
+| 2.3 Customer validation | Prototype → observed reactions, intent, pre-orders, pilots | UX Researcher, Account Executive, Customer Discovery Advisor, Content Strategist, UI/UX Designer | Proceed, modify, or kill |
 | 2.4 Technical validation | Technical concept → demonstrated feasibility | Software Architect, Security Engineer, DBA | **G3** — feasibility gate |
 | 2.5 Commercial validation | Interest → evidence customers will transact | CCO, CFO/FP&A, Commercial Contracts Counsel | Will they pay under realistic conditions? |
 | 2.6 MVP definition | Validated concept → prioritized minimum scope | Product Owner, Business Analyst, Software Architect | **G4** — freeze what is in and out |
+
+**A landing page is the standard instrument for 2.3.** Before committing engineering time to a full prototype, a single page stating the value proposition with a real call-to-action (sign up, waitlist, pre-order) is normally the cheapest way to produce the "observed reactions, intent, pre-orders" this substage needs — real clicks and signups are stronger evidence than opinions. Content Strategist writes the copy, UI/UX Designer designs it, `/build-interface` (`.claude/commands/`) builds it. This is a validation instrument at this stage, not yet the product's public GTM presence (that's Stage 3.5).
 
 ## Stage 3 — MVP / Initial Product
 
@@ -112,10 +114,12 @@ Stages decompose into substages. Each substage names the transition it performs,
 |---|---|---|---|
 | 3.1 Specification | MVP concept → executable requirements | Business Analyst, Product Owner, UI/UX Designer | Kickoff: scope, success metrics, ownership |
 | 3.2 Build | Specification → functional product | Engineering roles, QA Engineer, Tech Lead | Recurring reviews, not executive gates — `execution.md`'s Unit Cycle governs here |
-| 3.3 Internal validation | Build → release candidate | QA Engineer, Security Engineer, DevOps Engineer | Safe and functional enough to expose? |
+| 3.3 Internal validation | Build → release candidate | QA Engineer, Security Engineer, DevOps Engineer, Interface & Experience Auditor | Safe and functional enough to expose? |
 | 3.4 Pilot / beta | Candidate → controlled real-world use | Product Owner, Customer Success, DevOps Engineer | Continue, modify, or stop |
-| 3.5 Initial launch | Pilot → publicly available | Product Owner, PMM, DevOps Engineer, General Counsel, Interface & Experience Auditor | **G5** — go-live |
+| 3.5 Initial launch | Pilot → publicly available | Product Owner, PMM, Content Strategist, DevOps Engineer, General Counsel, Interface & Experience Auditor | **G5** — go-live |
 | 3.6 Post-launch learning | First customers → behavioral and economic evidence | Data Analyst, Product Owner, Customer Success | **G6** — what must change before broader investment? |
+
+**"Publicly available" (3.5) includes a real public landing page**, not only the product itself — a customer has to discover and understand the offer before they can acquire it (Stage 3's own exit condition, Section 2). If 2.3's validation page already exists, PMM and Content Strategist evolve it into the launch asset rather than starting over; if it doesn't, it is built now, before G5 clears.
 
 ## Stage 4 — Product-Market Fit
 

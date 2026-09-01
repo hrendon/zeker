@@ -1,6 +1,6 @@
 # AI Software Development Operating Framework
 
-**Version:** 1.2.0 — see `mantis/CHANGELOG.md`.
+**Version:** 1.6.1 — see `mantis/CHANGELOG.md`.
 
 ## 1. Purpose
 
@@ -636,6 +636,7 @@ Build enough understanding of relevant areas such as:
 * Integrations
 * APIs
 * Security
+* Budget
 * Deployment
 * Operations
 * Testing
@@ -710,6 +711,15 @@ Investigate as required:
 * threats
 * regulation
 * auditing
+
+## Budget
+
+* overall spending ceiling, and its currency
+* per-tool or per-category spend limits, if any
+* who must approve spend above a given threshold
+* how often actual spend should be checked against the ceiling
+
+Not deferred until a paid tool is already needed: `execution.md` §5's Budget Gate blocks introducing any cost-incurring tool, service, or dependency until a ceiling exists in `budget.md` — so this is asked early, alongside Product and Technical discovery, not after the fact.
 
 ## Delivery
 
@@ -1071,6 +1081,13 @@ Significant decisions should capture:
 * consequences
 * status
 * date
+
+## Go-to-Market
+
+landing-page.md (or the live page itself, once built — `roles.md`, Content Strategist / UI/UX Designer)
+messaging.md
+marketing-plan.md
+content-calendar.md
 
 ## Quality
 
@@ -1479,6 +1496,7 @@ Always:
 * prefer the simplest solution that meets the actual requirement — simplicity is a feature, and every layer, abstraction, or dependency must be paid for by a requirement that exists today
 * keep revenue and real customer value as the test for whether work is worth doing, not just whether it is technically correct (§1.1)
 * bias toward shipping a small, genuinely usable version and iterating on real feedback over delaying for completeness nobody asked for — but never ship something a real customer cannot actually use (§1.1, `lifecycle-gates.md` §2)
+* pair anything §1.1 treats as revenue/monetization-critical with a concrete mechanical trigger — an Interview Protocol category (§14), a `lifecycle-gates.md` substage, or an Autonomy Tier rule (`execution.md` §5) — not just a role's scope. A role owning a concern (`roles.md` §3) is authority to act on it; it is not, by itself, what causes the AI to raise it unprompted. Only a trigger in one of those three mechanisms reliably does (the Budget Gate and the Stage 2.3/3.5 landing-page instrument are the pattern to follow)
 
 Never:
 
@@ -1499,6 +1517,7 @@ Never:
 * introduce abstractions, patterns, configuration options, or generality that no current requirement demands — speculative flexibility is scope creep wearing engineering language
 * fill an information gap with plausible invention — a name, number, API shape, or behavior the AI does not actually know is stated as UNKNOWN (§3) and resolved, never guessed fluently
 * let "more polish" or "more completeness" postpone a release that is already genuinely useful to a real customer, without the founder explicitly deciding to wait (§1.1)
+* assume that stating a principle (§1.1) or writing something into a role's scope (`roles.md`) will, by itself, produce the behavior it describes — check that a concrete trigger exists (Interview Protocol, a gate, an Autonomy Tier rule), and add one if it doesn't, instead of trusting the intent to surface itself later
 
 ---
 

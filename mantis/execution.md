@@ -147,6 +147,7 @@ The AI proposes; the human approves. This is `mantis.md`'s existing PROPOSAL →
 * API changes
 * security decisions
 * large refactors
+* introducing a tool, service, or dependency with a recurring or usage-based cost (see Budget Gate, below)
 
 ## 🔴 Low Autonomy
 
@@ -161,6 +162,12 @@ The AI must not decide *or propose* without being explicitly asked — a hard st
 * turning an MVP into something else
 
 A 🟡- or 🔴-tier action still goes through the same human review gate at `delivery-framework.md` §4's `IN_REVIEW → MERGED` — the tiers tell the AI when to stop and ask *before* reaching that gate, they don't create a second approval mechanism.
+
+## Budget Gate
+
+Introducing a tool, service, or dependency with a recurring or usage-based cost is 🟡 Medium Autonomy by default: propose it, state the estimated cost, and check it against `budget.md`'s ceiling (`roles.md`, FP&A Manager). **If `budget.md` does not yet exist, or has no ceiling defined for the relevant category, that is a 🔴 hard stop, not a 🟡 proposal** — ask the human for the ceiling first (`mantis.md` §14's Budget category), the same as any other undefined foundational input is asked rather than assumed (`mantis.md` §33). This is what makes the framework actually ask about budget instead of silently proceeding.
+
+Once a ceiling exists, ongoing spend against it is tracked as a Business indicator in `indicators.md` (`roles.md` §10) and reviewed at every Checkpoint (`mantis.md` §17) and gate (`lifecycle-gates.md` §5) like any other indicator — DevOps Engineer reports infrastructure and usage-based cost, Procurement / Vendor Manager reports subscription and contract cost, FP&A Manager aggregates both against the ceiling and raises the alert when a threshold is crossed. This is what turns a one-time question into standing budget control rather than a question asked once and never checked again.
 
 ## Model Tier (where subagents are used)
 
@@ -262,10 +269,12 @@ MVP — Core workflow
 - Mobile navigation
 
 ## Indicators
-- MRR: $4,200 (target $5,000) — 🟡 at risk
-- W4 retention: 38% (target 40%) — 🟢 on track
-- Runway: 7 months (target 6+) — 🟢 on track
-See `indicators.md` (`roles.md` §10) for the full scoreboard, history, and who owns each entry. Omit this section entirely until there is at least one real indicator worth tracking (`lifecycle-gates.md` §2) — an empty scoreboard invented to fill the template is the same failure as any other fabricated evidence (`mantis.md` §33).
+- MRR: $4,200 (target $5,000) — 🟡 at risk [business]
+- W4 retention: 38% (target 40%) — 🟢 on track [business]
+- Monthly tool spend: $340 (ceiling $500) — 🟢 on track [business — see budget.md]
+- Sprint plan accuracy: 70% (target 85%) — 🔴 missed [management]
+- Code-review turnaround: 1.2 days (target <1) — 🟡 at risk [process]
+- Deploy frequency: 4/week (target 5+) — 🟢 on track [operational]
 
 ## Pending decisions
 - D-007 — Database strategy
@@ -293,7 +302,7 @@ See `indicators.md` (`roles.md` §10) for the full scoreboard, history, and who 
 
 **"Pending decisions" is the single queue of everything waiting on the human.** One card per decision: the options, a labeled recommendation, cost impact, reversibility, and how long it has been waiting. Every 🟡/🔴 approval request is raised here — never only scattered through conversation, where it competes with everything else for attention and is lost when the session ends. Answering a card is all the human has to do; a resolved card becomes a record in `decisions/` and leaves the queue. The queue empty means: nothing is blocked on you.
 
-**"Indicators" is the at-a-glance status of `indicators.md`** (`roles.md` §10), not a duplicate source — the full scoreboard, targets, and history stay in that file; this section mirrors the current line for whichever indicators are active, so the internal-control picture is visible without opening a second file. Each owning role keeps its own entry current; Decision & Outcomes Auditor (`roles.md` §4, Independent Audit) reviews it at every Checkpoint (`mantis.md` §17) and gate (`lifecycle-gates.md` §5) and flags anything stale, missing, or off-target long enough to matter.
+**"Indicators" is the at-a-glance status of `indicators.md`** (`roles.md` §10), not a duplicate source — the full scoreboard, targets, and history stay in that file; this section mirrors the current line for whichever indicators are active (business, management, process, and operational/results alike — not just revenue), so the internal-control picture is visible without opening a second file. Each owning role keeps its own entry current; Decision & Outcomes Auditor (`roles.md` §4, Independent Audit) reviews it at every Checkpoint (`mantis.md` §17) and gate (`lifecycle-gates.md` §5) and flags anything stale, missing, or off-target long enough to matter. Omit the section entirely until at least one real indicator exists — an empty scoreboard invented to fill the template is the same failure as any other fabricated evidence (`mantis.md` §33), and a pre-revenue project holding only management/process entries is expected, not a gap.
 
 Progress is tracked per feature group, not just as a single percentage:
 

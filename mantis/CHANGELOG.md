@@ -2,6 +2,34 @@
 
 Notable changes to the Mantis framework, most recent first. The current version is stated at the top of `mantis/mantis.md`. An adopting project can diff its vendored `mantis/` against `upstream/main` at any time to see what changed since it last updated.
 
+## 1.6.1 — 2026-08-31
+
+- Fix (found in post-change validation): the instructional paragraph about when to omit the Indicators section had been placed *inside* `PROJECT_STATE.md`'s template code block (`execution.md` §9), so copying the template would copy meta-instructions into a real status file. Moved the rule into the prose below the template, where the section's other guidance already lives; the template now holds only example lines.
+
+## 1.6.0 — 2026-08-31
+
+- Landing page now has an explicit lifecycle trigger, in two moments: as a validation instrument at Stage 2.3 (Customer validation — before committing to a full prototype, a page with a real call-to-action produces stronger evidence than opinions) and as the required public GTM asset at Stage 3.5 (Initial launch, G5) — "publicly available" now explicitly includes it, not just the product. Customer Discovery & Validation Advisor's scope names it as the standard low-cost instrument.
+- Added a "Go-to-Market" category to `mantis.md` §19's canonical artifact list (`landing-page.md`, `messaging.md`, `marketing-plan.md`, `content-calendar.md`) — these were owned by roles in `roles.md` but never appeared in the master artifact list.
+- Root-cause fix, not just this instance: added a rule to `mantis.md` §33 (Always/Never) that a role's scope, or a principle stated in §1.1, does not by itself cause proactive action — it must be paired with a concrete trigger (an Interview Protocol category, a `lifecycle-gates.md` substage, or an Autonomy Tier rule). This is why the Budget Gate and the landing-page substages needed adding even though the relevant roles' scope already implied both — scope is authority, not a trigger.
+
+## 1.5.0 — 2026-08-31
+
+- The framework now actually asks about budget. Added a "Budget" category to the Interview Protocol (`mantis.md` §14: spending ceiling, per-category limits, approval threshold, review cadence) and to Project Discovery (§13).
+- Added the Budget Gate (`execution.md` §5): introducing a tool/service/dependency with a recurring or usage-based cost is 🟡 by default (propose it, state the cost, check it against `budget.md`); if `budget.md` has no ceiling defined yet, it's a 🔴 hard stop — ask the human first, instead of proceeding silently.
+- No new role: extended FP&A Manager (aggregate spend monitoring and alerting against `budget.md`), DevOps Engineer (reports infrastructure/usage-based cost), and Procurement / Vendor Manager (reports subscription/contract cost) — each already owned the adjacent concern. FP&A Manager's activation trigger clarified: spend alone activates it, not only revenue.
+- Budget/spend vs. ceiling is now a first-class Business indicator in `indicators.md`, reviewed on the same recurring cadence (Checkpoint, gates) as every other indicator — this is what makes the alert actually recurring instead of a one-time question.
+
+## 1.4.0 — 2026-08-31
+
+- Added two roles for products that process payments or subscriptions: Payment / Fintech Specialist (Engineering — payment methods, processors, PSP quirks, interchange/fees) and Risk & Fraud Analyst (Security & Compliance — fraud scoring, chargebacks, dispute response). Both activate only once the product actually processes payments.
+- Extended Bookkeeper / Accountant's scope to cover settlement reconciliation, gateway fees, and multi-currency handling where the product processes payments directly — checked first for a naming-mismatch fix (`roles.md` §6) before considering a new role, per the Role Creation Protocol.
+- Compliance Officer's example list now names PCI DSS explicitly; Regulatory & Data Privacy Counsel's FinTech scope now names AML/KYC and payments regulation explicitly. Both were already covered by the existing scope — this just makes it visible rather than implicit.
+
+## 1.3.0 — 2026-08-31
+
+- Independent Audit roles now activate early by default, reversing the previous guidance. Interface & Experience Auditor activates at the first internally testable build (Stage 3.3, Internal validation) instead of waiting for real customers/launch (Stage 3.5) — a finding is cheapest to act on before customers see it and before more gets built on top of it, not after. Decision & Outcomes Auditor activates from the company's first recorded strategic decision (Stage 1) instead of waiting for decision volume or revenue. Added to Stage 3.3's substage table accordingly.
+- `indicators.md` broadened beyond business/revenue metrics to four kinds: business, management, process, and operational/results — each owned by whichever role's scope it falls under. A pre-revenue project can have real management/process entries and no business ones yet; that's expected, not a gap. `PROJECT_STATE.md`'s Indicators example now shows all four kinds.
+
 ## 1.2.0 — 2026-08-31
 
 - Added `indicators.md` (`roles.md` §10): a live, per-role indicator scoreboard (target, current value, status), owned by each role for its own entry. Turns the existing per-decision audit into an actual internal-control framework rather than isolated after-the-fact checks.

@@ -91,6 +91,8 @@ product-market-fit.md    → Product Owner         (Customer Discovery & Validat
 interface-audit.md       → Interface & Experience Auditor
 decision-audit.md        → Decision & Outcomes Auditor
 indicators.md            → each owning role, for its own indicator(s) (reviewed by Decision & Outcomes Auditor)
+payments-integration.md  → Payment / Fintech Specialist
+fraud-risk-model.md      → Risk & Fraud Analyst
 ```
 
 When two roles appear to claim the same concern:
@@ -190,6 +192,12 @@ Scope: combines Frontend Developer and Backend Developer scope; used when a proj
 Owns: same as Frontend Developer and Backend Developer, whichever is unsplit.
 Boundary: on a project with dedicated Frontend/Backend roles, this role either does not activate or its scope narrows to avoid overlap (Section 5).
 
+### Payment / Fintech Specialist
+Mission: brings deep, current knowledge of payment methods, processors, and PSPs (payment service providers) to how the company actually accepts and moves money.
+Scope: payment method and processor evaluation (cards, wallets, bank transfers, BNPL, local payment rails), PSP-specific integration quirks, interchange/fee structures, chargeback and dispute mechanics, tokenization standards. Activates only once the product actually processes payments or subscriptions (Section 5).
+Owns: `payments-integration.md` — which payment methods and processors are supported, why, and each one's operational quirks.
+Boundary: does not write the integration code (Backend Developer) or negotiate commercial terms with a provider (Procurement / Vendor Manager) — it supplies the domain expertise those roles build and negotiate against. Does not set fraud/risk rules (Risk & Fraud Analyst) or ensure PCI DSS compliance (Security Engineer, Compliance Officer) — it knows how the rails work, not how to secure or police them.
+
 ### Quality Assurance (QA) Engineer / Tester
 Mission: ensures the product actually works before it ships.
 Scope: test plans, automated/manual testing, bug identification.
@@ -198,7 +206,7 @@ Boundary: does not fix the bugs it finds (relevant developer role) or decide wha
 
 ### DevOps Engineer
 Mission: keeps infrastructure, CI/CD, and deployment automation running.
-Scope: infrastructure, pipelines, cloud resources, deployment automation, rollback mechanics.
+Scope: infrastructure, pipelines, cloud resources, deployment automation, rollback mechanics, reporting infrastructure and usage-based cost (cloud spend, API/compute usage) to FP&A Manager against `budget.md` (`execution.md` §5, Budget Gate).
 Owns: `deployment.md`, `pipeline.md`, `environments.md`.
 Boundary: does not decide application architecture (Software Architect) or approve destructive data migrations alone (Database Administrator / Security Engineer, per `delivery-framework.md` §8).
 
@@ -234,9 +242,15 @@ Scope: infrastructure security controls, vulnerability scanning, incident respon
 Owns: security implementation detail within `security.md`; the security-scan step of `delivery-framework.md` §4/§7.
 Boundary: does not set overall security strategy (CISO) or regulatory interpretation (Compliance Officer).
 
+### Risk & Fraud Analyst
+Mission: keeps fraud losses and false declines both low — catching bad transactions without blocking good customers.
+Scope: fraud detection rules and scoring, chargeback/dispute analysis and response, risk thresholds for transaction review, monitoring fraud patterns as they evolve. Activates only once the product actually processes payments or subscriptions (Section 5) — nothing to score before then.
+Owns: `fraud-risk-model.md` — the rules, scoring approach, thresholds, and what they're tuned against.
+Boundary: does not implement security controls or infrastructure (Security Engineer) or decide regulatory compliance posture (Compliance Officer, Regulatory & Data Privacy Counsel) — it targets one specific class of loss, fraudulent transactions, using signals distinct from infrastructure security or legal compliance.
+
 ### Compliance Officer / Specialist
 Mission: keeps the project within applicable regulations and standards.
-Scope: regulatory adherence and certification from an operational/audit standpoint (e.g. SOC 2, ISO 27001, GDPR, HIPAA).
+Scope: regulatory adherence and certification from an operational/audit standpoint (e.g. SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS).
 Owns: `compliance.md`.
 Boundary: does not implement technical controls (Security Engineer), set security strategy (CISO), or provide legal interpretation of regulations or draft a legally binding privacy policy (Regulatory & Data Privacy Counsel).
 
@@ -262,7 +276,7 @@ Boundary: does not draft the underlying templates (Commercial & Tech Transaction
 
 ### Regulatory & Data Privacy Counsel
 Mission: keeps the company's legal standing correct under the regulations and data-protection laws that apply to it.
-Scope: industry-specific regulation (FinTech, HealthTech/HIPAA, AI governance), data protection law (GDPR, CCPA), drafting privacy policies, regulatory-body liaison.
+Scope: industry-specific regulation (FinTech incl. AML/KYC and payments regulation, HealthTech/HIPAA, AI governance), data protection law (GDPR, CCPA), drafting privacy policies, regulatory-body liaison.
 Owns: `privacy-policy.md`.
 Boundary: does not run day-to-day security-compliance operations or certifications like SOC 2/ISO 27001 (Compliance Officer) and does not run per-feature privacy reviews (Product & Privacy Counsel) — it sets the legal interpretation those roles execute against.
 
@@ -434,7 +448,7 @@ Boundary: does not operate the product's infrastructure (DevOps Engineer) and do
 
 ### Procurement / Vendor Manager
 Mission: makes the company's buying deliberate instead of accidental.
-Scope: vendor selection and evaluation, subscription and contract renewals, third-party spend tracking, basic vendor risk (lock-in, data handling, continuity).
+Scope: vendor selection and evaluation, subscription and contract renewals, third-party spend tracking and reporting it to FP&A Manager against `budget.md`, basic vendor risk (lock-in, data handling, continuity).
 Owns: `vendors.md` — who the company buys from, what each costs, when each renews, and why each was chosen.
 Boundary: does not negotiate legal contract terms (Commercial & Tech Transactions Attorney) or hold budget authority (CFO / FP&A Manager) — it runs the buying process inside the budget and legal guardrails those roles set.
 
@@ -448,15 +462,15 @@ Boundary: does not do day-to-day bookkeeping (Bookkeeper/Accountant) or build de
 
 ### Financial Planning & Analysis (FP&A) Manager
 Mission: turns financial strategy into models and forecasts.
-Scope: financial modeling, cash runway forecasting, unit economics, board reporting.
+Scope: financial modeling, cash runway forecasting, unit economics, board reporting, aggregate spend monitoring against `budget.md`'s ceiling(s), and raising an alert when actual or projected spend crosses one (`execution.md` §5, Budget Gate).
 Owns: `budget.md`.
-Boundary: does not set capital strategy (CFO) or process daily transactions (Bookkeeper/Accountant).
+Boundary: does not set capital strategy (CFO) or process daily transactions (Bookkeeper/Accountant). Does not incur or report cost itself (DevOps Engineer for infrastructure/usage-based cost, Procurement / Vendor Manager for subscriptions and contracts) — it aggregates what they report and checks it against the ceiling.
 
 ### Bookkeeper / Accountant
 Mission: keeps the books accurate day to day.
-Scope: ledger management, payroll, routine tax filing, invoicing, accounts payable/receivable.
+Scope: ledger management, payroll, routine tax filing, invoicing, accounts payable/receivable. Where the product processes payments or subscriptions directly, also owns settlement reconciliation against processor/PSP payout reports, gateway fees, and multi-currency transaction handling.
 Owns: `ledger/`.
-Boundary: does not build forecasts or financial models (FP&A Manager), set financial strategy (CFO), or plan tax structure and treatment (Tax Advisor) — it executes and records, it does not decide the treatment.
+Boundary: does not build forecasts or financial models (FP&A Manager), set financial strategy (CFO), or plan tax structure and treatment (Tax Advisor) — it executes and records, it does not decide the treatment. Does not choose which payment processors are used (Payment / Fintech Specialist, Procurement / Vendor Manager) — it reconciles what those roles decided to integrate.
 
 ### Tax Advisor
 Mission: keeps the company's tax position correct and deliberate rather than accidental.
@@ -493,7 +507,7 @@ Advisory roles (Section 2) are consulted continuously across other roles' decisi
 ### Customer Discovery & Validation Advisor
 Mission: pressure-tests problem and solution hypotheses before real resources commit to them, and keeps validation honest as the project evolves.
 Draws on: Paul Graham (scrutinizing what makes an idea worth pursuing), Steve Blank's Customer Development (systematic hypothesis testing before scaling), Rob Fitzpatrick's *The Mom Test* (talking to customers without steering them into false positives), Eric Ries's *The Lean Startup* (Build-Measure-Learn, MVP scoping, validated learning over vanity metrics), and Y Combinator's applied startup pattern-matching.
-Scope: customer interview design and review, MVP/experiment scoping tied to a specific learning goal, product-market-fit signal assessment.
+Scope: customer interview design and review, MVP/experiment scoping tied to a specific learning goal (a landing page with a real call-to-action — `lifecycle-gates.md` §4, Stage 2.3 — is the standard low-cost instrument for this, before committing to a full prototype), product-market-fit signal assessment.
 Standing Consultation Trigger: any decision that commits meaningful engineering, marketing, or sales investment to a problem or solution hypothesis that has not yet been validated with real evidence from the people who would pay for it.
 Owns: `customer-discovery.md` — the hypothesis and evidence log: what was assumed, what was tested, what was actually learned.
 Boundary: does not own the roadmap or backlog priority (Product Owner) — it exists to make sure what enters the roadmap has actually been tested, not to run the roadmap itself.
@@ -532,10 +546,11 @@ Applies the base framework's Adaptive Depth principle (`mantis.md` §32) to role
 
 * A solo prototype might activate only Product Owner, a merged Software Architect / Tech Lead, Full-Stack Developer, and QA Engineer.
 * A funded product being actively built and sold typically activates most Engineering roles, Product Owner/PM, and whichever Commercial and Marketing roles are doing real work — not the full catalog.
-* Finance roles (CFO, FP&A Manager, Bookkeeper) activate once there is real revenue or spend to plan, not before.
+* Finance roles (CFO, FP&A Manager, Bookkeeper) activate once there is real revenue or spend to plan, not before — and spend alone is enough: FP&A Manager activates at the project's *first* cost-incurring tool or service, via the Budget Gate (`execution.md` §5), not once revenue exists. A pre-revenue project can and normally does have an active FP&A Manager and a real `budget.md`.
 * Security and Compliance roles activate once there is a meaningful attack surface or regulatory exposure to manage.
 * The Customer Discovery & Validation Advisor activates earliest of all — before significant engineering investment, since its purpose is to keep that investment from being spent on an unvalidated problem. The Sales Execution & Prospecting Advisor activates once there is an actual sales motion (even one person doing outbound) to coach.
-* Interface & Experience Auditor activates once a real interface is shipping to customers, not during early prototyping — auditing a throwaway prototype wastes the review. Decision & Outcomes Auditor activates once strategic decisions are frequent and consequential enough to be worth checking after the fact — not for a pre-revenue company's very first bets, which are expected to be wrong often.
+* Payment / Fintech Specialist and Risk & Fraud Analyst activate only once the product actually processes payments or subscriptions — evaluating processors or scoring fraud has nothing to work against before then.
+* **Both Independent Audit roles activate early, not once there are real customers or real revenue** — deliberately the opposite default from the roles above. Interface & Experience Auditor activates at the first internally testable build of the interface (`lifecycle-gates.md` §4, Stage 3.3 Internal validation), not gated on Stage 3.5's public launch: a finding here can send work back to development, and the whole point of auditing early is catching that before customers see it and before more gets built on top of it — waiting until there are customers is waiting until the finding is most expensive. It does not need to review a throwaway concept mockup nobody will ship (Stage 2.2). Decision & Outcomes Auditor activates from the company's first recorded strategic decision (as early as Stage 1, G0/G1) for the identical reason — an early bet caught wrong costs far less to correct than one discovered after resources have compounded on top of it; it is not gated on decision frequency or on revenue existing yet.
 
 Activation is recorded, never assumed. `roles/role-registry.md` lists exactly which roles are active for a project, who or what holds each one (a named person, a team, or "AI-assisted, unfilled"), and since when.
 
@@ -648,7 +663,15 @@ Produce `roles/role-registry.md` from the combined evidence and answers. Mark ro
 
 * `roles.md` — this file (L1): the role protocol and catalog.
 * `roles/role-registry.md` — project-specific (L2): which roles are active, who holds them, and since when.
-* `indicators.md` — project-specific (L2/L3): the company's live indicator scoreboard, one entry per owning role with a strategic or operational concern worth tracking. Not every role needs an entry, and not from day one — a pre-revenue Stage 1 company (`lifecycle-gates.md` §2) has little worth tracking yet; entries accumulate as gates clear and there is something real to measure. Each entry states: the indicator, its current target, the current value, when it was last updated, and a status (on track / at risk / missed). Kept current by the owning role for that indicator, not by Decision & Outcomes Auditor — that role reviews it (Section 4, Independent Audit), it does not author it, the same independence principle as everywhere else in this section.
+* `indicators.md` — project-specific (L2/L3): the company's live indicator scoreboard, one entry per owning role with something worth tracking. Not every role needs an entry, and not from day one — a pre-revenue Stage 1 company (`lifecycle-gates.md` §2) has little worth tracking yet; entries accumulate as gates clear and there is something real to measure. Each entry states: the indicator, its current target, the current value, when it was last updated, and a status (on track / at risk / missed). Kept current by the owning role for that indicator, not by Decision & Outcomes Auditor — that role reviews it (Section 4, Independent Audit), it does not author it, the same independence principle as everywhere else in this section.
+
+  Indicators are not limited to business/revenue metrics. Four kinds apply, each owned by whichever role's scope it falls under (Section 3):
+  * **Business** — revenue, retention, CAC/LTV, runway, spend vs. budget ceiling, and similar (CFO/FP&A, CCO, Data Analyst).
+  * **Management** — planning accuracy, decision-queue turnaround, backlog health (Project Manager/Scrum Master, Product Owner).
+  * **Process** — cycle time, lead time, code-review turnaround, gate-to-gate time (Tech Lead, DevOps Engineer).
+  * **Operational / Results** — uptime, incident count, deployment frequency, support response time, feature adoption, PMF signal strength (DevOps Engineer, Customer Support Agent, COO, Product Owner, Data Analyst).
+
+  A pre-revenue project can have an empty Business section and a real, tracked Process/Management section — the scoreboard reflects whatever is actually being managed, not only what generates money.
 
 Decision records reuse the base framework's `decisions/` — see Section 8.
 

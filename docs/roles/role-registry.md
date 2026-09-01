@@ -324,9 +324,27 @@ Independence is the operating principle: a role that reviews work does not revie
 - ✅ Whether an interface passes its own audit
 - 🟡 Can recommend holding a release on interface grounds
 
-**Activation:** ✅ Active since 2026-08-31, **from the interface-testing stage onward** — the Founder's instruction, deliberately earlier than the framework catalog's own criterion, which activates this role only once an interface is shipping to customers. Rationale: the interface gaps that matter most on this project (never seen on a real phone, the guard's own view never signed into, contrast never measured) are all discoverable during testing, and finding them after customers arrive costs a customer. See the change request raised to the framework on 2026-08-31.
+**Activation:** ✅ Active since 2026-08-31, from the interface-testing stage onward. This began as the Founder's instruction, ahead of the framework's own criterion at the time. **The framework then adopted it** (version 1.3.0, the same day): Independent Audit roles now activate early by default, and this role activates at the first internally testable build rather than at customer launch — "a finding is cheapest to act on before customers see it and before more gets built on top of it." What was a recorded deviation is now the framework's own default; no divergence remains.
 
 **Boundary:** Does not design the interface (UI/UX Designer) and does not build it (Frontend Developer) — it reviews what they produced, after the fact. Does not run structured research with real users (UX Researcher, not active) — it applies known usability standards, it does not observe live behavior.
+
+---
+
+### Decision & Outcomes Auditor
+
+**Holder:** AI-assisted, unfilled
+**Mission:** Independently checks whether strategic and administrative decisions and targets actually held up, using each domain's own indicators.
+**Scope:**
+- Per-decision: reviewing recorded decisions against the outcome each predicted at the time
+- Ongoing: reviewing `indicators.md` at every checkpoint and gate, flagging what is stale, missing, or off-target long enough to matter
+
+**Owned Artifacts:**
+- `docs/decisions/decision-audit.md` (to be created)
+- Review rights over `indicators.md` — review, not authorship
+
+**Activation:** ✅ Active since 2026-08-31. Framework 1.3.0 moved this role's activation to the company's first recorded strategic decision, rather than waiting for decision volume or revenue. Zeker has nine recorded decisions, so it applies now. Its first task is already on the board: Decision 001's segment scope was recorded, but the market case behind it was never rewritten — a predicted-versus-actual gap on a decision nobody has revisited.
+
+**Boundary:** Does not make the decisions it reviews (the owning role), and does not define what a metric means or keep the numbers current day to day (Data Analyst owns metric semantics; each owning role keeps its own indicator entry). It checks the gap on record, plainly, whether or not the result is flattering.
 
 ---
 
