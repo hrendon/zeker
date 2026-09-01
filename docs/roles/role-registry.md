@@ -413,7 +413,43 @@ Domain experts on the world Zeker's customers actually live in. They do not own 
 These roles will activate when relevant.
 
 - **Commercial / Head of Sales:** Post-MVP validation (when selling)
-- **Marketing / Demand Gen:** Post-MVP validation (when scaling)
+### Marketing & Acquisition — registered 2026-08-31, activation deferred
+
+The Founder asked for a positioning and paid-campaign plan with a budget. These
+are the roles that produce it. They are **registered now with an explicit
+trigger, not activated now**, because a plan to acquire customers for a product
+that is not yet market-ready would be spent before it could be used.
+
+**Shared activation trigger:** a market-ready version exists — meaning the
+interface has passed its audit, the phone pass is done, and the product can be
+handed to a stranger without a guided explanation. The Founder confirms this
+moment; it is not inferred.
+
+- **Chief Marketing Officer / Head of Marketing** — owns `marketing-plan.md`:
+  positioning, acquisition strategy, and **the marketing budget allocation**.
+  This is the role that presents the plan and the budget the Founder asked for.
+- **Growth / Performance Marketer / Paid Media Specialist** — Google Ads and Meta
+  Ads execution, conversion optimisation, acquisition analytics. Owns the
+  execution half of `marketing-plan.md`.
+- **Campaign Data Analyst** — owns `campaign-analytics.md`. Activates only once
+  campaigns are actually running; before that there is nothing to measure.
+
+**On SEO specifically:** the Role Creation Protocol (`roles.md` §6) requires
+checking whether an existing role covers the work before adding one, and here it
+does. Search positioning splits between the CMO (positioning) and the Content
+Strategist / Copywriter (the content that earns the ranking). **No new SEO role
+is being created** — adding one would duplicate scope under a different name,
+which is the failure that step of the protocol exists to prevent.
+
+- **Content Strategist / Copywriter** — owns `content-calendar.md`: content that
+  drives inbound interest, and landing-page copy. **Its trigger has arguably
+  already fired for an unrelated reason:** this registry has recorded since
+  2026-08-26 that the product's Spanish interface copy has no owning role and is
+  written by whoever builds the screen. Activating it early would give that copy
+  an owner. Awaiting the Founder's call.
+
+### Other roles not yet active
+
 - **Finance / CFO:** When revenue > $0
 - **General Counsel:** When processing payments or mature enough
 - **Operations / COO:** When team > 3 people

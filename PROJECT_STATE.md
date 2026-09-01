@@ -724,6 +724,27 @@ works end to end on the server.
 
 ## Known Issues
 
+- 🔴 **The email that lets a person into the product lands in spam.** Found by
+  the Founder on 2026-08-31, on their own account: the password-reset email
+  arrived, but in the spam folder, so it was never seen. This is not a personal
+  mishap — it is the product's onboarding path. Decision 006 makes the
+  administrator create every resident's and every guard's account, and Firebase
+  sends each of them a "set your password" email. **If that email lands in spam,
+  that person never gets in, and the administrator has no way to know.** In a
+  ten-apartment building that is ten people who cannot use what was set up for
+  them, with nothing on any screen indicating why.
+  The cause is the default sender, `noreply@zeker-505918.firebaseapp.com`: a
+  generic address on a domain with no reputation and no alignment with any real
+  sender, which is close to the definition of what spam filters catch.
+  Two fixes, different sizes:
+  **(a) Free, today** — the people screen and the reset screen must say plainly
+  that the email may arrive in spam and should be looked for there. It does not
+  fix delivery; it stops the silence.
+  **(b) The real fix** — a custom domain with a verified sender. That is a
+  recurring cost and therefore a 🟡 Budget Gate decision (`docs/business/budget.md`),
+  and it overlaps with needing a real domain for the product anyway.
+
+
 - ✅ ~~Nothing deletes an old check yet~~ — **closed 2026-08-31.** The Firestore
   TTL policy on `access_events.expires_at` is enabled and verified `state: ACTIVE`
   against the live project. An entry now deletes itself after 90 days and a
