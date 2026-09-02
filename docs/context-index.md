@@ -49,6 +49,7 @@ Map of authoritative sources for project knowledge.
 | — 011 | `decisions/011-billing-before-market.md` | Billing and subscriptions must exist before going to market | Founder |
 | — 012 | `decisions/012-one-free-organization.md` | One free organization per person, counted by who created it | Founder + Product Owner + Security |
 | — 013 | `decisions/013-meeting-cadence.md` | Which meetings Zeker holds, which are merged, and which are dormant | Founder + PM |
+| — 014 | `decisions/014-permit-use-and-what-it-leaves-behind.md` | One entry or free entries, chosen when the permit is created; the permit itself records that it was used | Founder + Product Owner + Architect |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
