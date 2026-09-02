@@ -21,6 +21,7 @@ Map of authoritative sources for project knowledge.
 | Data minimization | `security/data-minimization.md` | What we store, what we never store, minimization rules | Security Engineer |
 | Threat model | ⛔ not written | Threats, mitigations, assumptions | Security Engineer |
 | Privacy policy | ⛔ not written | Ley 1581/2016 compliance, consent, retention. Required before launch | Security Engineer |
+| API key snapshots | `security/api-key-snapshots/` | The browser key's restrictions as they stood before each change, one file per date. Evidence that a change was made deliberately, and what to restore | Security Engineer |
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
 | Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
 | **Decisions** | | | |
@@ -109,4 +110,4 @@ looks for them:
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-08-29
+**Last updated:** 2026-09-02

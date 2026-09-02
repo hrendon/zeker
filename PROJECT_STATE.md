@@ -2,7 +2,7 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-09-01
+**Last updated:** 2026-09-02
 
 **Session closed 2026-09-01. The framework grew a heartbeat, and the product's
 front door turned out to have been locked shut the whole time.**
@@ -1473,8 +1473,50 @@ what happens next and in what order. **Y** = only the Founder can do it.
 
 | # | Do | Who | Why it is first |
 |---|---|---|---|
-| 1 | **Fix the API key referrer** — the exact command is below | **Y** — 30 s | Password recovery has never worked. No sign-in, no phone test, no demo, no discovery call |
+| 1 | **Fix the API key referrer** — the exact command is below | 30 s. **Either of us** — this machine's gcloud session has the rights (checked 2026-09-02) | Password recovery has never worked. No sign-in, no phone test, no demo, no discovery call |
 | 2 | Request a reset link and sign in | **Y** — 2 min | Proves 1 worked. If it still fails, stop and say so — the diagnosis was wrong |
+
+**Status 2026-09-02:** still not done. Re-proved from a blocked origin that same
+morning: `403 API_KEY_HTTP_REFERRER_BLOCKED`. Security Engineer reviewed the
+change and **approved it as written**, with one condition: **do not add
+`zeker.com.co` yet** — the domain is bought but does not resolve, and allowing an
+origin that does not exist is opening a door to nobody-knows-what. It goes on the
+list in the same sitting as step 10, once it resolves and serves the app. The
+configuration as it stood before the change is kept at
+`docs/security/api-key-snapshots/2026-09-02-before.json`.
+
+**Done 2026-09-02 15:23 UTC**, after the Founder authorised it in the session.
+The evidence is the one written down in advance, from the origin that was
+blocked: `403 API_KEY_HTTP_REFERRER_BLOCKED` → `400 INVALID_OOB_CODE`. The key
+is now accepted and only the deliberately fake code is refused. Both states are
+kept in `docs/security/api-key-snapshots/` (`-before` and `-after`).
+
+**Two more locks were found behind it, both on 2026-09-02, and the first fix
+did not open the door on its own:**
+
+1. **The product answers on two Cloud Run addresses and only one was on the
+   key.** The canonical one — the address the console shows and a person
+   bookmarks — was blocked (R-25). Scripted in `scripts/arreglar-llave.sh`.
+2. **Firebase keeps a second, different permission list** — authorized
+   domains, the addresses a person may be returned to after setting a password
+   — and it held neither address the product runs on (R-26). **This is why no
+   invitation and no recovery has ever left the application**, for anyone.
+   Fixed and verified 2026-09-02: the browser's exact request, which refused
+   with `UNAUTHORIZED_DOMAIN` minutes earlier, now succeeds.
+
+**A made-up email address cannot test any of this** (R-27). Firebase answers
+"done" for an unknown account without checking anything else, so the obvious
+smoke test passes against a completely broken system — it did, at 11:20 that
+morning.
+
+**Closed the same day, by hand, on a real phone.** After all three locks were
+open the Founder received the email, set a password, signed in, and **issued an
+entry permit from a phone**. First time end to end in the product's life. R-19
+is closed — not by a passing test, by a person doing the thing.
+
+**What that unblocks:** the phone test (TC-PHONE-01) can now run whole, a
+demonstration is possible, and Decision 006's invitation path — every resident
+and every guard — works for the first time.
 
 ```bash
 gcloud services api-keys update   projects/880033266233/locations/global/keys/22180854-c084-41a2-ab6c-df3ba4d97cd1   --allowed-referrers="https://zeker-web-880033266233.us-central1.run.app/*,https://zeker-505918.firebaseapp.com/*"
@@ -1514,7 +1556,7 @@ Until then every "US$0.00" reading proves nothing.
 | # | Do | Depends on |
 |---|---|---|
 | 8 | Our own `/auth/action` page, in Spanish, on our host — removes the need for the referrer exception in step 1 | 2 |
-| 9 | Resend control and an "aún no ha entrado" state on the people screen; spam wording there | — |
+| ~~9~~ | ~~Resend control and an "aún no ha entrado" state on the people screen; spam wording there~~ — **built 2026-09-02**, unverified in a browser until step 1 lands | — |
 | 10 | Confirm the **free** path to attach the domain to Cloud Run (domain mapping vs. Firebase Hosting) | 5 |
 | 11 | Remove the unused KMS key (Decision 005 left it with no purpose) and add an Artifact Registry cleanup policy | 3 |
 | 12 | Cap member creation per organization | — |
@@ -1526,6 +1568,20 @@ Until then every "US$0.00" reading proves nothing.
 Runs whole once you can sign in. `TC-PHONE-01` has pass/fail lines now. Do it
 outdoors, on mobile data, at 50% brightness, with no traffic to the site for 20
 minutes beforehand or the speed measurement is meaningless.
+
+#### The machine we work on — added 2026-09-02, all five are your hands
+
+Audited today: this laptop holds a standing Google grant to production, in your
+name. Losing the laptop is losing control of the company; losing the *disk*
+costs almost nothing, because everything is on GitHub. Recorded as R-23 and R-24.
+
+| # | Do | Time | Why |
+|---|---|---|---|
+| 15 | Two-step verification on the Google account | 5 min | The single biggest reduction. Everything else assumes this exists |
+| 16 | Windows password + automatic lock on the screen | 5 min | Today the credential is protected by whoever can open the lid |
+| 17 | Confirm device encryption is on (Settings → Privacy and security) | 2 min | Could not be checked from here: it needs administrator rights, and Windows 11 Home has no BitLocker management |
+| 18 | An encrypted copy of `backend/.env` and `frontend/.env.local` | 5 min | The only two files that exist nowhere else |
+| 19 | Write the revocation procedure, before it is needed | 10 min | It is a Google-account action, not a `gcloud` command on a laptop you no longer have |
 
 #### Still yours to decide, not blocking today
 

@@ -9,7 +9,7 @@ import { ApiError, toSpanish } from '@/lib/errors'
 import { membersApi, type AssignableRole, type Member, type Org } from '@/lib/api'
 import { checkEmail, checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
-import { memberLabel } from '@/lib/members'
+import { canResendInvite, invitePending, memberLabel } from '@/lib/members'
 
 /**
  * The people who belong to one organization (Decision 006).
@@ -48,6 +48,8 @@ function MembersScreen({ org }: { org: Org }) {
   const [notice, setNotice] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [showForm, setShowForm] = useState(false)
+
+  const [listError, setListError] = useState<string | null>(null)
 
   const [pending, setPending] = useState<Member | null>(null)
   const [pendingBusy, setPendingBusy] = useState(false)
@@ -121,6 +123,33 @@ function MembersScreen({ org }: { org: Org }) {
     }
   }
 
+  /**
+   * Sends the "set your password" email again.
+   *
+   * The same call the person's own recovery screen makes, and the same one made
+   * when they were added — an administrator has no other way to let somebody in
+   * who never received, or never found, that first email.
+   */
+  async function resendInvite(member: Member) {
+    if (!member.email) return
+    setNotice(null)
+    setListError(null)
+    try {
+      await sendPasswordResetEmail(auth, member.email, {
+        url: `${window.location.origin}/entrar`,
+        handleCodeInApp: false,
+      })
+      setNotice(es.members.resent)
+    } catch (cause) {
+      // "No such account" here does not mean a wrong password, which is what
+      // the shared translation would say. It means the account is gone.
+      const code = (cause as { code?: string }).code
+      setListError(
+        code === 'auth/user-not-found' ? es.members.resendNoAccount : toSpanish(cause),
+      )
+    }
+  }
+
   async function runRemove() {
     if (!pending) return
     setPendingBusy(true)
@@ -155,6 +184,12 @@ function MembersScreen({ org }: { org: Org }) {
           </div>
         ) : null}
 
+        {listError ? (
+          <div className="mt-5">
+            <Notice kind="error">{listError}</Notice>
+          </div>
+        ) : null}
+
         <div className="mt-5">
           {loadError ? (
             <div className="space-y-3">
@@ -181,14 +216,27 @@ function MembersScreen({ org }: { org: Org }) {
                   key={member.user_id}
                   title={memberLabel(member)}
                   subtitle={`${roleLabel(member.role)} · ${member.email ?? es.members.noEmail}`}
+                  badge={invitePending(member) ? es.members.neverSignedIn : undefined}
                   actions={
-                    admin && member.role !== 'admin'
+                    admin
                       ? [
-                          {
-                            label: es.members.remove,
-                            danger: true,
-                            onSelect: () => setPending(member),
-                          },
+                          ...(canResendInvite(member)
+                            ? [
+                                {
+                                  label: es.members.resend,
+                                  onSelect: () => resendInvite(member),
+                                },
+                              ]
+                            : []),
+                          ...(member.role !== 'admin'
+                            ? [
+                                {
+                                  label: es.members.remove,
+                                  danger: true,
+                                  onSelect: () => setPending(member),
+                                },
+                              ]
+                            : []),
                         ]
                       : []
                   }
@@ -196,6 +244,18 @@ function MembersScreen({ org }: { org: Org }) {
               ))}
             </ul>
           )}
+
+          {members && members.some(invitePending) ? (
+            <p className="mt-4 text-sm text-[var(--color-ink-faint)]">
+              {es.members.neverSignedInHint}
+            </p>
+          ) : null}
+
+          {admin && members && members.length > 0 ? (
+            <p className="mt-2 text-sm text-[var(--color-ink-faint)]">
+              {es.members.emailDeliveryNote}
+            </p>
+          ) : null}
         </div>
 
         {admin && members ? (

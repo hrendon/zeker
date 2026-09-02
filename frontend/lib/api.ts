@@ -118,6 +118,15 @@ export interface Member {
   /** Held by Firebase, not by our database. Null when Firebase has none. */
   email: string | null
   role: OrgRole
+  /**
+   * Whether this person has ever signed in. An account an administrator
+   * created is not access: until the person opens the email and sets a
+   * password, they are locked out, and until now no screen said so.
+   *
+   * `null` means unknown — Firebase did not return the account. The screen
+   * must not turn that into "has not entered".
+   */
+  has_signed_in: boolean | null
 }
 
 /** The roles an administrator may hand out. `admin` is not one of them. */

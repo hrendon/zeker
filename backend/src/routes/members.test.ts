@@ -98,6 +98,8 @@ describe('POST /orgs/:orgId/members', () => {
 
     expect(response.status).toBe(201)
     expect(response.body.user_id).toBe(RESIDENT)
+    // The account was created a moment ago; nobody has used it yet.
+    expect(response.body.has_signed_in).toBe(false)
     expect(response.body.role).toBe('responsable')
     expect(response.body.first_name).toBe('María')
     expect(orgsOf(RESIDENT)).toEqual([{ org_id: ORG, role: 'responsable' }])
@@ -273,6 +275,35 @@ describe('GET /orgs/:orgId/members', () => {
     expect(response.body.members[1].email).toBe('maria@example.com')
     // Firebase had no email for the guard; the list still answers.
     expect(response.body.members[2].email).toBeNull()
+  })
+
+  it('says who has never signed in, and stays silent about who it cannot read', async () => {
+    seedMember(RESIDENT, ORG, 'responsable', { first_name: 'María', last_name: 'García' })
+    seedMember(GUARD, ORG, 'security', { first_name: 'Pedro', last_name: 'Vigilante' })
+    getUsers.mockResolvedValue({
+      users: [
+        // Invited, never opened the email: the account exists, the person is out.
+        { uid: RESIDENT, email: 'maria@example.com', metadata: { lastSignInTime: '' } },
+        {
+          uid: ADMIN,
+          email: 'ana@example.com',
+          metadata: { lastSignInTime: 'Mon, 01 Sep 2026 10:00:00 GMT' },
+        },
+      ],
+      notFound: [{ uid: GUARD }],
+    })
+    signedInAs(ADMIN)
+
+    const response = await request(app)
+      .get(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+
+    expect(response.status).toBe(200)
+    const [admin, maria, guard] = response.body.members
+    expect(admin.has_signed_in).toBe(true)
+    expect(maria.has_signed_in).toBe(false)
+    // Firebase did not return this account. Unknown is not "has not entered".
+    expect(guard.has_signed_in).toBeNull()
   })
 
   it('is refused for a resident — one neighbour cannot list the others', async () => {

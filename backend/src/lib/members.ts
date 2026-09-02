@@ -34,6 +34,28 @@ export interface MemberResponse {
   /** Read from Firebase Auth at request time, never from our database. */
   email: string | null
   role: OrgRole
+  /**
+   * Whether this person has ever signed in — the difference between an account
+   * that exists and a person who actually has access. An administrator creates
+   * the account and Firebase emails them; until they open that email and set a
+   * password, they cannot get in, and nothing on any screen said so.
+   *
+   * `null` means we do not know: Firebase did not return the account. Not the
+   * same as `false`, and the screen must not claim it is.
+   */
+  has_signed_in: boolean | null
+}
+
+/**
+ * Whether a Firebase account has ever been used to sign in.
+ *
+ * Firebase leaves `lastSignInTime` empty until the first sign-in. An account
+ * created by an administrator therefore reads `false` from the moment it is
+ * made, which is exactly the state worth showing.
+ */
+export function hasEverSignedIn(user: unknown): boolean {
+  const metadata = (user as { metadata?: { lastSignInTime?: string | null } } | undefined)?.metadata
+  return Boolean(metadata?.lastSignInTime)
 }
 
 export function toMemberResponse(
@@ -41,6 +63,7 @@ export function toMemberResponse(
   stored: Partial<UserDocument> | undefined,
   role: OrgRole,
   email: string | null,
+  hasSignedIn: boolean | null,
 ): MemberResponse {
   return {
     user_id: uid,
@@ -48,6 +71,7 @@ export function toMemberResponse(
     last_name: String(stored?.last_name ?? ''),
     email,
     role,
+    has_signed_in: hasSignedIn,
   }
 }
 

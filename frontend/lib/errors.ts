@@ -77,6 +77,18 @@ const API_MESSAGES: Record<string, string> = {
   internal_server_error: es.errors.serverError,
 }
 
+/**
+ * A blocked API key referrer has no stable error code to match on.
+ *
+ * Google answers `403 ... Requests from referer <URL> are blocked.` and the
+ * Firebase SDK, finding no code it knows, builds one out of that whole
+ * sentence: `auth/requests-from-referer-https://…-are-blocked.` — the address
+ * is *inside* the code, so an exact-match table can never catch it. Verified
+ * against the SDK's own source (`@firebase/auth` 12.18.0) and reproduced in a
+ * browser on 2026-09-02.
+ */
+const REFERRER_BLOCKED_PREFIX = 'auth/requests-from-referer'
+
 function firebaseErrorCode(error: unknown): string | undefined {
   if (typeof error !== 'object' || error === null) return undefined
   const code = (error as { code?: unknown }).code
@@ -100,6 +112,8 @@ export function toSpanish(error: unknown): string {
 
   const code = firebaseErrorCode(error)
   if (code) {
+    if (code.startsWith(REFERRER_BLOCKED_PREFIX)) return es.errors.originBlocked
+
     const known = FIREBASE_MESSAGES[code]
     if (known) return known
     // Anything under auth/ that we have not mapped is still an auth failure.

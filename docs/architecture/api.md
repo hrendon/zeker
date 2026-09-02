@@ -631,6 +631,14 @@ one resident must not be able to read about their neighbours.
 (Decision 002). The email in a response is read back from Firebase at request
 time, never from our database.
 
+**`has_signed_in` is the difference between an account and access.** An
+administrator creates the account; the person only gets in once they open the
+Firebase email and set a password. Until then they are locked out, and this
+field is `false`. It is read from Firebase's `lastSignInTime` in the same
+lookup that already fetches the email, so it costs no extra call. It is `null`
+when Firebase did not return the account — unknown, which a screen must not
+render as "has not entered".
+
 ---
 
 ### POST /orgs/{orgId}/members
@@ -666,6 +674,7 @@ not have one. **Administrators only.**
   "last_name": "García",
   "email": "maria@example.com",
   "role": "responsable",
+  "has_signed_in": false,
   "request_id": "req_abc123xyz"
 }
 ```
@@ -699,14 +708,18 @@ Everyone who belongs to this organization. **Administrators only.**
       "first_name": "María",
       "last_name": "García",
       "email": "maria@example.com",
-      "role": "responsable"
+      "role": "responsable",
+      "has_signed_in": false
     }
   ],
   "request_id": "req_abc123xyz"
 }
 ```
 
-Ordered by name. `email` is `null` when Firebase has none for that account.
+Ordered by name. `email` is `null` when Firebase has none for that account, and
+`has_signed_in` is `null` for the same reason: the account was not returned, so
+nothing is known about it. A member whose Firebase account has disappeared is
+still listed — the membership is real.
 
 **Errors:**
 - `401 unauthorized`

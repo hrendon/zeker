@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { checkEmail, checkRequiredText } from './validate'
 import { ApiError, toSpanish } from './errors'
 import { es } from './strings'
-import { memberLabel } from './members'
+import { canResendInvite, invitePending, memberLabel } from './members'
 
 /**
  * The people screen's pure logic (Decision 006). Whether a list renders or a
@@ -95,5 +95,51 @@ describe('what to call a person on screen', () => {
       es.common.unnamedPerson,
     )
     expect(memberLabel({ first_name: '', last_name: '', email: null })).not.toBe('')
+  })
+})
+
+describe('telling apart an account and actual access', () => {
+  it('marks somebody who was invited and never got in', () => {
+    expect(invitePending({ has_signed_in: false })).toBe(true)
+    expect(invitePending({ has_signed_in: true })).toBe(false)
+  })
+
+  it('says nothing about a person Firebase did not return', () => {
+    // `null` is "we do not know", and the screen must not turn that into
+    // "has not entered". A label that is sometimes invented is a label an
+    // administrator learns to ignore.
+    expect(invitePending({ has_signed_in: null })).toBe(false)
+    expect(canResendInvite({ has_signed_in: null, email: 'maria@example.com' })).toBe(false)
+  })
+
+  it('offers to send the email again only to someone still locked out', () => {
+    expect(canResendInvite({ has_signed_in: false, email: 'maria@example.com' })).toBe(true)
+    // Already inside: this would be an administrator resetting someone else's
+    // password, which is not what the action is for.
+    expect(canResendInvite({ has_signed_in: true, email: 'maria@example.com' })).toBe(false)
+    // Nowhere to send it.
+    expect(canResendInvite({ has_signed_in: false, email: null })).toBe(false)
+  })
+})
+
+describe('what the people screen says about the email', () => {
+  it('warns that the email can land in spam, and names the sender', () => {
+    // The first thing that goes wrong with an invitation nobody received.
+    expect(es.members.emailDeliveryNote).toContain('spam')
+    expect(es.members.emailDeliveryNote).toContain('noreply')
+  })
+
+  it('explains what the label means and what to do about it', () => {
+    // A badge that only labels the problem leaves the administrator stuck.
+    expect(es.members.neverSignedInHint).toContain(es.members.neverSignedIn)
+    expect(es.members.neverSignedInHint).toContain('contraseña')
+  })
+
+  it('does not answer a missing account with a password error', () => {
+    // The shared translation for auth/user-not-found is "wrong credentials",
+    // which on this screen would send an administrator hunting for a typo in a
+    // password nobody typed.
+    expect(es.members.resendNoAccount).not.toBe(es.errors.badCredentials)
+    expect(es.members.resendNoAccount).toContain('ya no existe')
   })
 })

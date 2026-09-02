@@ -55,3 +55,34 @@ describe('toSpanish', () => {
     expect(toSpanish(new ApiError(503, { error: 'gateway_down' }))).toBe(es.errors.serverError)
   })
 })
+
+describe('when the app is opened from an address the API key does not allow', () => {
+  /**
+   * The real code observed in a browser on 2026-09-02. Google's refusal is a
+   * sentence, and the SDK turns the whole sentence into the error code — so the
+   * address the person used is part of the code itself.
+   */
+  const blocked = {
+    code: 'auth/requests-from-referer-https://zeker-web-krsxkgch7q-uc.a.run.app/entrar-are-blocked.',
+  }
+
+  it('recognises it however the address changes', () => {
+    expect(toSpanish(blocked)).toBe(es.errors.originBlocked)
+    expect(
+      toSpanish({ code: 'auth/requests-from-referer-https://otra.direccion/-are-blocked.' }),
+    ).toBe(es.errors.originBlocked)
+  })
+
+  it('does not tell the person to wait and try again', () => {
+    // This is exactly what happened: the generic message invited a retry, and
+    // the Founder retried against something that could never succeed.
+    expect(toSpanish(blocked)).not.toBe(es.errors.unknown)
+    expect(es.errors.originBlocked).toContain('esperar no lo va a resolver')
+  })
+
+  it('still leaves every other auth failure alone', () => {
+    expect(toSpanish({ code: 'auth/invalid-credential' })).toBe(es.errors.badCredentials)
+    expect(toSpanish({ code: 'auth/expired-action-code' })).toBe(es.errors.expiredLink)
+  })
+})
+

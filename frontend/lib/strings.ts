@@ -232,6 +232,17 @@ export const es = {
     addedNoEmail:
       'La persona quedó agregada, pero no pudimos enviarle el correo. Pídale que use “Olvidé mi contraseña” en la pantalla de entrar.',
     noEmail: 'Sin correo',
+    // An account is not access. Somebody who never opened the email cannot use
+    // Zeker at all, and the list used to show them exactly like everyone else.
+    neverSignedIn: 'Aún no ha entrado',
+    neverSignedInHint:
+      'Quien aparece como “Aún no ha entrado” todavía no ha creado su contraseña, así que no puede usar Zeker. Puede reenviarle el correo desde el menú de esa persona.',
+    emailDeliveryNote:
+      'El correo para crear la contraseña lo envía Firebase, no Zeker. Si no llega en unos minutos, pídale que revise la carpeta de correo no deseado (spam) y que busque el remitente “noreply”.',
+    resend: 'Reenviar el correo',
+    resent: 'Listo. Le enviamos otra vez el correo para crear su contraseña.',
+    resendNoAccount:
+      'Esa cuenta ya no existe en el sistema de acceso. Quite a la persona y vuelva a agregarla.',
     remove: 'Quitar de la organización',
     removeConfirmTitle: '¿Quitar a esta persona?',
     removeConfirmBody:
@@ -387,6 +398,14 @@ export const es = {
       'Ese enlace ya venció o fue reemplazado por uno más nuevo. Pida uno nuevo y ábralo dentro de la hora siguiente.',
     invalidLink:
       'Ese enlace no es válido. Puede que se haya cortado al copiarlo. Pida uno nuevo.',
+    // Found 2026-09-02: the same product answers on two Cloud Run addresses and
+    // only one of them was allowed to reach Firebase. From the other one every
+    // sign-in and every password request failed as `unknown` — "intente de
+    // nuevo en un momento" — so the Founder retried for a while against
+    // something that was never going to work. Waiting is not the answer here.
+    // Wording to be reviewed by Content Strategist / Copywriter.
+    originBlocked:
+      'Está abriendo Zeker desde una dirección que no está autorizada, y por eso no podemos entrar. Vuelva a intentar desde la dirección oficial de Zeker; esperar no lo va a resolver. Si llegó por un enlace guardado, pida el enlace correcto al administrador.',
     notAllowed: 'No tiene permiso para hacer esto.',
     notFound: 'No encontramos lo que buscaba.',
     invalidRequest: 'Los datos enviados no son válidos. Revíselos.',

@@ -1,0 +1,24 @@
+{
+  "createTime": "2026-08-18T19:41:31.051217Z",
+  "displayName": "Browser key (auto created by Firebase)",
+  "etag": "W/\"vTz/H/rXCoOLXUMPZFOHDg==\"",
+  "name": "projects/880033266233/locations/global/keys/22180854-c084-41a2-ab6c-df3ba4d97cd1",
+  "restrictions": {
+    "apiTargets": [
+      {
+        "service": "identitytoolkit.googleapis.com"
+      },
+      {
+        "service": "securetoken.googleapis.com"
+      }
+    ],
+    "browserKeyRestrictions": {
+      "allowedReferrers": [
+        "https://zeker-web-880033266233.us-central1.run.app/*",
+        "https://zeker-505918.firebaseapp.com/*"
+      ]
+    }
+  },
+  "uid": "22180854-c084-41a2-ab6c-df3ba4d97cd1",
+  "updateTime": "2026-09-02T15:23:44.187165Z"
+}

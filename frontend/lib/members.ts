@@ -20,3 +20,31 @@ export function memberLabel(member: Pick<Member, 'first_name' | 'last_name' | 'e
   if (member.email) return member.email
   return es.common.unnamedPerson
 }
+
+/**
+ * Whether this person was given an account but has never got in.
+ *
+ * The account existing and the person having access are two different things:
+ * an administrator creates the account, Firebase emails them, and until they
+ * open that email and set a password they cannot use Zeker at all. The people
+ * list showed them identically to everyone else, so an administrator had no way
+ * to tell a working colleague from one who never received the email.
+ *
+ * Only a plain `false` counts. `has_signed_in` is `null` when Firebase did not
+ * return the account, and calling that "has not entered" would be inventing an
+ * answer we do not have.
+ */
+export function invitePending(member: Pick<Member, 'has_signed_in'>): boolean {
+  return member.has_signed_in === false
+}
+
+/**
+ * Whether the "send the email again" action belongs on this person's row.
+ *
+ * Only for someone still waiting to get in, and only when there is an address
+ * to send to. It is a re-invitation, not a way for an administrator to reset
+ * the password of somebody who already has access.
+ */
+export function canResendInvite(member: Pick<Member, 'has_signed_in' | 'email'>): boolean {
+  return invitePending(member) && Boolean(member.email)
+}

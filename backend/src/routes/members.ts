@@ -12,6 +12,7 @@ import { ORG_ROLES, userRef, usersCollection } from '../lib/users.js'
 import type { OrgRole, UserDocument } from '../lib/users.js'
 import {
   ASSIGNABLE_ROLES,
+  hasEverSignedIn,
   toMemberResponse,
   unusablePassword,
   withMembership,
@@ -67,10 +68,11 @@ function errorCode(error: unknown): string | undefined {
  */
 async function findOrCreateAccount(input: { email: string; displayName: string }): Promise<{
   uid: string
+  hasSignedIn: boolean
 }> {
   try {
     const existing = await auth().getUserByEmail(input.email)
-    return { uid: existing.uid }
+    return { uid: existing.uid, hasSignedIn: hasEverSignedIn(existing) }
   } catch (error) {
     if (errorCode(error) !== 'auth/user-not-found') throw error
   }
@@ -81,27 +83,45 @@ async function findOrCreateAccount(input: { email: string; displayName: string }
       displayName: input.displayName,
       password: unusablePassword(),
     })
-    return { uid: created.uid }
+    // Brand new: nobody has signed in with it, by definition.
+    return { uid: created.uid, hasSignedIn: false }
   } catch (error) {
     // Two administrators adding the same person at the same instant: the loser
     // reads back the account the winner just created.
     if (errorCode(error) === 'auth/email-already-exists') {
       const existing = await auth().getUserByEmail(input.email)
-      return { uid: existing.uid }
+      return { uid: existing.uid, hasSignedIn: hasEverSignedIn(existing) }
     }
     throw error
   }
 }
 
-/** The email Firebase holds for these accounts. Never read from our database. */
-async function emailsOf(uids: string[]): Promise<Map<string, string | null>> {
-  const emails = new Map<string, string | null>()
-  if (uids.length === 0) return emails
+interface Account {
+  email: string | null
+  /** `null` when Firebase did not return the account — unknown, not "no". */
+  hasSignedIn: boolean | null
+}
+
+/**
+ * What Firebase holds for these accounts: the address, and whether the person
+ * has ever actually signed in. Neither is read from our database — Firebase
+ * Auth is the system of record for both (Decision 002), and this costs no
+ * extra call: it is the same lookup the email already needed.
+ */
+async function accountsOf(uids: string[]): Promise<Map<string, Account>> {
+  const accounts = new Map<string, Account>()
+  if (uids.length === 0) return accounts
 
   const found = await auth().getUsers(uids.map((uid) => ({ uid })))
-  for (const user of found.users) emails.set(user.uid, user.email ?? null)
-  for (const uid of uids) if (!emails.has(uid)) emails.set(uid, null)
-  return emails
+  for (const user of found.users) {
+    accounts.set(user.uid, { email: user.email ?? null, hasSignedIn: hasEverSignedIn(user) })
+  }
+  // A member whose Firebase account is missing stays in the list — the
+  // membership is real — but nothing is claimed about a person we cannot read.
+  for (const uid of uids) {
+    if (!accounts.has(uid)) accounts.set(uid, { email: null, hasSignedIn: null })
+  }
+  return accounts
 }
 
 /**
@@ -124,7 +144,7 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => 
   const { email, first_name: firstName, last_name: lastName, role } = parsed.data
 
   try {
-    const { uid } = await findOrCreateAccount({
+    const { uid, hasSignedIn } = await findOrCreateAccount({
       email,
       displayName: `${firstName} ${lastName}`,
     })
@@ -175,7 +195,7 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => 
     )
 
     res.status(201).json({
-      ...toMemberResponse(uid, stored, role, email),
+      ...toMemberResponse(uid, stored, role, email, hasSignedIn),
       request_id: req.id,
     })
   } catch (error) {
@@ -210,12 +230,19 @@ membersRouter.get('/', requireAuth, requireOrgAdmin, async (req, res, next) => {
       .filter((row) => row.stored.deleted !== true)
       .filter((row) => row.stored.orgs?.some((entry) => entry.org_id === orgId))
 
-    const emails = await emailsOf(rows.map((row) => row.uid))
+    const accounts = await accountsOf(rows.map((row) => row.uid))
 
     const members: MemberResponse[] = rows
       .map((row) => {
         const role = row.stored.orgs!.find((entry) => entry.org_id === orgId)!.role as OrgRole
-        return toMemberResponse(row.uid, row.stored, role, emails.get(row.uid) ?? null)
+        const account = accounts.get(row.uid)
+        return toMemberResponse(
+          row.uid,
+          row.stored,
+          role,
+          account?.email ?? null,
+          account?.hasSignedIn ?? null,
+        )
       })
       .sort((a, b) =>
         `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, 'es'),
