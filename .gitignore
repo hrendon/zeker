@@ -1,26 +1,87 @@
-# Environment variables (NEVER commit .env files)
+# ---------------------------------------------------------------------------
+# Credentials — nothing here may ever be committed.
+#
+# Authentication uses Application Default Credentials, so there should be no key
+# file in the working tree at all. These patterns exist for the day one appears
+# anyway: a downloaded key, a script that wrote one, a copy made "just to test".
+# ---------------------------------------------------------------------------
+google-cloud-key.json
+service-account.json
+gcp-service-account-key.json
+*-service-account*.json
+*serviceaccount*.json
+application_default_credentials.json
+
+# ---------------------------------------------------------------------------
+# Environment variables
+#
+# ⚠️ READ THIS BEFORE ADDING `.env.production` BELOW.
+#
+# `frontend/.env.production` IS TRACKED, DELIBERATELY, and must stay tracked.
+# Next.js compiles NEXT_PUBLIC_* values into the browser bundle at BUILD time,
+# and the build happens inside the container (see frontend/Dockerfile). If that
+# file is not in the repository, the image builds cleanly with every value
+# empty — producing a site that deploys successfully and cannot sign anyone in.
+#
+# Its contents are public by design: they identify the Firebase project, they do
+# not grant access to it. Access is decided by Firebase Auth, by the Firestore
+# rules that deny browsers entirely (Decision 004), and by the browser key's
+# referrer restriction. That last one is not decoration — on 2026-09-01 it was
+# found to be the thing that had silently broken password recovery, which is how
+# we learned how load-bearing it is.
+#
+# The `.example` files are also tracked, on purpose: they are the documentation
+# of which variables exist.
+# ---------------------------------------------------------------------------
 .env
 .env.local
 .env.*.local
 
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
+# ---------------------------------------------------------------------------
+# Local tooling settings
+#
+# `.claude/settings.local.json` holds machine-specific permission grants. Until
+# 2026-09-01 it was ignored only by this machine's global git config, which
+# meant a clone on any other computer would have started tracking it. The rest
+# of `.claude/` is framework-owned and IS tracked.
+# ---------------------------------------------------------------------------
+.claude/settings.local.json
 
+# ---------------------------------------------------------------------------
+# Dependencies and build output
+#
 # package-lock.json is deliberately NOT ignored. It pins the exact version of
 # every library, so the code that runs in production is the code that was
 # tested. Ignoring it lets two builds of the same commit differ.
+# ---------------------------------------------------------------------------
+node_modules/
 yarn.lock
 pnpm-lock.yaml
 
-# Next.js
 .next/
 out/
+dist/
+build/
 .vercel/
+tsconfig.tsbuildinfo
 
-# IDE / Editor
+# ---------------------------------------------------------------------------
+# Logs, caches, scratch
+# ---------------------------------------------------------------------------
+*.log
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+firebase-debug.log
+firestore-debug.log
+.cache/
+coverage/
+*.tmp
+temp/
+
+# ---------------------------------------------------------------------------
+# Editors and operating systems
+# ---------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
@@ -28,31 +89,3 @@ out/
 *~
 .DS_Store
 Thumbs.db
-
-# OS
-.DS_Store
-.env.local
-.env.*.local
-
-# Build outputs
-dist/
-build/
-
-# Temporary files
-*.tmp
-.cache/
-temp/
-
-# GCP — credential files must never be committed.
-# Authentication uses Application Default Credentials (no key file), but any
-# key file that ends up in the working tree is blocked here regardless.
-google-cloud-key.json
-service-account.json
-gcp-service-account-key.json
-*-service-account*.json
-*serviceaccount*.json
-application_default_credentials.json
-*.json.example
-
-# Firebase
-firebase-debug.log

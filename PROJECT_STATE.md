@@ -2,60 +2,91 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-08-31
+**Last updated:** 2026-09-01
 
-**Session closed 2026-08-31. The product left this computer for the first time.**
+**Session closed 2026-09-01. The framework grew a heartbeat, and the product's
+front door turned out to have been locked shut the whole time.**
 
-Frontend: https://zeker-web-880033266233.us-central1.run.app
-API: https://zeker-api-880033266233.us-central1.run.app
-Both on Cloud Run, us-central1 (Decision 009 — Cloud Run instead of Vercel).
+## What this session was for
 
-**Verified live, not merely deployed:** `/health` and `/health/ready` return 200
-and reach Firestore; the browser bundle carries the right API address and Firebase
-config; CORS accepts the deployed frontend and refuses both a foreign origin and
-the old localhost value; Firestore rules released; three composite indexes READY;
-the `access_events` TTL policy enabled and verified ACTIVE; the Firebase browser
-key restricted to two APIs and to the deployed domain only.
+Update the Mantis framework, adopt its new meeting cadence, and answer four
+Founder questions. It became something else on the first message: the Founder
+could not sign in to their own product.
 
-**The Founder used it and it worked:** a permit issued and a visit approved at the
-gate, on the real URL, using the typed code. **The camera has still never decoded
-a real permit** — Decision 009's own predicted outcome, still unmet.
+## The finding that mattered
 
-**Found by that first real use, and nothing else could have found it:** every API
-call returned 401 because the Cloud Run service account had no Firebase Auth
-permission. The 188 backend tests passed throughout. Fixed by granting
-`roles/firebaseauth.admin` — the backend does not only read from Firebase Auth,
-it creates accounts (Decision 006) and revokes sessions.
+**Password recovery has never once worked in Zeker.** Not slowly, not
+intermittently — never.
 
-**Still not done, deliberately:** the smoke test has not been run by hand, and
-**the URL must not be publicised until D-006 is answered** — anyone who has it can
-create an organization, and nothing checks they run a real building.
-**Session closed:** 2026-08-30. One unit built (a guard checks a permit at a
-door, and every check is recorded), two commits, three scope questions answered
-by the Founder and recorded as Decision 008. A platform report was added
-afterwards, deliberately as an operator tool rather than as a privileged account
-inside the product. Documents were audited against the code at close; the
-endpoint, the stored record and the requirements all match what was built, and
-one small contradiction introduced this session is recorded below.
+On 2026-08-31 the browser API key was restricted to the deployed domain. That was
+a correct, real security improvement, and it was recorded as one. But Firebase's
+password page runs on a *different* domain, calls Google with that same key, and
+is refused — so it renders its generic English *"expired or already used."* The
+link was always fine. The permission was not.
 
-**Last verified:** 2026-08-30 — backend typecheck clean, 188/188 tests pass;
-frontend typecheck clean, 45/45 tests pass, production build clean; the gate
-driven by hand in a real browser against live Firebase and live Firestore: a
-permit issued for apartment 302 and let in (code typed in lowercase with a
-space, and accepted), a code that matches nothing refused with "ese código no
-existe", the permit then revoked and the same code refused with "el permiso fue
-anulado" — and all three checks confirmed written to live Firestore with no
-guard device or connection data in them. The QR-reading library was separately
-proved to decode exactly the QR this product draws. **The phone camera itself is
-not yet verified** — see Known issues.
+**Proved, not inferred.** Same request, same fake code, two origins:
 
-**Previously verified:** 2026-08-29 — backend typecheck clean, 166/166 tests pass; frontend typecheck clean, 38/38 tests pass, production build clean; the permit flow driven in a real browser against live Firebase and live Firestore: a permit issued for apartment 302, its QR proved to encode the permit's own code, deleting that apartment correctly refused while the permit was live, and the permit revoked, with its code and QR disappearing.
+| From | Google's answer |
+|---|---|
+| The app's own domain | `400 INVALID_OOB_CODE` — the API works |
+| Firebase's password page | `403 Requests from referer ... are blocked` |
 
-**Previously verified:** 2026-08-28 — backend 122/122, frontend 22/22; the whole people flow driven in a real browser: a resident's account created by the administrator, the member list showing her with the email Firebase holds, an apartment handed over to her, and removing her correctly refused while she was still in charge of it.
+The key was restricted at `23:49:08`. The Founder's account was created at
+`23:51:42` — **2 minutes 34 seconds later.** Sign-in kept working because the
+app's own origin was on the list. Only the way back in was not.
 
-**Previously verified:** 2026-08-27 — backend typecheck clean, 102/102 tests pass; frontend typecheck clean, 16/16 tests pass, production build clean; the whole setup flow driven in a real browser against live Firebase and live Firestore: account created, organization created, site added, apartment added with its responsable, apartment deleted, and deleting a site correctly refused while it still had apartments in it.
+**Under Decision 006 this is not a founder inconvenience.** The same call sends
+every resident's and every guard's "set your password" email. The product's only
+door has been shut since the day before it was first used.
 
----
+**And no test in this repository could ever have caught it.** 188 backend and 48
+frontend tests were green throughout, and would stay green: none of them leaves
+the app's own origin. Recorded as risk R-19 — the lesson is not the referrer
+list, it is that changing an access control needs a hand-run check of every flow
+that crosses an origin boundary.
+
+**Not fixed.** The one-line fix needs console access this session did not have.
+It is step 1 of the ordered list below.
+
+## What else this session established
+
+- **The US$300 GCP credit is active, expires 2026-11-17, and is shared with the
+  Founder's other projects.** So every "US$0.00" reading until then proves
+  nothing — a stack inside Always Free and one billed-then-credited look
+  identical and diverge on one day. The budget alert must therefore be set on the
+  **billing account**, not this project, or it watches the wrong pool.
+- **Finance had no owner for 13 days.** This project's registry gated finance on
+  revenue; the framework gates it on the first spend. `budget.md` named an owner
+  who had never been appointed. FP&A Manager and Procurement / Vendor Manager are
+  now active, FP&A backdated to 2026-08-19.
+- **`npm run costs` now exists**, because a role in a document does not read a
+  bill. It measures how full each free tier is and says plainly that it is not
+  the invoice. First run: Artifact Registry went 107.4 MB → 133.2 MB **after a
+  single deploy** — ~5% of the free allowance per deploy, growing with deploy
+  count and not with customers.
+- **The domain is bought:** `zeker.com.co`, Cloudflare, US$15/year = 25% of the
+  ceiling. Registered but not yet resolving — verified from outside as NXDOMAIN,
+  which is a setup step, not a fault in the purchase.
+- **Two meetings ran for the first time**, with eight roles convened as real
+  subagents. Records in `docs/meetings/`.
+
+## Verified, and how
+
+- Typecheck clean; **48 frontend and 188 backend tests pass**.
+- The free fixes are **deployed** to `zeker-web` revision `00004-c6h`, and the
+  live bundle was downloaded and confirmed to carry them. **They will not be
+  visible until step 1 is done** — today the page never gets far enough to show
+  a Zeker error at all.
+- The API key diagnosis was proved by direct API call, not reasoned about.
+- Artifact Registry, KMS versions and the billing-account link were read live.
+- **Not verified:** the actual bill, the 2026-08-19 billing alert, and whether
+  anything in this stack is truly inside Always Free rather than credited.
+
+## Deployed but unproven
+
+The reset flow still fails for the Founder as of session close. Everything below
+assumes step 1 lands; if it does not, the diagnosis was wrong and the session's
+central finding needs revisiting.
 
 ## Current Milestone
 
@@ -470,13 +501,13 @@ works end to end on the server.
 ✅ **Architecture & Technology**
 - Stack decided: GCP Cloud (Firestore, Cloud Run, Firebase Auth, Vercel)
 - Multi-tenancy design: org-level isolation, one admin → multiple orgs
-- Encryption strategy: AES-256 at rest, TLS in transit
+- ~~Encryption strategy: AES-256 at rest~~ — **superseded by Decisions 002 and 005** (2026-09-01 cleanup). TLS in transit stands. Nothing in the MVP needs our own encryption: the API never sees a password (002) and no phone number is collected (005). The KMS key is kept, unused
 - PWA: Yes (for offline read capability)
 
 ✅ **Security & Compliance**
 - Data minimization rules written
 - Never store: IDs, photos, biometrics, addresses
-- Encrypt: Emails, phone numbers
+- ~~Encrypt: Emails, phone numbers~~ — **never built, and correctly so.** Decisions 002 and 005 removed the need. Corrected 2026-09-01; it had read as completed work since 2026-08-26
 - Retention: 90 days events, 1 year auth records
 - Compliance target: Ley 1581/2016 (Colombia)
 
@@ -681,7 +712,7 @@ works end to end on the server.
 ### Phase 2: Customer Validation (Weeks 5-8)
 
 1. **Recruit Beta Users** (Ongoing)
-   - [ ] Contact schools/colegios in Bogotá
+   - [ ] Contact administrators of residential and business complexes in Bogotá **(corrected 2026-09-01 — this said "schools" for a day after Decision 010 changed the segment)**
    - [ ] Onboard 5-10 pilot customers
    - [ ] Train on platform
 
@@ -1244,7 +1275,7 @@ Blocker:        Data model + MVP scope locked until this approved
 - **Web + PWA** — No mobile native (Phase 2+)
 - **Multi-admin-multi-org** — One user can manage multiple organizations
 - **Data Minimization** — Never store IDs, photos, detailed addresses
-- **Encryption at Rest** — AES-256 for emails, phones
+- ~~**Encryption at Rest** — AES-256 for emails, phones~~ — **not an active decision.** Superseded by 002 and 005; removed from this list 2026-09-01 by the session-close contradiction check
 - **90-day Event Retention** — Auto-delete access logs after 90 days
 
 ### Superseded Decisions
@@ -1442,8 +1473,28 @@ what happens next and in what order. **Y** = only the Founder can do it.
 
 | # | Do | Who | Why it is first |
 |---|---|---|---|
-| 1 | **Fix the API key referrer.** Add `https://zeker-505918.firebaseapp.com/*` to the browser key's allowed list | **Y** — 30 s | Password recovery has never worked. No sign-in, no phone test, no demo, no discovery call |
+| 1 | **Fix the API key referrer** — the exact command is below | **Y** — 30 s | Password recovery has never worked. No sign-in, no phone test, no demo, no discovery call |
 | 2 | Request a reset link and sign in | **Y** — 2 min | Proves 1 worked. If it still fails, stop and say so — the diagnosis was wrong |
+
+```bash
+gcloud services api-keys update   projects/880033266233/locations/global/keys/22180854-c084-41a2-ab6c-df3ba4d97cd1   --allowed-referrers="https://zeker-web-880033266233.us-central1.run.app/*,https://zeker-505918.firebaseapp.com/*"
+```
+
+That key is `Browser key (auto created by Firebase)`, the one whose value sits in
+`frontend/.env.production`. It stays restricted to two domains, both ours — the
+restriction is not being loosened, it is being made complete.
+
+**Verify it worked without touching the product**, by asking Google the same
+question from the blocked origin. Before the fix this returns `403 blocked`;
+after it, `400 INVALID_OOB_CODE`, which means the key is accepted and only the
+fake code is refused:
+
+```bash
+curl -s -X POST   "https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=$(grep NEXT_PUBLIC_FIREBASE_API_KEY frontend/.env.production | cut -d= -f2)"   -H "Content-Type: application/json"   -H "Referer: https://zeker-505918.firebaseapp.com/__/auth/action"   -d '{"oobCode":"PRUEBA"}'
+```
+
+**Step 8 removes the need for this exception entirely** — once the action page
+lives on our own host, `firebaseapp.com` comes back off the list.
 
 #### This week — the money, because it now has a deadline
 
