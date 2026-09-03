@@ -22,6 +22,19 @@ PROJECT="zeker-505918"
 REGION="us-central1"
 QUE="${1:-todo}"
 
+# Las direcciones de navegador a las que la API le permite hablar.
+#
+# Esto vive aqui, en el repositorio, porque `--set-env-vars` NO agrega: reemplaza
+# todo lo que el servicio tenia. El 2026-09-03 esta lista estaba puesta a mano en
+# la consola y no aqui, asi que una publicacion normal la borro y la aplicacion
+# entera dejo de funcionar — diciendo "revise su conexion a internet", que es
+# falso y manda a la persona a buscar el problema donde no esta.
+#
+# Si alguna vez hay que agregar una direccion, se agrega AQUI. Un valor puesto a
+# mano en la consola queda escrito en un solo lugar que ninguna publicacion
+# respeta.
+CORS_ORIGINS="https://zeker-web-880033266233.us-central1.run.app"
+
 if [ "${QUE}" = "todo" ] || [ "${QUE}" = "api" ]; then
   echo "== Publicando la API"
   (
@@ -31,7 +44,7 @@ if [ "${QUE}" = "todo" ] || [ "${QUE}" = "api" ]; then
       --region "${REGION}" \
       --project "${PROJECT}" \
       --service-account "zeker-backend@${PROJECT}.iam.gserviceaccount.com" \
-      --set-env-vars "NODE_ENV=production,GCP_PROJECT_ID=${PROJECT}"
+      --set-env-vars "NODE_ENV=production,GCP_PROJECT_ID=${PROJECT},CORS_ORIGINS=${CORS_ORIGINS}"
   )
 fi
 
@@ -54,7 +67,11 @@ fi
 
 echo ""
 echo "== Publicado"
-echo "   https://zeker-web-krsxkgch7q-uc.a.run.app"
+# La direccion canonica: la que muestra la consola de Cloud Run y la que una
+# persona guarda en favoritos. El servicio responde tambien en
+# zeker-web-krsxkgch7q-uc.a.run.app, y esa segunda puerta fue la que produjo
+# el bloqueo del 2026-09-02 (R-25). Una sola se nombra aqui, a proposito.
+echo "   https://zeker-web-880033266233.us-central1.run.app"
 echo ""
 echo "   Verifíquelo a mano. Las pruebas no vieron nunca la puerta cerrada"
 echo "   que estuvo cerrada dos dias (R-19, R-26)."

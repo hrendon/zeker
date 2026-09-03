@@ -2,10 +2,91 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-09-02
+**Last updated:** 2026-09-03
 
-**Session closed 2026-09-02. Somebody used Zeker for real, for the first time —
-after three separate locks on the same door were found and opened.**
+**Decision 014 is live and proven by hand. The unit that had been built but
+never driven by a person is closed — and publishing it exposed a fourth
+configuration that existed nowhere but a console.**
+
+---
+
+# Session 2026-09-03
+
+## Objective
+
+Close Decision 014: publish what had been built on 2026-09-02 and drive it by
+hand in a real browser. Nothing else was to start before that closed.
+
+## What happened
+
+**Decision 014 works, and a person proved it.** Three hand-run cases, all pass:
+a one-entry permit is spent by being used and says so; a free-entries permit
+keeps working and counts; a permit issued before the decision keeps the rule it
+was issued under. The refusal at the gate reads word for word what was written
+in advance: *"Este permiso era para una sola entrada y ya se usó. Pídale al
+residente que haga uno nuevo."*
+
+**Publishing broke the whole product for a few minutes, and it was not the
+Decision.** `scripts/desplegar.sh` uses `--set-env-vars`, which replaces every
+value rather than adding one. The API's list of browser origins
+(`CORS_ORIGINS`) had been set by hand in the console and **was never in the
+repository**, so a routine publish erased it. Every screen that reads data
+died, showing *"revise su conexión a internet"* — which sends a person to look
+for the fault in their own network.
+
+| Revision | Allowed origins |
+|---|---|
+| Before (`zeker-api-00003-nks`) | `https://zeker-web-880033266233.us-central1.run.app` |
+| What the publish produced (`00004-ncm`) | **empty** |
+| After the fix (`00005-ml2`) | restored, and now declared in the script |
+
+**This is the fourth time in three days the same shape of failure has appeared:
+a setting that lives in exactly one place no process respects.** R-25 (two
+Cloud Run addresses, one on the key), R-26 (a second Firebase permission list),
+and now R-28. Recorded as **R-28**, and the fix is not the value — it is that
+the value is in the repository.
+
+**The Founder found a real interface defect within a minute of signing in:**
+Edge draws its own eye icon inside a password field and it lands on top of our
+"Mostrar la contraseña" button. Reproduced and fixed, with the before and after
+both photographed in the same browser.
+
+## What was built or fixed
+
+* **`CORS_ORIGINS` now lives in `scripts/desplegar.sh`**, with a comment saying
+  what it broke and why it is there.
+* **The deploy script names one address**, the canonical one. It was printing
+  the second Cloud Run address — the one nobody should bookmark, and the shape
+  of R-25.
+* **`docs/delivery/manual-test-cases.md` exists.** `TC-AUTH-RESET-01` and
+  `TC-PHONE-01` had been named in the state file and a meeting record since
+  2026-09-01 and **were never written anywhere**. The file now holds them, plus
+  TC-014-01/02/03 with their pass/fail lines and a run log.
+* **Edge's native password reveal is hidden** so our own labelled button is the
+  only control.
+
+## Verified, and how
+
+* 198 backend tests, 66 frontend tests, typecheck and production build: pass.
+* **By hand, in a real browser, against production:** TC-014-01, TC-014-02 and
+  TC-014-03, every step, recorded step by step in
+  `docs/delivery/manual-test-cases.md` with screenshots.
+* **The CORS fix was proved the way the failure was found** — the same request
+  from the same origin, before and after: the `access-control-allow-origin`
+  header absent, then present.
+* **The icon fix was proved by removing it again**: the icon reappears without
+  the rule and is gone with it, same browser, same eight typed characters.
+
+## Not done, deliberately
+
+* **The icon fix is committed and not published.** It needs a web deploy, and
+  each deploy costs ~5% of the free image-registry allowance. It rides with the
+  next unit rather than alone.
+* **`LOG_LEVEL=debug` was not restored.** The publish erased it along with
+  `CORS_ORIGINS`; the code's declared default is `info`. Debug logging in
+  production writes far more log, and logs are read by more people than permits
+  are. Say the word and it goes back.
+* Decision 015 is still not built. It is the next unit.
 
 ---
 
@@ -188,18 +269,20 @@ central finding needs revisiting.
 🟢 **The product is visible in a browser for the first time** (Camino B: Build first, validate after)
 
 ```
-Completed:       A person can now be let into this product and use it. Set-up,
-                 issuing, the door — and as of 2026-09-02 the way in works for
-                 somebody who is not already inside, which it never had
-                 (198 backend + 66 frontend tests pass)
-In Progress:     Decision 014 built, committed, NOT deployed and never driven
-                 by hand. Deploying it is the next action
+Completed:       A person can be let into this product and use it — set-up,
+                 issuing, the door, the way back in. And as of 2026-09-03 a
+                 permit that may be used once is used once, proven by hand
+                 against production (198 backend + 66 frontend tests pass)
+In Progress:     Nothing. Decision 014's cycle closed 2026-09-03. The next
+                 unit is Decision 015, not started
 Blocked:         0 · D-006 and D-008 still waiting on the Founder,
                  neither blocking
 Critical Risk:   R-23 — losing this laptop is losing control of production.
                  Five actions, ~25 minutes, only the Founder can do them
-Next:            Deploy and verify Decision 014 by hand on a phone. Then build
-                 Decision 015. Then the entry history
+New Risk:        R-28 — a publish erases any API setting not declared in the
+                 deploy script. Fixed for CORS_ORIGINS; nothing checks the rest
+Next:            Build Decision 015 (what a guard records when nobody comes
+                 in). Then the entry history, with its indexes proven live
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**
@@ -1660,7 +1743,7 @@ minutes beforehand or the speed measurement is meaningless.
 
 | Do | State |
 |---|---|
-| **Decision 014 — one entry or many.** The resident chooses when issuing; the permit itself counts the entries; "ya se usó" is a named refusal at the gate; the detail screen says whether anybody came in | **Built.** 198 backend and 66 frontend tests, typecheck and build pass. **Not yet driven by hand** — that is the only thing that makes it done |
+| **Decision 014 — one entry or many.** The resident chooses when issuing; the permit itself counts the entries; "ya se usó" is a named refusal at the gate; the detail screen says whether anybody came in | ✅ **Done 2026-09-03.** Published (`zeker-web-00005-x8k`) and driven by hand against production: TC-014-01, TC-014-02 and TC-014-03 all pass, step by step, in `docs/delivery/manual-test-cases.md` |
 | **Decision 015 — what a guard records when nobody comes in.** Four fixed reasons, no free text; "el visitante no entró" gives a one-entry permit back | Decided and written. **Not built** — the next unit |
 
 #### The machine we work on — added 2026-09-02, all five are your hands

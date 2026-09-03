@@ -24,6 +24,8 @@ Map of authoritative sources for project knowledge.
 | API key snapshots | `security/api-key-snapshots/` | The browser key's restrictions as they stood before each change, one file per date. Evidence that a change was made deliberately, and what to restore | Security Engineer |
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
 | Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
+| **Delivery / QA** | | | |
+| Hand-run test cases | `delivery/manual-test-cases.md` | The tests a person runs in a real browser or phone, each with its pass/fail line written in advance. Automated suites have gone green three times while the product was broken | QA Engineer |
 | **Decisions** | | | |
 | Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A Manager |
 | Indicators | `business/indicators.md` | The live scoreboard: target, current value, status. Each role owns its own rows. **UNMEASURED is a valid value; a guess is not** | Each owning role |

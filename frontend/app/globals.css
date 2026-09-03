@@ -39,3 +39,15 @@ body {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
+
+/* Edge draws its own eye icon inside a password field as soon as it has text,
+   and it lands exactly on top of our "Mostrar la contraseña" button. Two
+   controls for the same thing, one covering the other — found by the Founder
+   in a real browser on 2026-09-03. Ours stays: it is a labelled button, it
+   works with a keyboard and a screen reader, and it reads the same on every
+   browser. Edge's is removed rather than moved, because moving it would leave
+   two ways to do the same thing on one browser and one on the rest. */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
+}
