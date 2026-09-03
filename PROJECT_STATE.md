@@ -132,6 +132,63 @@ recorded as not hand-tested rather than as tested.
 through, because it now lives in the deploy script. Proved by a real deploy, not
 reasoned about.
 
+## Then: the entry history (US-007)
+
+**Built, published and partly proven by hand.** What happened at the doors,
+newest first, with a date range and a "solo los rechazados" switch — the
+smaller filter set the Founder chose, because every filter is another index
+that must be deployed and proved.
+
+**The indexes were deployed and read back `READY` before the query was
+written.** That is the opposite order to the three times this project shipped
+an index declared and never deployed, every time with a green suite (R-16). Six
+composite indexes are now live, confirmed with `gcloud`.
+
+**Who may read it is the design, not a setting.** An administrator sees the
+whole organization; a responsable sees only their own interiors, scoped **in
+the query** rather than filtered afterwards; **security staff cannot open it at
+all** — no tab, and the API refuses them. Whoever can read who came into which
+apartment, at what time, for ninety days holds exactly what Decision 007 kept
+out of a guard's hands.
+
+**Verified by hand against production** (`zeker-web-00007-sxd`,
+`zeker-api-00007-mdz`), five of seven steps of TC-HIST-01: the list and its
+ordering, a refusal naming which refusal it was, the date range (including the
+same day in both boxes, which is where this kind of filter breaks), "solo los
+rechazados", and a guard's note appearing under the check it corrects. The
+audit trail now reads as a sentence: *"El portero anotó: El visitante no entró
+· Se le devolvió la entrada."*
+
+**Two steps not yet passed, and neither is marked as passed:**
+
+* **Step C — a responsable cannot see another apartment.** This is the
+  criterion Product Owner set for accepting the unit. It needs a second
+  responsable, which did not exist. Interior `202` and the member `Vecina
+  Prueba` (`hdrahernan+prueba@gmail.com`, the Founder's own alias) were created
+  for it; the account exists and has never signed in. **Waiting on the Founder
+  to set its password from the invitation email.** Interior `101`, which holds
+  every event so far, has no responsable — so the expected result is that
+  Vecina Prueba sees nothing at all while eleven events exist.
+* **Step D — a guard cannot open it.** No security account exists in this
+  organization, and creating one costs another email and another password.
+  **Covered by test, not by hand**, and recorded that way: four frontend tests
+  assert a guard's tab list is exactly `["gate"]`, and a backend test asserts
+  the API answers 403.
+
+**A side effect worth recording:** creating that member showed the people
+screen of 2026-09-02 working for the first time — "Aún no ha entrado" appeared
+for a person who has an account but no password. Built that day, never seen
+alive until now.
+
+**`tabsFor` moved to `frontend/lib/navigation.ts`.** It decides whether a guard
+is offered the history, and it had no test because it could not have one where
+it lived. It is now where this codebase keeps rules it wants to test.
+
+**US-007's acceptance criteria were rewritten.** They carried the school
+framing Decision 010 superseded, and said nothing about the responsable
+isolation, the guard exclusion, or the indexes being deployed rather than
+declared.
+
 ## Not done, deliberately
 
 * ~~The icon fix is committed and not published.~~ **Published with Decision
@@ -331,18 +388,19 @@ Completed:       A person can be let into this product and use it — set-up,
                  issuing, the door, the way back in. And as of 2026-09-03 a
                  permit that may be used once is used once, and one burned
                  by mistake comes back, both proven by hand against
-                 production (217 backend + 75 frontend tests pass)
-In Progress:     Nothing. Decisions 014 and 015 both closed 2026-09-03,
-                 published and driven by hand
+                 production (236 backend + 93 frontend tests pass)
+In Progress:     The entry history — built, published, five of seven
+                 hand-run steps pass. Blocked on one Founder action: set
+                 the password for the test responsable so the isolation
+                 step can run
 Blocked:         0 · D-006 and D-008 still waiting on the Founder,
                  neither blocking
 Critical Risk:   R-23 — losing this laptop is losing control of production.
                  Five actions, ~25 minutes, only the Founder can do them
 New Risk:        R-28 — a publish erases any API setting not declared in the
                  deploy script. Fixed for CORS_ORIGINS; nothing checks the rest
-Next:            The entry history, with its indexes proven live — the
-                 largest unit left, and where a note first becomes readable
-                 by an administrator
+Next:            Close the history (step C), then the money and the
+                 domain — both the Founder's hands, both with a deadline
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**

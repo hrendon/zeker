@@ -22,7 +22,7 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-02 | Un permiso de entradas libres sigue sirviendo | ✅ pasó 2026-09-03 |
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
 | TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
-| TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ⬜ nunca corrido |
+| TC-HIST-01 | El historial, y sobre todo quién NO lo ve | 🟡 5 de 7 pasan 2026-09-03; falta el paso C |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -447,3 +447,33 @@ despliegue de verdad y no razonada.
 Fundador, con nombres obviamente falsos: `Prueba 014 Una Entrada` (gastado),
 `Prueba 014 Libres` y `Prueba 015 Devolucion` (activos hasta el 4 de
 septiembre). Ninguno guarda nada de una persona real.
+
+## 2026-09-03 — TC-HIST-01, parcial
+
+**Contra:** producción. Aplicación `zeker-web-00007-sxd`, API `zeker-api-00007-mdz`.
+**Quién:** la sesión de IA, con la sesión del Fundador. Edge en Windows.
+
+**Resultado: cinco de siete pasan. Dos no se han corrido, y no se marcan como
+aprobados.**
+
+| Paso | Resultado |
+|---|---|
+| A | ✅ La lista carga con lo más reciente arriba: quién, qué interior, cuándo, por qué entrada y si entró |
+| B | ✅ Un rechazo dice cuál fue: *"Ese código no existe. Revise que esté bien escrito."* y *"Este permiso era para una sola entrada y ya se usó."* |
+| C | ⏳ **Sin correr.** Necesita un segundo responsable. Se creó el interior `202` con la persona `Vecina Prueba` (`hdrahernan+prueba@gmail.com`), y falta que el Fundador le ponga contraseña desde el correo de invitación |
+| D | ⚠️ **Cubierto por prueba, no a mano.** No existe una cuenta de portero en esta organización. Cuatro pruebas de frontend comprueban que la lista de pestañas de un portero es exactamente `["gate"]`, y una de backend que la API responde 403 |
+| E | ✅ 11 filas sin filtro → 1 poniendo el mismo día en las dos casillas, y es la entrada de ese día. El caso que rompe este tipo de filtro no ocurre |
+| F | ✅ "Solo los rechazados" deja exactamente los dos rechazos, cada uno con su motivo |
+| G | ✅ La anotación del portero aparece debajo de la revisión que corrige: *"El portero anotó: El visitante no entró · Se le devolvió la entrada."* |
+
+**Lo que el paso F probó de paso, y vale más que el filtro:** el índice de
+`result` funcionando contra la base de datos real. Usado, no razonado.
+
+**Cómo quedará armado el paso C cuando se corra:** el interior `101` —donde
+están las once entradas de hoy— **no tiene responsable asignado**. Así que
+Vecina Prueba debe ver **nada en absoluto**, mientras once entradas existen a
+un apartamento de distancia. Es la forma más limpia posible de esta prueba.
+
+**Una función vieja verificada de rebote:** al crear a Vecina Prueba, la
+pantalla de personas mostró *"Aún no ha entrado"* — el estado construido el
+2026-09-02 y nunca visto funcionando hasta hoy.
