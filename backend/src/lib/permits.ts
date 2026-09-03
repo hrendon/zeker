@@ -55,11 +55,27 @@ import { orgRef } from './orgs.js'
 export const PERMIT_PURPOSES = ['visitor', 'pickup', 'provider', 'employee', 'other'] as const
 export type PermitPurpose = (typeof PERMIT_PURPOSES)[number]
 
+/**
+ * How many times a permit may let somebody in (Decision 014).
+ *
+ * `single` — one entry, then the permit is spent. A visit, a delivery.
+ * `multiple` — free entries until it expires. A domestic employee, a
+ * technician working across a day, anyone who goes in and out.
+ *
+ * Until 2026-09-02 every permit behaved as `multiple`, and that was never
+ * decided — it is what the code happened to do. **A permit stored without this
+ * field keeps behaving that way**, because it was issued under a rule that
+ * offered no alternative, and silently converting it to single-use would
+ * revoke access nobody agreed to revoke.
+ */
+export const PERMIT_ENTRY_MODES = ['single', 'multiple'] as const
+export type PermitEntryMode = (typeof PERMIT_ENTRY_MODES)[number]
+
 /** Stored status. Expiry is not one of these — see `stateOf`. */
 export type PermitStatus = 'active' | 'revoked'
 
 /** What a permit looks like to a person, worked out at read time. */
-export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked'
+export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked' | 'used'
 
 /** The longest a single permit may run. A permit is for a visit, not a tenancy. */
 export const MAX_PERMIT_DAYS = 365
@@ -79,10 +95,36 @@ export interface PermitDocument {
   /** Uppercase, no separator. Unique within the organization. */
   code: string
   status: PermitStatus
+  /** Decision 014. Absent on permits issued before 2026-09-02: those are `multiple`. */
+  entry_mode?: PermitEntryMode
+  /**
+   * How many people have been let in on this permit. Written by the gate, in
+   * the same transaction that decides the answer — a count written afterwards
+   * would let two guards scanning at the same instant both be told yes.
+   */
+  entry_count?: number
+  first_entry_at?: unknown
+  last_entry_at?: unknown
   created_by: string
   created_at?: unknown
   revoked_at?: unknown
   revoked_by?: string | null
+}
+
+/** What a permit was issued as. Anything stored before Decision 014 is `multiple`. */
+export function entryModeOf(stored: Partial<PermitDocument> | undefined): PermitEntryMode {
+  return stored?.entry_mode === 'single' ? 'single' : 'multiple'
+}
+
+/** How many entries this permit has already allowed. */
+export function entryCountOf(stored: Partial<PermitDocument> | undefined): number {
+  const count = Number(stored?.entry_count ?? 0)
+  return Number.isFinite(count) && count > 0 ? count : 0
+}
+
+/** A one-entry permit that has already been used. It opens nothing else. */
+export function isSpent(stored: Partial<PermitDocument> | undefined): boolean {
+  return entryModeOf(stored) === 'single' && entryCountOf(stored) >= 1
 }
 
 export function permitsCollection(orgId: string) {
@@ -154,10 +196,17 @@ export function normalizeCode(input: string): string {
  * is simply where `at` falls relative to the two dates.
  */
 export function stateOf(
-  stored: Pick<PermitDocument, 'valid_from' | 'valid_to'> & { status?: PermitStatus },
+  stored: Pick<PermitDocument, 'valid_from' | 'valid_to'> & {
+    status?: PermitStatus
+    entry_mode?: PermitEntryMode
+    entry_count?: number
+  },
   at: Date = new Date(),
 ): PermitState {
   if (stored.status === 'revoked') return 'revoked'
+  // Spent outranks the dates. "Ya se usó" tells the reader what happened to
+  // this permit; "vencido" only tells them what the clock did.
+  if (isSpent(stored)) return 'used'
 
   const now = at.toISOString()
   if (now < String(stored.valid_from)) return 'scheduled'
@@ -165,7 +214,16 @@ export function stateOf(
   return 'active'
 }
 
-/** A permit that could still let somebody in: not revoked, and not yet over. */
+/**
+ * A permit that could still let somebody in: not revoked, and not yet over.
+ *
+ * A spent one-entry permit deliberately still counts as live here. This
+ * function backs the delete guards, which ask Firestore the same question with
+ * a query — and teaching that query about `entry_count` would need a new
+ * composite index for no gain. The consequence is only that an interior with a
+ * spent permit cannot be deleted until that permit's window closes, which is
+ * exactly what happened before Decision 014.
+ */
 export function isLive(stored: Partial<PermitDocument>, at: Date = new Date()): boolean {
   if (stored.status !== 'active') return false
   return at.toISOString() <= String(stored.valid_to)
@@ -216,6 +274,12 @@ export interface PermitResponse {
   /** Shown as `A1B2-C3D4`. The QR encodes the same characters without the dash. */
   code: string
   state: PermitState
+  /** Decision 014. `multiple` for anything issued before it. */
+  entry_mode: PermitEntryMode
+  /** How many people have been let in on it. */
+  entry_count: number
+  /** When somebody was last let in, or null if nobody ever has. */
+  last_entry_at: string | null
   created_by: string
   created_at: string | null
   revoked_at: string | null
@@ -245,9 +309,14 @@ export function toPermitResponse(
         valid_from: String(stored.valid_from ?? ''),
         valid_to: String(stored.valid_to ?? ''),
         status: stored.status,
+        entry_mode: entryModeOf(stored),
+        entry_count: entryCountOf(stored),
       },
       at,
     ),
+    entry_mode: entryModeOf(stored),
+    entry_count: entryCountOf(stored),
+    last_entry_at: toIso(stored.last_entry_at),
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),
     revoked_at: toIso(stored.revoked_at),

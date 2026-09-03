@@ -403,6 +403,19 @@ describe('the record of a check', () => {
     expect(retentionDate(new Date(0), 'denied').getTime()).toBe(30 * DAY)
   })
 
+  it('counts the entry on the permit itself, not only in the history', async () => {
+    // Decision 014. The history is deleted at 90 days; the permit's own record
+    // is not, and a list of permits must not cost one query per row.
+    seedPermit(ORG, PERMIT, { entry_mode: 'multiple', entry_count: 0 })
+
+    await check(GUARD, { location_id: GATE, code: CODE })
+
+    const stored = store.docs.get(`orgs/${ORG}/authorizations/${PERMIT}`)!
+    expect(stored.entry_count).toBe(1)
+    expect(stored.last_entry_at).toBeDefined()
+    expect(stored.first_entry_at).toBeDefined()
+  })
+
   it('is never changed once written', async () => {
     seedPermit(ORG, PERMIT)
 
@@ -412,8 +425,67 @@ describe('the record of a check', () => {
     const written = store.writes.filter((entry) => entry.path.includes('/access_events/'))
     expect(written).toHaveLength(2)
     // Two separate records, and nothing updated. A log that can be edited is
-    // not evidence.
-    expect(written.every((entry) => entry.op === 'set')).toBe(true)
+    // not evidence. Since Decision 014 the write happens inside the same
+    // transaction that counts the entry, so the operation is `tx.set` rather
+    // than `set` — what matters is that it is a whole new record either way,
+    // and that nothing ever updates one.
+    expect(written.every((entry) => entry.op.endsWith('set'))).toBe(true)
+    expect(written.some((entry) => entry.op.includes('update'))).toBe(false)
     expect(new Set(written.map((entry) => entry.path)).size).toBe(2)
   })
 })
+
+describe('how many times a permit works (Decision 014)', () => {
+  it('lets the first person in on a one-entry permit, and refuses the second', async () => {
+    seedPermit(ORG, PERMIT, { entry_mode: 'single', entry_count: 0 })
+
+    const first = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(first.status).toBe(200)
+    expect(first.body.result).toBe('allowed')
+
+    const second = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(second.status).toBe(200)
+    expect(second.body.result).toBe('denied')
+    // A guard who is only told "no" cannot explain anything to the person in
+    // front of them, and that turns into an argument at the gate.
+    expect(second.body.reason).toBe('already_used')
+  })
+
+  it('lets the same person in again and again when the permit says so', async () => {
+    // A domestic employee, a technician working across a day: in and out.
+    seedPermit(ORG, PERMIT, { entry_mode: 'multiple', entry_count: 0 })
+
+    for (const _ of [1, 2, 3]) {
+      const answer = await check(GUARD, { location_id: GATE, code: CODE })
+      expect(answer.body.result).toBe('allowed')
+    }
+
+    expect(store.docs.get(`orgs/${ORG}/authorizations/${PERMIT}`)!.entry_count).toBe(3)
+  })
+
+  it('leaves permits issued before the decision working exactly as they did', async () => {
+    // No entry_mode at all: issued when there was no other option. Converting
+    // it to single-use would revoke access nobody agreed to revoke.
+    seedPermit(ORG, PERMIT)
+
+    expect((await check(GUARD, { location_id: GATE, code: CODE })).body.result).toBe('allowed')
+    expect((await check(GUARD, { location_id: GATE, code: CODE })).body.result).toBe('allowed')
+  })
+
+  it('refuses a spent permit before it looks at the entrance', async () => {
+    // The order of reasons is not cosmetic: "try the other gate" for a permit
+    // that can no longer open anything would send a guard to redirect somebody
+    // who cannot be let in anywhere.
+    seedPermit(ORG, PERMIT, { entry_mode: 'single', entry_count: 1, location_id: GATE })
+
+    const answer = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(answer.body.reason).toBe('already_used')
+  })
+
+  it('never lets a revoked permit look merely used', async () => {
+    seedPermit(ORG, PERMIT, { entry_mode: 'single', entry_count: 1, status: 'revoked' })
+
+    expect((await check(GUARD, { location_id: GATE, code: CODE })).body.reason).toBe('revoked')
+  })
+})
+

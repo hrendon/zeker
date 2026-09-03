@@ -11,6 +11,7 @@ import { interiorRef, interiorsCollection } from '../lib/interiors.js'
 import type { InteriorDocument } from '../lib/interiors.js'
 import {
   MAX_PERMIT_DAYS,
+  PERMIT_ENTRY_MODES,
   PERMIT_PURPOSES,
   newCode,
   newPermitId,
@@ -50,13 +51,19 @@ const CreatePermitSchema = z
     interior_id: z.string().trim().min(1),
     visitor_name: z.string().trim().min(1).max(120),
     purpose: z.enum(PERMIT_PURPOSES).optional(),
+    /**
+     * Decision 014. Absent means `single`: a permit is for a visit unless the
+     * person issuing it says otherwise. The screen asks the question outright,
+     * so this default only covers a caller that does not.
+     */
+    entry_mode: z.enum(PERMIT_ENTRY_MODES).optional(),
     /** ISO 8601. Checked for range and order by `readWindow` below. */
     valid_from: z.string().trim().min(1),
     valid_to: z.string().trim().min(1),
   })
   .strict()
 
-const STATES: readonly PermitState[] = ['scheduled', 'active', 'expired', 'revoked']
+const STATES: readonly PermitState[] = ['scheduled', 'active', 'expired', 'revoked', 'used']
 
 function badRequest(error: z.ZodError): ReturnType<typeof invalidRequest> {
   return invalidRequest(
@@ -190,6 +197,10 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
             valid_to: window.valid_to,
             code: candidate,
             status: 'active',
+            entry_mode: parsed.data.entry_mode ?? 'single',
+            entry_count: 0,
+            first_entry_at: null,
+            last_entry_at: null,
             created_by: uid,
             created_at: FieldValue.serverTimestamp(),
             revoked_at: null,
@@ -230,6 +241,8 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
           valid_to: window.valid_to,
           code,
           status: 'active',
+          entry_mode: parsed.data.entry_mode ?? 'single',
+          entry_count: 0,
           created_by: uid,
           created_at: { toDate: () => now },
         },
@@ -301,8 +314,11 @@ permitsRouter.get('/', requireAuth, requireOrgMember, async (req, res, next) => 
         const rank: Record<PermitState, number> = {
           active: 0,
           scheduled: 1,
-          expired: 2,
-          revoked: 3,
+          // A spent permit is finished business, like an expired one, but it
+          // is the more interesting of the two: somebody actually came in.
+          used: 2,
+          expired: 3,
+          revoked: 4,
         }
         if (rank[a.state] !== rank[b.state]) return rank[a.state] - rank[b.state]
         return b.valid_from.localeCompare(a.valid_from)

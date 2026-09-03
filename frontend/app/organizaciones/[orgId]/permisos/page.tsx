@@ -6,8 +6,16 @@ import { useAuth } from '@/components/AuthProvider'
 import { OrgGate, OrgHeader, useOrgId } from '@/components/OrgShell'
 import { Field, ListRow, Notice, SubmitButton } from '@/components/ui'
 import { ApiError, toSpanish } from '@/lib/errors'
-import { interiorsApi, permitsApi, type Interior, type Org, type Permit } from '@/lib/api'
 import {
+  interiorsApi,
+  permitsApi,
+  type Interior,
+  type Org,
+  type Permit,
+  type PermitEntryMode,
+} from '@/lib/api'
+import {
+  ENTRY_MODE_OPTIONS,
   PURPOSE_OPTIONS,
   checkWindow,
   defaultWindow,
@@ -45,6 +53,8 @@ function PermitsScreen({ org }: { org: Org }) {
   const [interiorId, setInteriorId] = useState('')
   const [visitorName, setVisitorName] = useState('')
   const [purpose, setPurpose] = useState<(typeof PURPOSE_OPTIONS)[number]['value']>('visitor')
+  // A permit is for a visit unless the resident says otherwise (Decision 014).
+  const [entryMode, setEntryMode] = useState<PermitEntryMode>('single')
   const [validFrom, setValidFrom] = useState(() => defaultWindow().from)
   const [validTo, setValidTo] = useState(() => defaultWindow().to)
 
@@ -114,6 +124,7 @@ function PermitsScreen({ org }: { org: Org }) {
         interior_id: interiorId,
         visitor_name: visitorName,
         purpose,
+        entry_mode: entryMode,
         valid_from: from,
         valid_to: to,
       })
@@ -179,7 +190,11 @@ function PermitsScreen({ org }: { org: Org }) {
                     permit.valid_to,
                   )}`}
                   badge={stateLabel(permit.state)}
-                  dimmed={permit.state === 'expired' || permit.state === 'revoked'}
+                  dimmed={
+                    permit.state === 'expired' ||
+                    permit.state === 'revoked' ||
+                    permit.state === 'used'
+                  }
                   actions={[
                     {
                       label: es.permits.open,
@@ -243,6 +258,28 @@ function PermitsScreen({ org }: { org: Org }) {
                     label: option.label,
                   }))}
                 />
+
+                {/*
+                  The first question on this form that changes what a permit
+                  *is*, so the consequence of each answer is spelled out under
+                  it rather than left to the label — the same shape the people
+                  screen uses for choosing somebody's role.
+                */}
+                <div>
+                  <Select
+                    label={es.permits.entryMode}
+                    value={entryMode}
+                    disabled={creating}
+                    onChange={(value) => setEntryMode(value as PermitEntryMode)}
+                    options={ENTRY_MODE_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                  />
+                  <p className="mt-1.5 text-sm text-[var(--color-ink-faint)]">
+                    {ENTRY_MODE_OPTIONS.find((option) => option.value === entryMode)?.hint}
+                  </p>
+                </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field

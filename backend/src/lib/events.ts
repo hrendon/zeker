@@ -55,6 +55,9 @@ import { orgRef } from './orgs.js'
 export const DENY_REASONS = [
   'invalid_code',
   'revoked',
+  // Decision 014: a one-entry permit that already let somebody in. A guard who
+  // is only told "no" cannot explain anything to the person in front of them.
+  'already_used',
   'not_started',
   'expired',
   'wrong_location',

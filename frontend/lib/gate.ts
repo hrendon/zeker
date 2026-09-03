@@ -18,6 +18,7 @@ import type { DenyReason } from './api'
 const DENY_MESSAGES: Record<DenyReason, string> = {
   invalid_code: es.gate.reasonInvalidCode,
   revoked: es.gate.reasonRevoked,
+  already_used: es.gate.reasonAlreadyUsed,
   not_started: es.gate.reasonNotStarted,
   expired: es.gate.reasonExpired,
   wrong_location: es.gate.reasonWrongLocation,

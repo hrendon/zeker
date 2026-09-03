@@ -86,7 +86,15 @@ export type PermitPurpose = 'visitor' | 'pickup' | 'provider' | 'employee' | 'ot
  * What a permit is right now. Worked out by the server from the dates — it is
  * not stored, so nothing has to run on a schedule to keep it true.
  */
-export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked'
+export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked' | 'used'
+
+/**
+ * How many times a permit works (Decision 014).
+ *
+ * `single` — one entry, then it is spent. A visit, a delivery.
+ * `multiple` — free entries until it expires. Somebody who goes in and out.
+ */
+export type PermitEntryMode = 'single' | 'multiple'
 
 /** An entry permit for one visitor, at one interior, between two moments. */
 export interface Permit {
@@ -104,6 +112,12 @@ export interface Permit {
   /** Shown as `A1B2-C3D4`. The QR encodes the same characters without the dash. */
   code: string
   state: PermitState
+  /** Decision 014. `multiple` for anything issued before it. */
+  entry_mode: PermitEntryMode
+  /** How many people have been let in on it. */
+  entry_count: number
+  /** When somebody was last let in, or null if nobody ever has. */
+  last_entry_at: string | null
   created_by: string
   created_at: string | null
   revoked_at: string | null
@@ -385,6 +399,8 @@ export const permitsApi = {
       interior_id: string
       visitor_name: string
       purpose?: PermitPurpose
+      /** Decision 014. The server treats an absent value as `single`. */
+      entry_mode?: PermitEntryMode
       /** ISO 8601. `toIsoInstant` in lib/permits.ts builds these. */
       valid_from: string
       valid_to: string
@@ -411,6 +427,8 @@ export const permitsApi = {
 export type DenyReason =
   | 'invalid_code'
   | 'revoked'
+  /** Decision 014: a one-entry permit that has already let somebody in. */
+  | 'already_used'
   | 'not_started'
   | 'expired'
   | 'wrong_location'

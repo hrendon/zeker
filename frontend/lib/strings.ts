@@ -291,6 +291,20 @@ export const es = {
     stateScheduled: 'Programado',
     stateExpired: 'Vencido',
     stateRevoked: 'Anulado',
+    // Decision 014. "Usado" outranks "vencido" on purpose: it says what
+    // happened to the permit, not what the clock did.
+    stateUsed: 'Ya se usó',
+
+    entryMode: '¿Cuántas veces sirve?',
+    entryModeSingle: 'Una sola entrada',
+    entryModeSingleHint:
+      'Deja de servir apenas la persona entre. Para una visita, un domicilio o una entrega.',
+    entryModeMultiple: 'Entradas libres hasta que venza',
+    entryModeMultipleHint:
+      'La persona puede entrar y salir las veces que necesite. Para quien trabaja en el interior o viene varias veces el mismo día.',
+    notUsedYet: 'Todavía no se ha usado',
+    usedOnce: 'Entró el',
+    usedTimes: 'Entradas registradas:',
 
     codeTitle: 'Código de entrada',
     open: 'Ver el permiso',
@@ -347,6 +361,10 @@ export const es = {
     // explain anything to the person standing in front of them.
     reasonInvalidCode: 'Ese código no existe. Revise que esté bien escrito.',
     reasonRevoked: 'El permiso fue anulado por quien lo creó.',
+    // Decision 014. This one has a second sentence because, unlike the others,
+    // there is something the person at the gate can do about it.
+    reasonAlreadyUsed:
+      'Este permiso era para una sola entrada y ya se usó. Pídale al residente que haga uno nuevo.',
     reasonNotStarted: 'El permiso todavía no empieza.',
     reasonExpired: 'El permiso ya terminó.',
     reasonWrongLocation: 'Ese permiso no es para esta entrada.',

@@ -806,6 +806,7 @@ Issue a permit. Administrators, and the responsable of the interior.
   "interior_id": "int_a1b2c3",
   "visitor_name": "Ana Ruiz Peña",
   "purpose": "visitor",
+  "entry_mode": "single",
   "valid_from": "2026-08-29T22:00:00.000Z",
   "valid_to": "2026-08-30T22:00:00.000Z"
 }
@@ -815,6 +816,13 @@ Issue a permit. Administrators, and the responsable of the interior.
 `pickup`, `provider`, `employee`, `other`. `valid_from` and `valid_to` are
 ISO 8601. Any other field is rejected — the schema is strict, so an identity
 document cannot slip in.
+
+`entry_mode` is `single` or `multiple` (Decision 014) and **defaults to
+`single`**: a permit is for a visit unless the person issuing it says otherwise.
+A `single` permit stops working once somebody has been let in on it. **Permits
+stored before 2026-09-02 carry no `entry_mode` and are read as `multiple`** —
+they were issued under a rule that offered no alternative, and converting them
+would revoke access nobody agreed to revoke.
 
 **Response (201):**
 ```json
@@ -869,8 +877,10 @@ those of the interiors they are in charge of.
 - `interior_id` — narrow to one interior (optional). A responsable asking for an
   interior that is not theirs gets `403`, rather than an empty list, so the
   screen can say why
-- `state` — `scheduled` | `active` | `expired` | `revoked` (optional). An
-  unrecognised value is `400`, not silently ignored
+- `state` — `scheduled` | `active` | `used` | `expired` | `revoked` (optional).
+  An unrecognised value is `400`, not silently ignored. `used` is a spent
+  one-entry permit; it outranks the dates, so a permit that was used and later
+  expired reads as `used`
 
 **Response (200):**
 ```json
@@ -995,10 +1005,17 @@ request itself was broken.
 }
 ```
 
-`reason` is one of `invalid_code`, `revoked`, `not_started`, `expired`,
-`wrong_location`, **evaluated in that order**. The permit's own state is settled
-before the entrance is considered, so a revoked permit never produces "try the
-other gate".
+`reason` is one of `invalid_code`, `revoked`, `already_used`, `not_started`,
+`expired`, `wrong_location`, **evaluated in that order**. The permit's own state
+is settled before the entrance is considered, so a revoked permit never produces
+"try the other gate".
+
+**An allowed check and the count are written in one transaction** (Decision
+014). The permit is re-read inside it, because a one-entry permit is spent by
+being used and two guards scanning the same code at the same instant must not
+both be told yes. The permit's own `entry_count` and `last_entry_at` are the
+record a screen reads — the entry history is deleted after 90 days, and a list
+of permits must not cost one query per row.
 
 `permit` is present whenever the code matched a real permit, including on a
 refusal — a guard turning someone away can then say who, and which interior. It

@@ -7,7 +7,7 @@ import { OrgGate, OrgHeader, useOrgId } from '@/components/OrgShell'
 import { ConfirmDialog, Notice, TextLink } from '@/components/ui'
 import { toSpanish } from '@/lib/errors'
 import { permitsApi, type Org, type Permit } from '@/lib/api'
-import { formatMoment, purposeLabel, stateLabel } from '@/lib/permits'
+import { formatMoment, purposeLabel, stateLabel, useLine } from '@/lib/permits'
 import { es } from '@/lib/strings'
 
 /**
@@ -147,7 +147,25 @@ function PermitScreen({ org }: { org: Org }) {
                 <dt className="text-[var(--color-ink-faint)]">{es.permits.validTo}</dt>
                 <dd>{formatMoment(permit.valid_to)}</dd>
               </div>
+              <div className="flex gap-2">
+                <dt className="text-[var(--color-ink-faint)]">{es.permits.entryMode}</dt>
+                <dd>
+                  {permit.entry_mode === 'single'
+                    ? es.permits.entryModeSingle
+                    : es.permits.entryModeMultiple}
+                </dd>
+              </div>
             </dl>
+
+            {/*
+              Whether anybody actually came in — the question the Founder asked
+              for on 2026-09-02, the day the product was first used for real.
+            */}
+            {useLine(permit, formatMoment) ? (
+              <p className="mt-3 text-sm text-[var(--color-ink-soft)]">
+                {useLine(permit, formatMoment)}
+              </p>
+            ) : null}
 
             {usable ? (
               <div className="mt-6 border-t border-[var(--color-line)]/60 pt-6">

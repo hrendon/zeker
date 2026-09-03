@@ -1,5 +1,5 @@
 import { es } from './strings'
-import type { PermitPurpose, PermitState } from './api'
+import type { Permit, PermitEntryMode, PermitPurpose, PermitState } from './api'
 
 /**
  * The date and text handling behind the permit screens.
@@ -92,6 +92,7 @@ export function checkWindow(
 const STATE_LABELS: Record<PermitState, string> = {
   active: es.permits.stateActive,
   scheduled: es.permits.stateScheduled,
+  used: es.permits.stateUsed,
   expired: es.permits.stateExpired,
   revoked: es.permits.stateRevoked,
 }
@@ -138,4 +139,48 @@ export function formatMoment(iso: string): string {
 /** "30 ago 2026, 2:00 p. m. → 31 ago 2026, 2:00 p. m." */
 export function formatWindow(from: string, to: string): string {
   return `${formatMoment(from)} → ${formatMoment(to)}`
+}
+
+// ---------------------------------------------------------------------------
+// How a permit has been used (Decision 014)
+// ---------------------------------------------------------------------------
+
+export const ENTRY_MODE_OPTIONS: ReadonlyArray<{
+  value: PermitEntryMode
+  label: string
+  hint: string
+}> = [
+  {
+    value: 'single',
+    label: es.permits.entryModeSingle,
+    hint: es.permits.entryModeSingleHint,
+  },
+  {
+    value: 'multiple',
+    label: es.permits.entryModeMultiple,
+    hint: es.permits.entryModeMultipleHint,
+  },
+]
+
+/**
+ * One line about whether anybody has come in on this permit.
+ *
+ * Returns null when there is nothing worth saying — a permit that is over and
+ * was never used does not need a line telling the reader so.
+ */
+export function useLine(
+  permit: Pick<Permit, 'entry_count' | 'last_entry_at' | 'state'>,
+  format: (iso: string) => string,
+): string | null {
+  if (permit.entry_count > 0 && permit.last_entry_at) {
+    const when = `${es.permits.usedOnce} ${format(permit.last_entry_at)}`
+    // The count only earns its place once it stops being obvious.
+    return permit.entry_count > 1
+      ? `${when} · ${es.permits.usedTimes} ${permit.entry_count}`
+      : when
+  }
+  if (permit.state === 'active' || permit.state === 'scheduled') {
+    return es.permits.notUsedYet
+  }
+  return null
 }

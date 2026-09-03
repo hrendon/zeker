@@ -1569,6 +1569,13 @@ Runs whole once you can sign in. `TC-PHONE-01` has pass/fail lines now. Do it
 outdoors, on mobile data, at 50% brightness, with no traffic to the site for 20
 minutes beforehand or the speed measurement is meaningless.
 
+#### Built 2026-09-02, after the door opened
+
+| Do | State |
+|---|---|
+| **Decision 014 — one entry or many.** The resident chooses when issuing; the permit itself counts the entries; "ya se usó" is a named refusal at the gate; the detail screen says whether anybody came in | **Built.** 198 backend and 66 frontend tests, typecheck and build pass. **Not yet driven by hand** — that is the only thing that makes it done |
+| **Decision 015 — what a guard records when nobody comes in.** Four fixed reasons, no free text; "el visitante no entró" gives a one-entry permit back | Decided and written. **Not built** — the next unit |
+
 #### The machine we work on — added 2026-09-02, all five are your hands
 
 Audited today: this laptop holds a standing Google grant to production, in your

@@ -10,7 +10,8 @@ import { interiorRef } from '../lib/interiors.js'
 import type { InteriorDocument } from '../lib/interiors.js'
 import { locationRef } from '../lib/locations.js'
 import type { LocationDocument } from '../lib/locations.js'
-import { normalizeCode, permitsCollection, stateOf } from '../lib/permits.js'
+import { db } from '../lib/firebase.js'
+import { entryCountOf, normalizeCode, permitsCollection, stateOf } from '../lib/permits.js'
 import type { PermitDocument } from '../lib/permits.js'
 import { eventsCollection, newEventId, retentionDate } from '../lib/events.js'
 import type { AccessEventDocument, DenyReason } from '../lib/events.js'
@@ -72,11 +73,18 @@ interface PermitSummary {
  *
  * The order the reasons are evaluated matters, and is not arbitrary:
  *
- *   no such code → revoked → not started → finished → wrong entrance
+ *   no such code → revoked → already used → not started → finished →
+ *   wrong entrance
  *
  * The permit's own state is settled before the entrance is considered, so a
  * revoked permit can never produce "try the other gate" — which would send a
  * guard to redirect somebody who must not be let in anywhere.
+ *
+ * **The answer and the count are written in one transaction** (Decision 014).
+ * A one-entry permit is spent by being used, so deciding first and counting
+ * afterwards would let two guards scanning the same code at the same instant
+ * both be told yes. The permit is re-read inside the transaction for the same
+ * reason: the copy found by the code lookup may already be out of date.
  */
 validateRouter.post(
   '/',
@@ -135,27 +143,47 @@ validateRouter.post(
               await permitsCollection(orgId).where('code', '==', code).limit(1).get()
             ).docs[0]
 
-      const permit = found
-        ? ({ id: found.id, ...(found.data() as Partial<PermitDocument>) } as PermitDocument)
-        : undefined
-
-      let reason: DenyReason | null = null
-      if (!permit) {
-        reason = 'invalid_code'
-      } else {
-        const state = stateOf(permit, now)
-        if (state === 'revoked') reason = 'revoked'
-        else if (state === 'scheduled') reason = 'not_started'
-        else if (state === 'expired') reason = 'expired'
-        else if (permit.location_id !== parsed.data.location_id) reason = 'wrong_location'
-      }
-
-      const result = reason === null ? 'allowed' : 'denied'
-
       const eventId = newEventId(orgId)
-      await eventsCollection(orgId)
-        .doc(eventId)
-        .set({
+
+      const { permit, reason, result } = await db().runTransaction(async (tx) => {
+        // Re-read inside the transaction. The lookup above found the document
+        // by its code; between that read and this write somebody else's check
+        // may already have spent it.
+        const fresh = found ? await tx.get(found.ref) : undefined
+
+        const permit =
+          fresh && fresh.exists
+            ? ({ id: fresh.id, ...(fresh.data() as Partial<PermitDocument>) } as PermitDocument)
+            : undefined
+
+        let reason: DenyReason | null = null
+        if (!permit) {
+          reason = 'invalid_code'
+        } else {
+          const state = stateOf(permit, now)
+          if (state === 'revoked') reason = 'revoked'
+          else if (state === 'used') reason = 'already_used'
+          else if (state === 'scheduled') reason = 'not_started'
+          else if (state === 'expired') reason = 'expired'
+          else if (permit.location_id !== parsed.data.location_id) reason = 'wrong_location'
+        }
+
+        const result: 'allowed' | 'denied' = reason === null ? 'allowed' : 'denied'
+
+        // The permit remembers the entry itself (Decision 014). Asking the
+        // history instead would need an index, cost a query per permit in a
+        // list, and lose the answer when the history is deleted at 90 days.
+        if (result === 'allowed' && found) {
+          tx.update(found.ref, {
+            entry_count: FieldValue.increment(1),
+            last_entry_at: FieldValue.serverTimestamp(),
+            ...(entryCountOf(permit) === 0
+              ? { first_entry_at: FieldValue.serverTimestamp() }
+              : {}),
+          })
+        }
+
+        tx.set(eventsCollection(orgId).doc(eventId), {
           id: eventId,
           org_id: orgId,
           location_id: parsed.data.location_id,
@@ -172,6 +200,9 @@ validateRouter.post(
           created_at: FieldValue.serverTimestamp(),
           expires_at: retentionDate(now, result),
         } satisfies Record<keyof AccessEventDocument, unknown>)
+
+        return { permit, reason, result }
+      })
 
       // Audit trail. The code is never logged, for the same reason it is never
       // logged when a permit is created: logs are read by more people than

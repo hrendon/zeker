@@ -4,8 +4,10 @@ import {
   checkWindow,
   defaultWindow,
   formatWindow,
+  ENTRY_MODE_OPTIONS,
   purposeLabel,
   stateLabel,
+  useLine,
   toIsoInstant,
   toLocalInput,
 } from './permits'
@@ -129,3 +131,56 @@ describe('what the reader sees', () => {
     expect(formatWindow('', '')).toBe(' → ')
   })
 })
+
+describe('whether anybody has come in on a permit (Decision 014)', () => {
+  const format = (iso: string) => `[${iso}]`
+  const base = { entry_count: 0, last_entry_at: null, state: 'active' as const }
+
+  it('says nobody has used it yet, while it could still be used', () => {
+    expect(useLine(base, format)).toBe(es.permits.notUsedYet)
+    expect(useLine({ ...base, state: 'scheduled' }, format)).toBe(es.permits.notUsedYet)
+  })
+
+  it('says when somebody came in', () => {
+    const line = useLine(
+      { entry_count: 1, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'used' },
+      format,
+    )
+    expect(line).toContain('[2026-09-02T20:14:00.000Z]')
+    // One entry needs no count: "1 vez" tells the reader nothing the date did
+    // not already say.
+    expect(line).not.toContain(es.permits.usedTimes)
+  })
+
+  it('adds the count only once it stops being obvious', () => {
+    const line = useLine(
+      { entry_count: 4, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'active' },
+      format,
+    )
+    expect(line).toContain(es.permits.usedTimes)
+    expect(line).toContain('4')
+  })
+
+  it('says nothing about a finished permit nobody ever used', () => {
+    // A line telling the reader that an expired permit was never used is noise
+    // on a screen that already says it expired.
+    expect(useLine({ ...base, state: 'expired' }, format)).toBeNull()
+    expect(useLine({ ...base, state: 'revoked' }, format)).toBeNull()
+  })
+
+  it('names the spent state, and does not reuse another one for it', () => {
+    expect(stateLabel('used')).toBe(es.permits.stateUsed)
+    expect(stateLabel('used')).not.toBe(stateLabel('expired'))
+    expect(stateLabel('used')).not.toBe(stateLabel('revoked'))
+  })
+
+  it('offers exactly the two kinds of permit, each with its consequence', () => {
+    expect(ENTRY_MODE_OPTIONS.map((option) => option.value)).toEqual(['single', 'multiple'])
+    // The label alone does not say that a single-entry permit stops working;
+    // the hint has to, because that is what surprises somebody later.
+    for (const option of ENTRY_MODE_OPTIONS) {
+      expect(option.hint.length).toBeGreaterThan(option.label.length)
+    }
+  })
+})
+

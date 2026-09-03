@@ -359,11 +359,20 @@ describe('POST /orgs/{orgId}/authorizations', () => {
       .send(NEW_PERMIT)
 
     const stored = permit(ORG, res.body.id)!
+    // Every field is listed on purpose. This test is here to fail the day
+    // somebody adds a phone number, a document, or a free-text note — so it
+    // has to be updated deliberately, never loosened.
     expect(Object.keys(stored).sort()).toEqual(
       [
         'code',
         'created_at',
         'created_by',
+        // Decision 014: how the permit may be used, and what use it has had.
+        // About the permit, not about the person carrying it.
+        'entry_mode',
+        'entry_count',
+        'first_entry_at',
+        'last_entry_at',
         'id',
         'interior_id',
         'location_id',
@@ -631,3 +640,46 @@ describe('DELETE /orgs/{orgId}/authorizations/{permitId}', () => {
     expect(permit(ORG, 'auth_1')?.status).toBe('active')
   })
 })
+
+describe('one entry or many (Decision 014)', () => {
+  it('issues a permit for one entry unless the caller says otherwise', async () => {
+    // A permit is for a visit. Free entries are a deliberate choice, not what
+    // somebody gets by not reading the question.
+    signedInAs(RESIDENT)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send(NEW_PERMIT)
+
+    expect(res.status).toBe(201)
+    expect(res.body.entry_mode).toBe('single')
+    expect(res.body.entry_count).toBe(0)
+    expect(res.body.last_entry_at).toBeNull()
+    expect(permit(ORG, res.body.id)!.entry_mode).toBe('single')
+  })
+
+  it('issues a permit for free entries when asked', async () => {
+    signedInAs(RESIDENT)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send({ ...NEW_PERMIT, entry_mode: 'multiple' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.entry_mode).toBe('multiple')
+  })
+
+  it('refuses anything that is not one of the two kinds', async () => {
+    signedInAs(RESIDENT)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send({ ...NEW_PERMIT, entry_mode: 'unlimited' })
+
+    expect(res.status).toBe(400)
+  })
+})
+

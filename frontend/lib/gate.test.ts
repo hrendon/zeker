@@ -52,3 +52,22 @@ describe('why someone was turned away', () => {
     }
   })
 })
+
+describe('the refusal for a permit that was already used (Decision 014)', () => {
+  it('names it, instead of falling through to the generic answer', () => {
+    expect(denyMessage('already_used')).toBe(es.gate.reasonAlreadyUsed)
+    expect(denyMessage('already_used')).not.toBe(es.errors.unknown)
+  })
+
+  it('tells the guard what can be done about it', () => {
+    // Unlike every other refusal, there is a way out of this one, and the
+    // person at the gate should hear it rather than just "no".
+    expect(es.gate.reasonAlreadyUsed).toContain('nuevo')
+  })
+
+  it('is not confused with a revoked or expired permit', () => {
+    expect(denyMessage('already_used')).not.toBe(denyMessage('revoked'))
+    expect(denyMessage('already_used')).not.toBe(denyMessage('expired'))
+  })
+})
+
