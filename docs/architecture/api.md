@@ -1142,54 +1142,125 @@ pressed twice takes the count below what actually happened.
 
 ## Access Events Endpoint
 
-> ⚠️ **PARTLY BUILT.** The validation endpoint above **writes** access events
-> as of 2026-08-30; their stored shape is in `data-model.md`. The `GET` endpoint
-> below is **not built** — nothing reads them yet. It is the next unit, and the
-> shape below still needs correcting first: a stored event has no `visitor_name`
-> (it points at the permit, which holds the name), its `auth_id` is stored as
-> `permit_id`, and `action` is always `entry` — exits are not recorded. See
-> `../decisions/008-checking-a-permit-at-a-door.md`.
+> ✅ **BUILT 2026-09-03.** Written by `POST /orgs/{orgId}/validate`, read by the
+> endpoint below. Its composite indexes are deployed and were confirmed live
+> before the endpoint was written.
 
 ### GET /orgs/{orgId}/events
 
-List access events (entry/exit log).
+The entry history (US-007). What happened at the doors, newest first.
 
-**Query params:**
-- `auth_id` — Filter by authorization (optional)
-- `location_id` — Filter by location (optional)
-- `from_date` — Start date (optional, ISO 8601)
-- `to_date` — End date (optional)
-- `result` — "allowed" | "denied" (optional)
-- `limit` — Max results (default: 100, max: 1000)
+**Who may read it, and this is the whole design:**
+
+| Role | Sees |
+|---|---|
+| `admin` | every check in the organization |
+| `responsable` | only checks against the interiors they are in charge of |
+| `security` | **nothing** — 403 |
+
+**A guard is refused deliberately.** Decision 007 kept a guard from listing
+permits, because whoever can list them knows who is expected where all day. A
+readable history of who came in, at what time, to which apartment is the same
+knowledge after the fact, and rotating contracted staff have no business
+holding it.
+
+**A responsable's isolation is enforced in the query, not after it.** The events
+of another apartment are never fetched, so there is no filtering step that a
+later change can forget, reorder, or make conditional.
+
+**Query params** (all optional, `.strict()` — an unknown one is a 400):
+- `from` — ISO 8601, inclusive
+- `to` — ISO 8601, **exclusive**, so a whole day is `from` 00:00 to the next 00:00
+- `result` — `allowed` or `denied`
+- `limit` — 1 to 200, default 50
+- `cursor` — the `id` of the last event of the previous page
+
+**`cursor` is an id, not a timestamp.** Two events written in the same
+millisecond would make a timestamp cursor skip one, and a history that quietly
+drops a row is worse than one that is slow. A cursor naming an event that no
+longer exists — retention deleted it while a screen was open — is treated as the
+start of the list rather than as an error.
 
 **Response (200):**
 ```json
 {
   "events": [
     {
-      "id": "event_20260818_001",
-      "auth_id": "auth_p1k2p9m",
-      "location_id": "loc_entrance_1",
-      "timestamp": "2026-08-18T15:30:45Z",
+      "id": "event_43A7mW3TICIFxENnZUts",
       "action": "entry",
       "result": "allowed",
-      "visitor_name": "María García López"
-    },
-    {
-      "id": "event_20260818_002",
-      "auth_id": "auth_invalid",
-      "location_id": "loc_entrance_1",
-      "timestamp": "2026-08-18T15:32:00Z",
-      "action": "entry",
-      "result": "denied",
-      "reason": "revoked"
+      "deny_reason": null,
+      "note": null,
+      "about_event_id": null,
+      "entry_returned": null,
+      "visitor_name": "Ana Ruiz",
+      "permit_id": "auth_lbqq9thDHLRipL41BymE",
+      "interior_id": "int_F2pPeLgP1yF2FfzCioyB",
+      "interior_number": "302",
+      "location_id": "loc_xmRXT7S30maPtKnJstgG",
+      "location_name": "Portería principal",
+      "created_at": "2026-09-03T14:05:00.000Z"
     }
   ],
-  "total": 247
+  "next_cursor": "event_43A7mW3TICIFxENnZUts",
+  "request_id": "req_abc123xyz"
 }
 ```
 
+`next_cursor` is `null` on the last page.
+
+**`visitor_name` is resolved from the permit at display time.** The event does
+not hold it, on purpose: copying a person's name into a second collection is
+what `../security/data-minimization.md` exists to prevent. **A check whose
+permit was deleted still appears**, with an empty name — the check happened, and
+hiding the row would be a hole in an audit trail.
+
+**Names are resolved in batches for the whole page**, never one lookup per row.
+A busy gate's history would otherwise cost hundreds of reads to draw one screen.
+
+**The code is never returned** — not the permit's, and not the characters typed
+at a failed check. Both are on a screen more people can open than the gate.
+
+**A guard's note is its own row** (Decision 015), with `action: "note"`,
+`note` naming what was tapped, `about_event_id` pointing at the check, and
+`entry_returned` saying whether an entry was actually given back. The screen
+pairs them; the API does not, because pairing is presentation and the log's
+value is that each record stands alone.
+
+**Errors:**
+- `400 invalid_request` — a bad date, `from` on or after `to`, a limit outside
+  1–200, or any unknown query param
+- `403 forbidden` — security staff, or any role other than admin/responsable
+- `404 not_found` — the caller is not a member of the organization
+
+A responsable in charge of **no** interiors gets an empty list and a 200, not an
+error: being a member with nothing assigned yet is a normal state.
+
+**A responsable in charge of more than 30 interiors gets a 400** naming that
+limit, rather than a database error that reads like "our system is broken".
+Thirty is Firestore's own cap on an `in` query, and it is far above any current
+plan's interior limit.
+
+**Composite indexes — required, and deployed 2026-09-03.** Declared in
+`../../firestore.indexes.json` and confirmed `READY` with
+`gcloud firestore indexes composite list`:
+
+| Fields | Serves |
+|---|---|
+| `interior_id` ASC, `created_at` DESC | a responsable's history |
+| `result` ASC, `created_at` DESC | "solo los rechazados", for an administrator |
+| `interior_id` ASC, `result` ASC, `created_at` DESC | both together |
+
+An administrator with no filter needs none — a single-field index on
+`created_at` is automatic, in both directions. Date ranges need none beyond the
+above, because the range is on the field already being ordered.
+
+**Declaring an index is not deploying one** (R-16): three features in this
+project have shipped without one, every time with a green test suite. These
+were deployed and read back live before this endpoint was written, not after.
+
 ---
+
 
 ## Error Response Format
 

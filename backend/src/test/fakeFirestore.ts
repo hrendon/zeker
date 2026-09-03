@@ -207,13 +207,38 @@ export class FakeCollection {
     return this.store.query(this.path).where(field, op, value)
   }
 
-  orderBy(field: string): FakeQuery {
-    return this.store.query(this.path).orderBy(field)
+  orderBy(field: string, direction: 'asc' | 'desc' = 'asc'): FakeQuery {
+    return this.store.query(this.path).orderBy(field, direction)
   }
 
   async get() {
     return this.store.query(this.path).get()
   }
+}
+
+/**
+ * Orders two stored values the way Firestore does.
+ *
+ * Timestamps come back from the real SDK as objects with `toDate()`, and this
+ * double stores either those or plain Dates. Sorting them with `String()`
+ * yields "[object Object]" for every row, so an `orderBy` on `created_at`
+ * silently becomes no ordering at all — a double that answers a question real
+ * Firestore would answer differently, which is exactly the failure R-16 is
+ * about.
+ */
+function comparable(value: unknown): number | string {
+  if (value instanceof Date) return value.getTime()
+  const maybe = value as { toDate?: () => Date } | null | undefined
+  if (maybe && typeof maybe.toDate === 'function') return maybe.toDate().getTime()
+  if (typeof value === 'number') return value
+  return String(value ?? '')
+}
+
+function compareValues(a: unknown, b: unknown): number {
+  const x = comparable(a)
+  const y = comparable(b)
+  if (typeof x === 'number' && typeof y === 'number') return x - y
+  return String(x).localeCompare(String(y))
 }
 
 /** Compares two stored objects by content, as Firestore does — not by key order. */
@@ -225,6 +250,7 @@ function stableKey(value: unknown): string {
 
 export class FakeQuery {
   private rows: Array<{ id: string; path: string; data: Doc }>
+  private ordered?: { field: string; direction: 'asc' | 'desc' }
 
   constructor(
     private readonly store: FakeFirestore,
@@ -256,6 +282,19 @@ export class FakeQuery {
       })
       return this
     }
+    // Used by the entry history: a responsable sees the events of the interiors
+    // they are in charge of. The 30-value cap is real Firestore's, and it is
+    // enforced here so a double never accepts a query the database would
+    // reject.
+    if (op === 'in') {
+      const wanted = value as unknown[]
+      if (!Array.isArray(wanted)) throw new Error('FakeFirestore: "in" needs an array')
+      if (wanted.length === 0 || wanted.length > 30) {
+        throw new Error(`FakeFirestore: "in" takes 1 to 30 values, got ${wanted.length}`)
+      }
+      this.rows = this.rows.filter((row) => wanted.includes(row.data[field] as never))
+      return this
+    }
     // Membership is stored as objects inside users/{uid}.orgs[], so listing an
     // organization's members matches on any of the {org_id, role} shapes.
     if (op === 'array-contains-any') {
@@ -269,10 +308,25 @@ export class FakeQuery {
     throw new Error(`FakeFirestore does not support "${op}"`)
   }
 
-  orderBy(field: string): FakeQuery {
-    this.rows = [...this.rows].sort((a, b) =>
-      String(a.data[field] ?? '').localeCompare(String(b.data[field] ?? '')),
-    )
+  orderBy(field: string, direction: 'asc' | 'desc' = 'asc'): FakeQuery {
+    const sign = direction === 'desc' ? -1 : 1
+    this.rows = [...this.rows].sort((a, b) => sign * compareValues(a.data[field], b.data[field]))
+    this.ordered = { field, direction }
+    return this
+  }
+
+  /**
+   * Continues after a document, as Firestore's cursor does.
+   *
+   * Positional, not value-based: the row itself is found in the current
+   * ordering and everything up to and including it is dropped. Two events
+   * written in the same millisecond therefore cannot make a page skip one,
+   * which a timestamp cursor would.
+   */
+  startAfter(snapshot: { id: string }): FakeQuery {
+    if (!this.ordered) throw new Error('FakeFirestore: startAfter needs an orderBy')
+    const at = this.rows.findIndex((row) => row.id === snapshot.id)
+    this.rows = at === -1 ? [] : this.rows.slice(at + 1)
     return this
   }
 

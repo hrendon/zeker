@@ -23,7 +23,7 @@ Map of authoritative sources for project knowledge.
 | Privacy policy | ⛔ not written | Ley 1581/2016 compliance, consent, retention. Required before launch | Security Engineer |
 | API key snapshots | `security/api-key-snapshots/` | The browser key's restrictions as they stood before each change, one file per date. Evidence that a change was made deliberately, and what to restore | Security Engineer |
 | Database access rules | `../firestore.rules` | The Firestore rules actually deployed (clients denied; backend-only) | Security Engineer |
-| Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md` | Software Architect |
+| Database indexes | `../firestore.indexes.json` | Composite indexes the queries need. Declaring one is not deploying it — see `architecture/developer-guide.md`. Six live as of 2026-09-03, all confirmed READY | Software Architect |
 | **Delivery / QA** | | | |
 | Hand-run test cases | `delivery/manual-test-cases.md` | The tests a person runs in a real browser or phone, each with its pass/fail line written in advance. Automated suites have gone green three times while the product was broken | QA Engineer |
 | **Decisions** | | | |

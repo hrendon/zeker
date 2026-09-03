@@ -94,7 +94,7 @@ export function isAdmin(org: Org | null): boolean {
   return org?.role === 'admin'
 }
 
-export type OrgTab = 'locations' | 'interiors' | 'members' | 'permits' | 'gate'
+export type OrgTab = 'locations' | 'interiors' | 'members' | 'permits' | 'history' | 'gate'
 
 /**
  * The tabs one person may actually use.
@@ -123,6 +123,9 @@ export function tabsFor(org: Org): Array<{ key: OrgTab; label: string; href: str
       ? [{ key: 'members' as const, label: es.nav.members, href: `${base}/personas` }]
       : []),
     { key: 'permits' as const, label: es.nav.permits, href: `${base}/permisos` },
+    // A responsable sees only their own interiors here; the API scopes it in
+    // the query itself, so the tab is safe to offer to both.
+    { key: 'history' as const, label: es.nav.history, href: `${base}/entradas` },
   ]
 
   // An administrator may also staff the gate — in a small building they often

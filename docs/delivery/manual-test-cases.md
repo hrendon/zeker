@@ -22,6 +22,7 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-02 | Un permiso de entradas libres sigue sirviendo | ✅ pasó 2026-09-03 |
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
 | TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
+| TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ⬜ nunca corrido |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -225,6 +226,94 @@ No prueba que el portero diga la verdad. Un portero deshonesto puede dejar
 entrar a alguien y después tocar "no entró". Nada en esta capa lo impide — el
 Fundador lo aceptó con esas palabras. Lo que sí hace el producto es dejarlo
 escrito: quién, cuándo y contra cuál permiso.
+
+---
+
+# TC-HIST-01 — El historial, y sobre todo quién NO lo ve
+
+**Qué prueba:** la historia US-007. Qué pasó en las puertas, y el límite que la
+hace aceptable: **un responsable no puede ver las entradas de otro apartamento,
+y un portero no puede verlo en absoluto.**
+
+**Por qué importa que sea a mano:** esta pantalla depende de índices en la base
+de datos. En este proyecto ya pasó tres veces que un índice quedó declarado y
+sin publicar, siempre con las pruebas en verde (R-16). **Una prueba automática
+no puede ver esa falla: usa una base de datos falsa que contesta lo que
+Firestore rechazaría.** Solo se ve pidiéndole la pantalla a la base real.
+
+## Antes de empezar
+
+- La revisión publicada es posterior al 2026-09-03.
+- Existen entradas registradas — si no, verifique un permiso en portería
+  primero, para que haya algo que mirar.
+- **Para el paso C hace falta un segundo interior con otro responsable.** Si la
+  organización no lo tiene, se anota "no aplica" y **se dice en el resultado**;
+  no se marca como aprobado.
+
+## Los pasos
+
+**A. Como administrador, abrir la pestaña "Entradas".**
+
+- **Pasa:** carga una lista, lo más reciente arriba. Cada línea dice quién, qué
+  interior, cuándo, por qué entrada, y si entró o no.
+- **Falla A:** un error, o queda cargando. Casi siempre significa **un índice
+  declarado y no publicado** — es exactamente el síntoma de R-16.
+- **Falla B:** carga vacía habiendo entradas registradas.
+
+**B. Un rechazo dice cuál rechazo fue.**
+
+- **Pasa:** una línea rechazada dice el motivo con palabras — por ejemplo *"Este
+  permiso era para una sola entrada y ya se usó"*.
+- **Falla:** dice solo "No entró", o un texto genérico. Quien lee esto una
+  semana después está haciendo la misma pregunta que hizo el portero en la
+  puerta; "no" no responde nada.
+
+**C. El límite. Entrar como un responsable y mirar la misma pestaña.**
+
+- **Pasa:** ve **solo** las entradas de sus propios interiores. Las del otro
+  apartamento **no aparecen por ninguna parte**: ni el número, ni el nombre del
+  visitante.
+- **Falla:** aparece aunque sea una línea de otro apartamento. **Esto es una
+  falla grave, no un detalle** — es el vecino leyendo quién visita al vecino.
+- **No aplica** si no hay un segundo interior con otro responsable. Se anota
+  así.
+
+**D. Entrar como portero y buscar la pestaña.**
+
+- **Pasa:** **la pestaña "Entradas" no existe** para él. Y si escribe la
+  dirección a mano, la pantalla no le muestra el historial.
+- **Falla:** la ve. Un portero que puede leer quién entró a qué apartamento y a
+  qué hora, durante noventa días, tiene lo que la Decisión 007 le quitó a
+  propósito.
+
+**E. Filtrar por fecha.**
+
+- **Pasa:** elegir un rango deja solo lo de esas fechas. Elegir el mismo día en
+  las dos casillas muestra ese día entero, no vacío.
+- **Falla:** el mismo día dos veces devuelve nada.
+
+**F. "Solo los rechazados".**
+
+- **Pasa:** quedan únicamente las líneas rechazadas.
+- **Falla:** siguen apareciendo las que sí entraron.
+
+**G. La anotación del portero.**
+
+- **Pasa:** si un portero anotó algo (Decisión 015), aparece **debajo** de la
+  revisión que corrige, no como una línea suelta sin contexto.
+- **No aplica** si no hay anotaciones todavía.
+
+## Qué anotar
+
+Fecha, revisión publicada, y el resultado de cada paso. **El paso C es el que
+hay que fotografiar**: la pantalla de un responsable sin rastro del otro
+apartamento.
+
+## Lo que hay que volver a correr
+
+Este caso se repite **cada vez que se agregue un filtro nuevo al historial**.
+Cada filtro es un índice más, y un índice de más es otra oportunidad de que
+quede declarado y sin publicar.
 
 ---
 

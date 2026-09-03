@@ -476,6 +476,49 @@ export type CheckResult =
       event_id: string
     }
 
+/** One line of the entry history (US-007). */
+export interface AccessEvent {
+  id: string
+  /** `entry` is a check at a door; `note` is what a guard said afterwards. */
+  action: 'entry' | 'note'
+  result: 'allowed' | 'denied'
+  deny_reason: DenyReason | null
+  note: CheckNote | null
+  about_event_id: string | null
+  entry_returned: boolean | null
+  /** Resolved from the permit — the event itself never holds a name. */
+  visitor_name: string
+  permit_id: string | null
+  interior_id: string | null
+  interior_number: string
+  location_id: string
+  location_name: string
+  created_at: string | null
+}
+
+/**
+ * What happened at the doors.
+ *
+ * An administrator sees the whole organization; a responsable sees only the
+ * interiors they are in charge of, and the API scopes that in the query rather
+ * than filtering afterwards. Security staff are refused outright.
+ */
+export const eventsApi = {
+  list: (
+    orgId: string,
+    query: { from?: string; to?: string; result?: 'denied'; limit?: number; cursor?: string } = {},
+  ) => {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== '') params.set(key, String(value))
+    }
+    const suffix = params.toString() ? `?${params.toString()}` : ''
+    return request<{ events: AccessEvent[]; next_cursor: string | null }>(
+      `/orgs/${orgId}/events${suffix}`,
+    )
+  },
+}
+
 /**
  * The gate.
  *

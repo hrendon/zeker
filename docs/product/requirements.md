@@ -189,17 +189,38 @@ these units, so the product could not deliver what it sells without them.
 
 ## US-007: Responsable Views Entry History
 
-**As:** Parent
+**As:** A resident in charge of an apartment (or an administrator of the building)
 **I want to:** See who entered, when, and what the status was
 **So that:** I have a record and can detect unauthorized entries
 
+> **Rewritten 2026-09-03, when the screen was actually built.** The "Parent"
+> above was the school framing Decision 010 superseded. The criteria themselves
+> were also thinner than the thing needed to be: they said nothing about a
+> responsable being unable to see another apartment, nothing about a guard being
+> kept out, and nothing about the indexes being deployed rather than declared —
+> which is the condition Product Owner set for accepting this unit at all.
+> (The ticks were never a claim of completion; see the note at the top.)
+
 ### Acceptance Criteria
 
-- [x] History page shows all entry/exit events for user's authorizations
-- [x] Each event shows: name, date, time, location, status (allowed/denied)
+- [x] History page shows the checks made at the doors, newest first
+- [x] Each line shows: who, which interior, when, which entrance, and whether
+      they were let in — **naming which refusal it was**, not only "denied"
+- [x] **A responsable sees only the interiors they are in charge of**, enforced
+      in the query itself rather than filtered afterwards
+- [x] **Security staff cannot open it at all.** Whoever can read who came into
+      which apartment, at what time, for ninety days, holds what Decision 007
+      kept out of a guard's hands
 - [x] Filter by date range
-- [x] Filter by authorization (dropdown)
-- [x] Sortable by date (newest first)
+- [x] Filter to the refused ones only
+- [x] A guard's note (Decision 015) appears under the check it corrects
+- [x] Its composite indexes are **deployed and confirmed live**, not only
+      declared — the condition Product Owner set for accepting this unit (R-16)
+
+**Deliberately not in this version:** filtering by entrance (useful only once a
+building has more than one gate) and jumping from a permit to its own history.
+Each is another index to deploy and prove; Founder chose the smaller set on
+2026-09-03.
 
 ---
 

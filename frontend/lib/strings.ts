@@ -99,6 +99,7 @@ export const es = {
     interiors: 'Interiores',
     members: 'Personas',
     permits: 'Permisos',
+    history: 'Entradas',
     gate: 'Portería',
     changeOrg: 'Cambiar organización',
   },
@@ -330,6 +331,32 @@ export const es = {
     backToList: 'Volver a los permisos',
     filterAll: 'Todos',
     forInterior: 'Interior',
+  },
+
+  history: {
+    title: 'Entradas',
+    subtitle: 'Qué pasó en las puertas. Lo más reciente primero.',
+    // A responsable sees only their own interiors, and is told so rather than
+    // left to wonder whether the building is empty or the screen is hiding
+    // something.
+    subtitleResponsable: 'Lo que pasó en las puertas con sus interiores. Lo más reciente primero.',
+    empty: 'Todavía no ha entrado nadie.',
+    emptyFiltered: 'No hay nada que coincida con lo que buscó.',
+    onlyDenied: 'Solo los rechazados',
+    from: 'Desde',
+    to: 'Hasta',
+    clear: 'Quitar los filtros',
+    more: 'Ver más',
+    loadingMore: 'Cargando…',
+    allowed: 'Entró',
+    denied: 'No entró',
+    at: 'en',
+    // Decision 015: the guard's note, shown under the check it corrects.
+    noteLine: 'El portero anotó:',
+    entryReturned: 'Se le devolvió la entrada.',
+    unknownVisitor: 'Sin permiso',
+    retentionNote:
+      'Las entradas se guardan 90 días y los rechazos 30. Después se borran solos.',
   },
 
   gate: {

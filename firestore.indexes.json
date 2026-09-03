@@ -4,26 +4,96 @@
       "collectionGroup": "authorizations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "valid_to", "order": "ASCENDING" }
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "valid_to",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "authorizations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "location_id", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "valid_to", "order": "ASCENDING" }
+        {
+          "fieldPath": "location_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "valid_to",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "authorizations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "interior_id", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "valid_to", "order": "ASCENDING" }
+        {
+          "fieldPath": "interior_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "valid_to",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "access_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "interior_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "access_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "result",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "access_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "interior_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "result",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        }
       ]
     }
   ],
