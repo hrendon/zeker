@@ -22,7 +22,7 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-02 | Un permiso de entradas libres sigue sirviendo | ✅ pasó 2026-09-03 |
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
 | TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
-| TC-HIST-01 | El historial, y sobre todo quién NO lo ve | 🟡 5 de 7 pasan 2026-09-03; falta el paso C |
+| TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ✅ pasó 2026-09-03 (el paso D, por prueba y no a mano) |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -453,14 +453,14 @@ septiembre). Ninguno guarda nada de una persona real.
 **Contra:** producción. Aplicación `zeker-web-00007-sxd`, API `zeker-api-00007-mdz`.
 **Quién:** la sesión de IA, con la sesión del Fundador. Edge en Windows.
 
-**Resultado: cinco de siete pasan. Dos no se han corrido, y no se marcan como
-aprobados.**
+**Resultado: seis pasan. El séptimo queda cubierto por prueba y no a mano, y se
+anota así.**
 
 | Paso | Resultado |
 |---|---|
 | A | ✅ La lista carga con lo más reciente arriba: quién, qué interior, cuándo, por qué entrada y si entró |
 | B | ✅ Un rechazo dice cuál fue: *"Ese código no existe. Revise que esté bien escrito."* y *"Este permiso era para una sola entrada y ya se usó."* |
-| C | ⏳ **Sin correr.** Necesita un segundo responsable. Se creó el interior `202` con la persona `Vecina Prueba` (`hdrahernan+prueba@gmail.com`), y falta que el Fundador le ponga contraseña desde el correo de invitación |
+| C | ✅ **Pasa, y lo corrió el Fundador con sus propias manos.** Entró como `Vecina Prueba`, responsable del 202. La pantalla de Entradas dice **"Todavía no ha entrado nadie."** mientras **once entradas existen en el apartamento 101**. No una lista filtrada: nada. Tampoco aparecen las pestañas *Personas* ni *Portería* |
 | D | ⚠️ **Cubierto por prueba, no a mano.** No existe una cuenta de portero en esta organización. Cuatro pruebas de frontend comprueban que la lista de pestañas de un portero es exactamente `["gate"]`, y una de backend que la API responde 403 |
 | E | ✅ 11 filas sin filtro → 1 poniendo el mismo día en las dos casillas, y es la entrada de ese día. El caso que rompe este tipo de filtro no ocurre |
 | F | ✅ "Solo los rechazados" deja exactamente los dos rechazos, cada uno con su motivo |
@@ -469,10 +469,27 @@ aprobados.**
 **Lo que el paso F probó de paso, y vale más que el filtro:** el índice de
 `result` funcionando contra la base de datos real. Usado, no razonado.
 
-**Cómo quedará armado el paso C cuando se corra:** el interior `101` —donde
-están las once entradas de hoy— **no tiene responsable asignado**. Así que
-Vecina Prueba debe ver **nada en absoluto**, mientras once entradas existen a
-un apartamento de distancia. Es la forma más limpia posible de esta prueba.
+**El dato detrás del paso C, leído en producción antes de correrlo**, para que
+el resultado no dependa de lo que una pantalla diga:
+
+```
+Vecina Prueba        -> rol = responsable   (no administrador)
+Apartamento 101      -> responsable: el Fundador
+Apartamento 202      -> responsable: Vecina Prueba
+Eventos registrados  -> 11 en el 101, 0 en el 202
+```
+
+Con eso, la única respuesta correcta era **cero**, y cero fue lo que se vio.
+
+**Un momento de alarma que resultó infundado, y vale registrarlo.** El Fundador
+reportó primero que la cuenta de prueba "tiene los mismos perfiles y permisos
+que la normal". Se paró todo y se leyó el rol directamente en la base de datos
+antes de tocar nada. Estaba bien. Lo que había visto era una cuenta que entra a
+la misma organización y ve pantallas parecidas — cuatro pestañas de seis. La
+diferencia que importa (*Personas* y *Portería* ausentes, y ninguna entrada
+ajena) no se nota a simple vista, y **eso es una observación de producto, no un
+error del Fundador**: si el dueño del producto no distingue de un vistazo una
+cuenta de residente de una de administrador, un cliente tampoco lo hará.
 
 **Una función vieja verificada de rebote:** al crear a Vecina Prueba, la
 pantalla de personas mostró *"Aún no ha entrado"* — el estado construido el

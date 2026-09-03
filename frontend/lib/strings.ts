@@ -185,6 +185,10 @@ export const es = {
       'La persona que podrá crear permisos de entrada para este interior. Si todavía no tiene su correo, póngase usted y cámbielo después.',
     responsableNobody: 'Elija una persona',
     noResponsable: 'sin asignar',
+    // Somebody IS in charge, but their account has no name recorded. Saying
+    // "sin asignar" here is a lie that invites an administrator to hand the
+    // apartment to somebody else. Found 2026-09-03.
+    responsableWithoutName: 'asignado, sin nombre registrado',
     needsMember: 'Primero agregue a la persona que estará a cargo.',
     goToMembers: 'Ir a personas',
     handOver: 'Cambiar responsable',

@@ -22,6 +22,7 @@ import {
   type Org,
 } from '@/lib/api'
 import { checkRequiredText } from '@/lib/validate'
+import { responsableLabel } from '@/lib/interiors'
 import { es } from '@/lib/strings'
 import { memberLabel } from '@/lib/members'
 
@@ -257,9 +258,9 @@ function InteriorsScreen({ org }: { org: Org }) {
                 <ListRow
                   key={interior.id}
                   title={interior.name ? `${interior.number} · ${interior.name}` : interior.number}
-                  subtitle={`${es.interiors.responsable}: ${
-                    interior.responsable_name || es.interiors.noResponsable
-                  } · ${locationName(interior.location_id)}`}
+                  subtitle={`${es.interiors.responsable}: ${responsableLabel(
+                    interior,
+                  )} · ${locationName(interior.location_id)}`}
                   badge={interior.enabled ? undefined : es.interiors.retired}
                   dimmed={!interior.enabled}
                   actions={

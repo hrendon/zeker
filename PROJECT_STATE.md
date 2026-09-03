@@ -159,21 +159,41 @@ rechazados", and a guard's note appearing under the check it corrects. The
 audit trail now reads as a sentence: *"El portero anotó: El visitante no entró
 · Se le devolvió la entrada."*
 
-**Two steps not yet passed, and neither is marked as passed:**
+**Step C passed, and the Founder ran it.** They signed in as `Vecina Prueba`,
+responsable of interior `202`, and the entry history said **"Todavía no ha
+entrado nadie."** while **eleven events existed on interior 101**, one apartment
+away. Not a filtered list — nothing. The *Personas* and *Portería* tabs were
+absent too. This is the criterion Product Owner set for accepting the unit, and
+it is now met by a person doing the thing.
 
-* **Step C — a responsable cannot see another apartment.** This is the
-  criterion Product Owner set for accepting the unit. It needs a second
-  responsable, which did not exist. Interior `202` and the member `Vecina
-  Prueba` (`hdrahernan+prueba@gmail.com`, the Founder's own alias) were created
-  for it; the account exists and has never signed in. **Waiting on the Founder
-  to set its password from the invitation email.** Interior `101`, which holds
-  every event so far, has no responsable — so the expected result is that
-  Vecina Prueba sees nothing at all while eleven events exist.
-* **Step D — a guard cannot open it.** No security account exists in this
-  organization, and creating one costs another email and another password.
-  **Covered by test, not by hand**, and recorded that way: four frontend tests
-  assert a guard's tab list is exactly `["gate"]`, and a backend test asserts
-  the API answers 403.
+The data behind it was read from production **before** the step was run, so the
+result could not depend on what a screen said: Vecina Prueba's role is
+`responsable`, 101 belongs to the Founder, 202 to her, and the eleven events are
+all on 101.
+
+**Step D — a guard cannot open it — is covered by test, not by hand**, and is
+recorded that way rather than counted as a pass. No security account exists in
+this organization and creating one costs another email and another password.
+Four frontend tests assert a guard's tab list is exactly `["gate"]`; a backend
+test asserts the API answers 403.
+
+**A false alarm worth keeping.** The Founder first reported that the test
+account "has the same profiles and permissions as the normal one". Everything
+stopped and the role was read straight from the database before anything was
+touched. It was correct. What they had seen was an account that enters the same
+organization and shows similar-looking screens — four tabs out of six. **The
+difference that matters is not visible at a glance, and that is a product
+observation, not a mistake**: if the person who owns the product cannot tell a
+resident's account from an administrator's at a glance, a customer will not
+either.
+
+**A real defect found while checking it, and fixed.** The interiors screen
+showed *"Responsable: sin asignar"* for apartment 101, which does have a
+responsable — the Founder. It decided from the **name** instead of from the
+assignment, and the Founder's own account has no name recorded. An
+administrator reading that would think the apartment was unclaimed and hand it
+to somebody else. The rule moved to `frontend/lib/interiors.ts` with five
+tests; an assigned interior whose person has no name now says so.
 
 **A side effect worth recording:** creating that member showed the people
 screen of 2026-09-02 working for the first time — "Aún no ha entrado" appeared
@@ -387,20 +407,20 @@ central finding needs revisiting.
 Completed:       A person can be let into this product and use it — set-up,
                  issuing, the door, the way back in. And as of 2026-09-03 a
                  permit that may be used once is used once, and one burned
-                 by mistake comes back, both proven by hand against
-                 production (236 backend + 93 frontend tests pass)
-In Progress:     The entry history — built, published, five of seven
-                 hand-run steps pass. Blocked on one Founder action: set
-                 the password for the test responsable so the isolation
-                 step can run
+                 by mistake comes back, and there is a history of it that
+                 the neighbour cannot read (236 backend + 98 frontend
+                 tests pass)
+In Progress:     Nothing. The entry history closed 2026-09-03: six of
+                 seven hand-run steps pass, the seventh covered by test
+                 and recorded as such
 Blocked:         0 · D-006 and D-008 still waiting on the Founder,
                  neither blocking
 Critical Risk:   R-23 — losing this laptop is losing control of production.
                  Five actions, ~25 minutes, only the Founder can do them
 New Risk:        R-28 — a publish erases any API setting not declared in the
                  deploy script. Fixed for CORS_ORIGINS; nothing checks the rest
-Next:            Close the history (step C), then the money and the
-                 domain — both the Founder's hands, both with a deadline
+Next:            The money and the domain — both the Founder's hands,
+                 both with a deadline. Then the brief rewrite
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**
