@@ -21,7 +21,7 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-01 | Un permiso de una sola entrada se gasta al usarse | ✅ pasó 2026-09-03 |
 | TC-014-02 | Un permiso de entradas libres sigue sirviendo | ✅ pasó 2026-09-03 |
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
-| TC-015-01 | Un permiso quemado por error se devuelve | ⬜ nunca corrido |
+| TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -185,11 +185,18 @@ solo se ve haciéndolo.
   pantalla los distingue.
 - **Falla:** dice "Todavía no se ha usado". Se perdió lo que pasó.
 
-**F. Volver a portería, verificar de nuevo, y tocar dos veces una razón.**
+**F. Tocar una razón, y mirar qué queda en la pantalla.**
 
-- **Pasa:** la segunda vez rechaza con **"Ya se anotó algo sobre esta
-  revisión."**
-- **Falla:** acepta las dos. El contador podría bajar de la verdad.
+- **Pasa:** las opciones **desaparecen** y solo queda "Verificar otro". Un
+  portero no puede anotar dos veces sobre la misma revisión.
+- **Falla:** los botones siguen ahí y se pueden tocar otra vez. El contador
+  podría bajar por debajo de lo que de verdad pasó.
+
+> El servidor también rechaza una segunda anotación, con "Ya se anotó algo
+> sobre esta revisión." Ese camino **no se puede alcanzar desde una sola
+> pantalla** — es para dos porteros en dos teléfonos sobre la misma revisión, y
+> está cubierto por prueba automática. Se dice aquí para que nadie lo busque a
+> mano y concluya que falta.
 
 **G. Verificar un permiso en la entrada equivocada (si hay dos sedes).**
 
@@ -204,6 +211,13 @@ solo se ve haciéndolo.
 
 Fecha, revisión publicada, y el resultado de cada paso. La foto más útil es la
 del paso D: un permiso que decía "ya se usó" diciendo otra vez "puede entrar".
+
+## Lo que no cubre
+
+**La ventana de diez minutos no se prueba aquí.** Exigiría esperar diez minutos
+frente a la pantalla. Está cubierta por prueba automática en los dos sentidos —
+a los nueve minutos acepta, a los once rechaza con "Pasaron más de 10 minutos
+desde la revisión". Se anota como no probado a mano, no como probado.
 
 ## Lo que esta prueba no puede probar, y hay que decirlo
 
@@ -303,3 +317,44 @@ teclado de verdad:
 **Arreglo:** se oculta el control de Edge y se queda el nuestro, que tiene texto,
 funciona con teclado y con lector de pantalla, y se ve igual en todos los
 navegadores. En `frontend/app/globals.css`.
+
+## 2026-09-03 — TC-015-01
+
+**Contra:** producción. Aplicación `zeker-web-00006-chq`, API `zeker-api-00006-2xj`.
+**Quién:** la sesión de IA, manejando el navegador con la sesión del Fundador.
+Edge en Windows, organización "compartir", una sola sede.
+
+**Resultado: pasa.** Ningún paso falló.
+
+| Paso | Qué se vio |
+|---|---|
+| A | Permiso de una sola entrada verificado: "Puede entrar" |
+| B | Aparece "¿Pasó algo distinto?" con las cuatro opciones. **Ninguna casilla de texto en la pantalla** |
+| C | Al tocar "El visitante no entró": "Listo. El permiso vuelve a servir." |
+| E | El detalle dice **"El visitante no llegó a entrar"**, no "Todavía no se ha usado". Estado Activo y el QR de vuelta |
+| D | El mismo código, otra vez: **"Puede entrar"**. Este es el paso que justifica la unidad |
+| F | Después de tocar una razón, **las tres opciones desaparecen** y solo queda "Verificar otro" |
+| G | Con un código que no existe: "No puede entrar", y **solo tres opciones** — "El visitante no entró" no aparece |
+
+**El paso F resultó mejor de lo que estaba escrito, y el caso quedó corregido.**
+La versión original decía "tocar dos veces y esperar el rechazo *Ya se anotó
+algo sobre esta revisión*". Por la pantalla eso **no se puede hacer**: al tocar
+una vez, las opciones se reemplazan por la confirmación. El rechazo del
+servidor existe y está cubierto por prueba automática — es para el caso de dos
+porteros en dos teléfonos sobre la misma revisión. Lo que sí se puede verificar
+a mano, y es lo que ahora dice el paso, es que la pantalla no deja llegar ahí.
+
+**No se probó a mano:** la ventana de diez minutos. Exigiría esperar diez
+minutos frente a la pantalla; está cubierta por prueba automática, en los dos
+sentidos (a los 9 minutos acepta, a los 11 rechaza). Se anota como no probado a
+mano, no como probado.
+
+**Una comprobación aparte, que ayer habría ahorrado una caída:** esta
+publicación **conservó la lista de direcciones de la API**, porque desde hoy
+vive en el script. Es la primera prueba real de la corrección de R-28, con un
+despliegue de verdad y no razonada.
+
+**Datos de prueba que quedaron en producción**, en la organización del
+Fundador, con nombres obviamente falsos: `Prueba 014 Una Entrada` (gastado),
+`Prueba 014 Libres` y `Prueba 015 Devolucion` (activos hasta el 4 de
+septiembre). Ninguno guarda nada de una persona real.

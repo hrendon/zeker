@@ -4,9 +4,10 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-03
 
-**Decision 014 is live and proven by hand. The unit that had been built but
-never driven by a person is closed — and publishing it exposed a fourth
-configuration that existed nowhere but a console.**
+**Decisions 014 and 015 are both live and both proven by hand. A permit that
+may be used once is used once — and a permit burned by mistake now comes back.
+Publishing 014 exposed a fourth configuration that existed nowhere but a
+console; publishing 015 proved that fix holds.**
 
 ---
 
@@ -77,16 +78,73 @@ both photographed in the same browser.
 * **The icon fix was proved by removing it again**: the icon reappears without
   the rule and is gone with it, same browser, same eight typed characters.
 
+## Then, the same day: Decision 015
+
+**The hole Decision 014 left open on purpose was open in production for about
+five hours.** A one-entry permit checked by mistake stayed spent, and the person
+at the gate could not come back. Decision 015 closes it, and it is live and
+driven by hand.
+
+**What a guard can now do, and what they deliberately cannot.** After any check
+the screen offers four fixed reasons — *el visitante no entró*, *lo envié a otra
+entrada*, *dijo que vuelve más tarde*, *pedí confirmación al residente*. There
+is **no text box**, and that is the decision rather than an omission: what lands
+in a free field at a real gate is document numbers, phone numbers and
+descriptions of third parties who consented to nothing, which this project has
+now refused four times. A closed list is also the only version an administrator
+can count.
+
+**"El visitante no entró" gives the entry back within ten minutes** — the
+Founder's number, chosen as the line between fixing a mistake with the person
+still at the gate and re-opening a credential later.
+
+**A note is a new record pointing at the check, never an edit.** Nothing here
+updates an access event once written, and that is not a detail: a log that can
+be edited is not evidence. The note inherits the check's own expiry exactly, so
+the two can never become half a history.
+
+**The permit now says which of two different things happened.** "Todavía no se
+ha usado" and "El visitante no llegó a entrar" are not the same fact, and an
+administrator asked for exactly that difference (Decision 015's fourth
+consequence). Until the entry history exists, the permit detail is the only
+place anybody can read it.
+
+**Two design calls worth naming**, both made while building and both verified:
+
+* **"El visitante no entró" does not appear under a refusal.** It would ask the
+  guard to record what the screen just said, and there would be no entry to give
+  back. Confirmed by hand: a refused check offers three options, not four.
+* **The panel closes after one tap**, so a guard cannot record twice. The
+  server refuses a second note as well, but that path cannot be reached from one
+  screen — it exists for two guards on two phones. The hand-run test was
+  corrected to say so rather than to describe a step nobody can perform.
+
+**Verified by hand, against production** (`zeker-web-00006-chq`,
+`zeker-api-00006-2xj`): TC-015-01, every applicable step, in
+`docs/delivery/manual-test-cases.md`. The step the unit exists for — a permit
+that said "ya se usó" saying "puede entrar" again — is photographed.
+
+**Not verified by hand:** the ten-minute window, which would mean waiting ten
+minutes at the screen. Covered by automated test in both directions, and
+recorded as not hand-tested rather than as tested.
+
+**R-28's fix held its first real test.** This deploy carried `CORS_ORIGINS`
+through, because it now lives in the deploy script. Proved by a real deploy, not
+reasoned about.
+
 ## Not done, deliberately
 
-* **The icon fix is committed and not published.** It needs a web deploy, and
-  each deploy costs ~5% of the free image-registry allowance. It rides with the
-  next unit rather than alone.
+* ~~The icon fix is committed and not published.~~ **Published with Decision
+  015**, as planned — it rode with the next unit rather than costing a deploy of
+  its own.
 * **`LOG_LEVEL=debug` was not restored.** The publish erased it along with
   `CORS_ORIGINS`; the code's declared default is `info`. Debug logging in
   production writes far more log, and logs are read by more people than permits
   are. Say the word and it goes back.
-* Decision 015 is still not built. It is the next unit.
+* **Test data left in production**, in the Founder's own organization, with
+  obviously fake names: `Prueba 014 Una Entrada` (spent), `Prueba 014 Libres`
+  and `Prueba 015 Devolucion` (active until 4 September). None holds anything
+  about a real person. They can be revoked on request.
 
 ---
 
@@ -271,18 +329,20 @@ central finding needs revisiting.
 ```
 Completed:       A person can be let into this product and use it — set-up,
                  issuing, the door, the way back in. And as of 2026-09-03 a
-                 permit that may be used once is used once, proven by hand
-                 against production (198 backend + 66 frontend tests pass)
-In Progress:     Nothing. Decision 014's cycle closed 2026-09-03. The next
-                 unit is Decision 015, not started
+                 permit that may be used once is used once, and one burned
+                 by mistake comes back, both proven by hand against
+                 production (217 backend + 75 frontend tests pass)
+In Progress:     Nothing. Decisions 014 and 015 both closed 2026-09-03,
+                 published and driven by hand
 Blocked:         0 · D-006 and D-008 still waiting on the Founder,
                  neither blocking
 Critical Risk:   R-23 — losing this laptop is losing control of production.
                  Five actions, ~25 minutes, only the Founder can do them
 New Risk:        R-28 — a publish erases any API setting not declared in the
                  deploy script. Fixed for CORS_ORIGINS; nothing checks the rest
-Next:            Build Decision 015 (what a guard records when nobody comes
-                 in). Then the entry history, with its indexes proven live
+Next:            The entry history, with its indexes proven live — the
+                 largest unit left, and where a note first becomes readable
+                 by an administrator
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**
@@ -1744,7 +1804,7 @@ minutes beforehand or the speed measurement is meaningless.
 | Do | State |
 |---|---|
 | **Decision 014 — one entry or many.** The resident chooses when issuing; the permit itself counts the entries; "ya se usó" is a named refusal at the gate; the detail screen says whether anybody came in | ✅ **Done 2026-09-03.** Published (`zeker-web-00005-x8k`) and driven by hand against production: TC-014-01, TC-014-02 and TC-014-03 all pass, step by step, in `docs/delivery/manual-test-cases.md` |
-| **Decision 015 — what a guard records when nobody comes in.** Four fixed reasons, no free text; "el visitante no entró" gives a one-entry permit back | Decided and written. **Not built** — the next unit |
+| **Decision 015 — what a guard records when nobody comes in.** Four fixed reasons, no free text; "el visitante no entró" gives a one-entry permit back | ✅ **Done 2026-09-03.** Built, published (`zeker-web-00006-chq`) and driven by hand: TC-015-01 passes, including a permit that said "ya se usó" saying "puede entrar" again. The ten-minute window is covered by test, not by hand |
 
 #### The machine we work on — added 2026-09-02, all five are your hands
 
