@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { cleanCode, denyMessage, groupCode } from './gate'
+import { cleanCode, denyMessage, groupCode, noteLabel, notesFor } from './gate'
+import type { CheckNote } from './api'
 import { es } from './strings'
 
 describe('what a guard types', () => {
@@ -71,3 +72,38 @@ describe('the refusal for a permit that was already used (Decision 014)', () => 
   })
 })
 
+describe('what a guard records afterwards (Decision 015)', () => {
+  // The four reasons, exactly as the API accepts them. If these two lists ever
+  // disagree, a guard presses a button and gets a 400 at a gate.
+  const NOTES: CheckNote[] = [
+    'no_entry',
+    'sent_to_other_entrance',
+    'returning_later',
+    'asked_resident',
+  ]
+
+  it('has Spanish for every reason, and no two the same', () => {
+    const labels = NOTES.map((note) => noteLabel(note))
+    expect(labels.every((label) => label.length > 0)).toBe(true)
+    expect(new Set(labels).size).toBe(NOTES.length)
+  })
+
+  it('never falls back to the unknown-error text', () => {
+    // A guard who taps a button and is shown "algo salió mal" learns nothing.
+    for (const note of NOTES) expect(noteLabel(note)).not.toBe(es.errors.unknown)
+  })
+
+  it('offers the entry back only after somebody was let in', () => {
+    // Under a refusal, "el visitante no entró" asks the guard to record what
+    // the screen just said — and there is no entry to give back.
+    expect(notesFor(true)).toContain('no_entry')
+    expect(notesFor(false)).not.toContain('no_entry')
+  })
+
+  it('always offers the other three', () => {
+    for (const note of NOTES.filter((one) => one !== 'no_entry')) {
+      expect(notesFor(true)).toContain(note)
+      expect(notesFor(false)).toContain(note)
+    }
+  })
+})

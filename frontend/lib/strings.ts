@@ -303,6 +303,9 @@ export const es = {
     entryModeMultipleHint:
       'La persona puede entrar y salir las veces que necesite. Para quien trabaja en el interior o viene varias veces el mismo día.',
     notUsedYet: 'Todavía no se ha usado',
+    // Decision 015. The difference an administrator asked for: a permit nobody
+    // ever used, and one whose visitor was turned around at the door.
+    visitorNeverCame: 'El visitante no llegó a entrar',
     usedOnce: 'Entró el',
     usedTimes: 'Entradas registradas:',
 
@@ -373,6 +376,23 @@ export const es = {
     goingTo: 'Va a',
     validUntil: 'Vale hasta',
     recorded: 'Queda registrado.',
+
+    // Decision 015. Four fixed reasons, never a free-text box: what lands in
+    // a box like that at a real gate is cedulas, telefonos and descriptions
+    // of people who agreed to nothing.
+    noteTitle: '¿Pasó algo distinto?',
+    noteHint: 'Toque una opción. Queda escrito con su nombre y la hora.',
+    noteNoEntry: 'El visitante no entró',
+    noteSentToOtherEntrance: 'Lo envié a otra entrada',
+    noteReturningLater: 'Dijo que vuelve más tarde',
+    noteAskedResident: 'Pedí confirmación al residente',
+    noteSaving: 'Guardando…',
+    // Two different confirmations, because two different things happened.
+    noteSavedReturned: 'Listo. El permiso vuelve a servir.',
+    noteSaved: 'Listo. Queda escrito.',
+    noteTooLate:
+      'Pasaron más de 10 minutos desde la revisión. Pídale al residente que haga un permiso nuevo.',
+    noteAlready: 'Ya se anotó algo sobre esta revisión.',
   },
 
   usage: {

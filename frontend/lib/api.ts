@@ -116,6 +116,8 @@ export interface Permit {
   entry_mode: PermitEntryMode
   /** How many people have been let in on it. */
   entry_count: number
+  /** Decision 015. How many entries a guard gave back because nobody came in. */
+  entry_returns: number
   /** When somebody was last let in, or null if nobody ever has. */
   last_entry_at: string | null
   created_by: string
@@ -433,6 +435,17 @@ export type DenyReason =
   | 'expired'
   | 'wrong_location'
 
+/**
+ * What a guard may record about a check (Decision 015). Mirrors
+ * `backend/src/lib/events.ts` — a closed list, so it can be counted and so
+ * nobody ever types a document number into it.
+ */
+export type CheckNote =
+  | 'no_entry'
+  | 'sent_to_other_entrance'
+  | 'returning_later'
+  | 'asked_resident'
+
 /** What the guard is told about the visitor. Never includes the code itself. */
 export interface CheckedPermit {
   id: string
@@ -473,4 +486,16 @@ export type CheckResult =
 export const checksApi = {
   check: (orgId: string, input: { location_id: string; code: string }) =>
     request<CheckResult>(`/orgs/${orgId}/validate`, { method: 'POST', body: omitBlank(input) }),
+
+  /**
+   * What happened, after the check (Decision 015).
+   *
+   * A second record pointing at the first, never an edit. Only `no_entry`
+   * changes anything, and only when there was an entry to give back.
+   */
+  note: (orgId: string, eventId: string, note: CheckNote) =>
+    request<{ event_id: string; note: CheckNote; entry_returned: boolean }>(
+      `/orgs/${orgId}/validate/${eventId}/nota`,
+      { method: 'POST', body: { note } },
+    ),
 }

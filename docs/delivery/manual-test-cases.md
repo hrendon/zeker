@@ -21,6 +21,7 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-01 | Un permiso de una sola entrada se gasta al usarse | ✅ pasó 2026-09-03 |
 | TC-014-02 | Un permiso de entradas libres sigue sirviendo | ✅ pasó 2026-09-03 |
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
+| TC-015-01 | Un permiso quemado por error se devuelve | ⬜ nunca corrido |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -132,6 +133,84 @@ vigente.** Si no existe ninguno, se anota "no aplica" — no se inventa uno.
 - **Falla:** la segunda lo rechaza por usado. Eso es quitarle un acceso a alguien
   que nunca aceptó perderlo — lo que la Decisión 014 dice explícitamente que no
   debe pasar.
+
+---
+
+# TC-015-01 — Un permiso quemado por error se devuelve
+
+**Qué decisión prueba:** la 015. El portero toca una razón, nunca escribe; y
+"el visitante no entró" hace que el permiso vuelva a servir.
+
+**Por qué importa que sea a mano:** la Decisión 014 dejó este hueco a propósito.
+Desde que se publicó, un permiso de una sola entrada verificado por equivocación
+queda quemado y la persona no puede entrar. Esto es lo único que lo cierra, y
+solo se ve haciéndolo.
+
+## Antes de empezar
+
+- Estar dentro como administrador, con una sede y un interior.
+- La revisión publicada es posterior al 2026-09-03.
+
+## Los pasos
+
+**A. Emitir un permiso de "Una sola entrada" y verificarlo en portería.**
+
+- **Pasa:** "Puede entrar".
+
+**B. Mirar la misma pantalla, debajo del resultado.**
+
+- **Pasa:** aparece **"¿Pasó algo distinto?"** con **cuatro** opciones:
+  *El visitante no entró*, *Lo envié a otra entrada*, *Dijo que vuelve más
+  tarde*, *Pedí confirmación al residente*. **No hay ninguna casilla para
+  escribir texto.**
+- **Falla A:** hay un campo de texto libre. Eso es lo que la decisión rechaza —
+  ahí terminan cédulas y descripciones de personas.
+- **Falla B:** faltan opciones, o alguna sale en inglés.
+
+**C. Tocar "El visitante no entró".**
+
+- **Pasa:** confirma con **"Listo. El permiso vuelve a servir."**
+- **Falla:** un mensaje genérico, o un error.
+
+**D. Verificar el mismo código otra vez, en la misma entrada.**
+
+- **Pasa:** **"Puede entrar"**. Este es el paso que justifica toda la unidad.
+- **Falla:** dice "ya se usó". Entonces no se devolvió nada y el hueco sigue
+  abierto.
+
+**E. Abrir el detalle del permiso.**
+
+- **Pasa:** después del paso C y antes del D, el detalle dice **"El visitante no
+  llegó a entrar"** — no "Todavía no se ha usado". Son dos hechos distintos y la
+  pantalla los distingue.
+- **Falla:** dice "Todavía no se ha usado". Se perdió lo que pasó.
+
+**F. Volver a portería, verificar de nuevo, y tocar dos veces una razón.**
+
+- **Pasa:** la segunda vez rechaza con **"Ya se anotó algo sobre esta
+  revisión."**
+- **Falla:** acepta las dos. El contador podría bajar de la verdad.
+
+**G. Verificar un permiso en la entrada equivocada (si hay dos sedes).**
+
+- **Pasa:** rechaza, y debajo aparecen **solo tres** opciones — *El visitante no
+  entró* no está.
+- **Falla:** aparece. Le estaría pidiendo al portero que anote lo que la
+  pantalla acaba de decir.
+- **No aplica** si la organización tiene una sola sede. Se anota así, no se
+  inventa una.
+
+## Qué anotar
+
+Fecha, revisión publicada, y el resultado de cada paso. La foto más útil es la
+del paso D: un permiso que decía "ya se usó" diciendo otra vez "puede entrar".
+
+## Lo que esta prueba no puede probar, y hay que decirlo
+
+No prueba que el portero diga la verdad. Un portero deshonesto puede dejar
+entrar a alguien y después tocar "no entró". Nada en esta capa lo impide — el
+Fundador lo aceptó con esas palabras. Lo que sí hace el producto es dejarlo
+escrito: quién, cuándo y contra cuál permiso.
 
 ---
 

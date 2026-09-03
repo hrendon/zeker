@@ -1,5 +1,5 @@
 import { es } from './strings'
-import type { DenyReason } from './api'
+import type { CheckNote, DenyReason } from './api'
 
 /**
  * The gate: turning what the server answered into what the guard reads.
@@ -49,4 +49,40 @@ export function cleanCode(input: string): string {
 export function groupCode(code: string): string {
   const clean = cleanCode(code)
   return clean.length > 4 ? `${clean.slice(0, 4)}-${clean.slice(4)}` : clean
+}
+
+/**
+ * What a guard may record after a check (Decision 015).
+ *
+ * Four fixed options and no text box. What lands in a free field at a real
+ * gate is cedulas, phone numbers and descriptions of people who consented to
+ * nothing — the thing this project has now refused four times. A closed list
+ * is also the only version an administrator can count.
+ *
+ * The list lives here rather than in the screen so it can be checked against
+ * the API's own list: if the two ever drift, a guard taps a button and is
+ * handed an error at a gate.
+ */
+const NOTE_LABELS: Record<CheckNote, string> = {
+  no_entry: es.gate.noteNoEntry,
+  sent_to_other_entrance: es.gate.noteSentToOtherEntrance,
+  returning_later: es.gate.noteReturningLater,
+  asked_resident: es.gate.noteAskedResident,
+}
+
+/** Never empty, for the same reason a refusal is never empty. */
+export function noteLabel(note: CheckNote): string {
+  return NOTE_LABELS[note] ?? es.errors.unknown
+}
+
+/**
+ * Which reasons to offer, given what the check answered.
+ *
+ * "El visitante no entró" only appears after a "puede entrar": under a refusal
+ * it would ask the guard to record what the screen just said, and there would
+ * be no entry to give back anyway.
+ */
+export function notesFor(allowed: boolean): CheckNote[] {
+  const rest: CheckNote[] = ['sent_to_other_entrance', 'returning_later', 'asked_resident']
+  return allowed ? ['no_entry', ...rest] : rest
 }

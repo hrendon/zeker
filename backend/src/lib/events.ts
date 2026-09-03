@@ -66,8 +66,51 @@ export type DenyReason = (typeof DENY_REASONS)[number]
 
 export type EventResult = 'allowed' | 'denied'
 
-/** Only entries are recorded today — see note 3 above. */
-export type EventAction = 'entry'
+/**
+ * What a guard may record about a check that has already happened
+ * (Decision 015).
+ *
+ * A closed list, deliberately. A guard is rotating staff from a contracted
+ * security firm, typing with somebody waiting at the gate; what lands in a
+ * free-text field in practice is ID numbers, phone numbers and descriptions of
+ * people who consented to nothing — the exact thing this project has already
+ * refused three times (Decisions 005, 007, 008). **A field that exists is a
+ * field somebody fills, eventually, with what it must not hold.**
+ *
+ * A closed list is also the only version that can be counted. "How many
+ * permits were issued for somebody who never arrived" is a question an
+ * administrator will ask, and free text cannot answer it.
+ */
+export const CHECK_NOTES = [
+  /** The only one that changes anything: it gives a one-entry permit back. */
+  'no_entry',
+  'sent_to_other_entrance',
+  'returning_later',
+  'asked_resident',
+] as const
+export type CheckNote = (typeof CHECK_NOTES)[number]
+
+/**
+ * How long after a check a guard may still record what happened
+ * (Decision 015, the Founder's number: ten minutes).
+ *
+ * This is the line between correcting a mistake with the person still at the
+ * gate and re-opening a credential later. Long enough for a guard handling two
+ * people at once; far too short to be useful to anyone an hour afterwards.
+ * Past it, the residente issues a new permit, which costs nothing.
+ */
+export const NOTE_WINDOW_MINUTES = 10
+
+/**
+ * What a record is.
+ *
+ * `entry` is a check at a door — see note 3 above; exits are not recorded in
+ * the MVP. `note` is what a guard said about a check afterwards, and it is a
+ * **new record pointing at the first one, never an edit** (Decision 015). The
+ * log stays append-only, which is the whole reason it is worth anything as
+ * evidence.
+ */
+export type EventAction = 'entry' | 'note'
 
 /**
  * How long a check is kept, per `docs/security/data-minimization.md`.
@@ -79,6 +122,22 @@ export type EventAction = 'entry'
  * mistyped code from a passing courier is not something to hold for a quarter.
  */
 export const EVENT_RETENTION_DAYS = { allowed: 90, denied: 30 } as const
+
+/**
+ * A note is kept exactly as long as the check it is about (Decision 015).
+ *
+ * Anything else produces a half-history: a correction still readable after the
+ * thing it corrects is gone, or — worse — an entry that outlives the record
+ * saying nobody actually came in.
+ */
+export function noteRetentionDate(checkExpiresAt: unknown, fallback: Date): Date {
+  if (checkExpiresAt instanceof Date) return checkExpiresAt
+  // Firestore hands timestamps back as objects with toDate(); the test double
+  // stores plain Dates. Neither is worth a hard dependency here.
+  const maybe = checkExpiresAt as { toDate?: () => Date } | null | undefined
+  if (maybe && typeof maybe.toDate === 'function') return maybe.toDate()
+  return fallback
+}
 
 export interface AccessEventDocument {
   id: string
@@ -92,6 +151,16 @@ export interface AccessEventDocument {
   action: EventAction
   result: EventResult
   deny_reason: DenyReason | null
+  /** Decision 015. What the guard said happened. Null on a check itself. */
+  note: CheckNote | null
+  /** Decision 015. The check this note is about. Null on a check itself. */
+  about_event_id: string | null
+  /**
+   * Decision 015. Whether this note actually gave an entry back. False when
+   * the note was recorded for the record only — the check had let nobody in,
+   * or the permit is gone. Null on a check itself.
+   */
+  entry_returned: boolean | null
   /** Only when nothing matched — see note 4 above. */
   scanned_code: string | null
   /** The guard, or the administrator, who made the check. */

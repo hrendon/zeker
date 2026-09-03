@@ -103,6 +103,13 @@ export interface PermitDocument {
    * would let two guards scanning at the same instant both be told yes.
    */
   entry_count?: number
+  /**
+   * Decision 015. How many entries a guard gave back with "el visitante no
+   * entró". Kept so an administrator can tell a permit nobody ever used from
+   * one whose visitor never arrived — the event log holds the detail, this is
+   * what a screen can read before the entry history exists.
+   */
+  entry_returns?: number
   first_entry_at?: unknown
   last_entry_at?: unknown
   created_by: string
@@ -119,6 +126,12 @@ export function entryModeOf(stored: Partial<PermitDocument> | undefined): Permit
 /** How many entries this permit has already allowed. */
 export function entryCountOf(stored: Partial<PermitDocument> | undefined): number {
   const count = Number(stored?.entry_count ?? 0)
+  return Number.isFinite(count) && count > 0 ? count : 0
+}
+
+/** How many entries were given back on this permit (Decision 015). */
+export function entryReturnsOf(stored: Partial<PermitDocument> | undefined): number {
+  const count = Number(stored?.entry_returns ?? 0)
   return Number.isFinite(count) && count > 0 ? count : 0
 }
 
@@ -278,6 +291,8 @@ export interface PermitResponse {
   entry_mode: PermitEntryMode
   /** How many people have been let in on it. */
   entry_count: number
+  /** Decision 015. How many entries a guard gave back because nobody came in. */
+  entry_returns: number
   /** When somebody was last let in, or null if nobody ever has. */
   last_entry_at: string | null
   created_by: string
@@ -316,6 +331,7 @@ export function toPermitResponse(
     ),
     entry_mode: entryModeOf(stored),
     entry_count: entryCountOf(stored),
+    entry_returns: entryReturnsOf(stored),
     last_entry_at: toIso(stored.last_entry_at),
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),

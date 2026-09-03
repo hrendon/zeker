@@ -169,7 +169,7 @@ export const ENTRY_MODE_OPTIONS: ReadonlyArray<{
  * was never used does not need a line telling the reader so.
  */
 export function useLine(
-  permit: Pick<Permit, 'entry_count' | 'last_entry_at' | 'state'>,
+  permit: Pick<Permit, 'entry_count' | 'entry_returns' | 'last_entry_at' | 'state'>,
   format: (iso: string) => string,
 ): string | null {
   if (permit.entry_count > 0 && permit.last_entry_at) {
@@ -178,6 +178,13 @@ export function useLine(
     return permit.entry_count > 1
       ? `${when} · ${es.permits.usedTimes} ${permit.entry_count}`
       : when
+  }
+  // Decision 015. A permit at zero entries that a guard gave back is not the
+  // same thing as one nobody ever presented, and an administrator asked for
+  // exactly that difference. Said before "todavía no se ha usado", which
+  // would be true and useless.
+  if ((permit.entry_returns ?? 0) > 0) {
+    return es.permits.visitorNeverCame
   }
   if (permit.state === 'active' || permit.state === 'scheduled') {
     return es.permits.notUsedYet

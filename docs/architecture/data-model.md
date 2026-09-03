@@ -237,6 +237,7 @@ Access permit (core entity). **Built 2026-08-29.**
   "status": "active",                  // "active" | "revoked" — NOT "expired"
   "entry_mode": "single",              // "single" | "multiple" — Decision 014
   "entry_count": 0,                    // written by the gate, in the same transaction
+  "entry_returns": 0,                  // entries a guard gave back — Decision 015
   "first_entry_at": null,              // server timestamp on the first entry
   "last_entry_at": null,               // server timestamp on every entry
   "created_by": "user1",
@@ -255,6 +256,13 @@ Access permit (core entity). **Built 2026-08-29.**
   after it. A one-entry permit is spent by being used, so an answer decided
   first and counted afterwards lets two guards scanning at the same instant
   both be told yes
+- **`entry_returns` counts our own corrections, not facts about the visitor.**
+  It goes up when a guard records "el visitante no entró" within ten minutes of
+  a check that let somebody in (Decision 015), and `entry_count` goes down by
+  one in the same transaction. It exists so an administrator can tell a permit
+  **nobody ever used** from one whose **visitor was turned around at the door** —
+  a difference the event log holds in full, and which this counter makes
+  readable before the entry history is built
 - `valid_from` must be before `valid_to`
 - `valid_to` must be in the future when the permit is created. `valid_from` may
   be in the past — "valid since this morning" is ordinary
@@ -322,10 +330,14 @@ One document per check, allowed or refused.
   "location_id": "loc_entrance_1",     // the entrance the guard was at
   "permit_id": "auth_p1k2p9m",         // null when the code matched nothing
   "interior_id": "int_302",            // copied from the permit; null likewise
-  "action": "entry",                   // only value today — see below
+  "action": "entry",                   // "entry" | "note" — see below
   "result": "allowed",                 // "allowed" | "denied"
-  "deny_reason": null,                 // "invalid_code" | "revoked" | "not_started"
-                                       //   | "expired" | "wrong_location"
+  "deny_reason": null,                 // "invalid_code" | "revoked" | "already_used"
+                                       //   | "not_started" | "expired"
+                                       //   | "wrong_location"
+  "note": null,                        // Decision 015 — null on a check itself
+  "about_event_id": null,              // the check a note is about; null on a check
+  "entry_returned": null,              // whether a note gave an entry back
   "scanned_code": null,                // only when nothing matched
   "checked_by": "user3",               // the guard or administrator
   "request_id": "req_abc123xyz",
@@ -358,9 +370,19 @@ Each is recorded in `../decisions/008-checking-a-permit-at-a-door.md`.
    collection — the same reason a responsable's name is not copied onto an
    interior (Decision 006). A check that matched no permit correctly shows none.
 
-3. **`action` is always `entry`** (Founder decision, 2026-08-30). Exits are not
-   recorded in the MVP: it doubles the work at the gate and no customer has asked
-   for it. The field is kept so adding `exit` later is one line, not a migration.
+3. **`action` is `entry` or `note`; `exit` is still not recorded** (Founder
+   decision, 2026-08-30). Exits double the work at the gate and no customer has
+   asked for one. `note` was added by Decision 015 on 2026-09-03: what a guard
+   said happened after a check.
+
+   **A note is a second record pointing at the first, never an edit** — which is
+   the only way to add a correction to a log whose whole value is that it cannot
+   be edited. It carries `note` (one of `no_entry`, `sent_to_other_entrance`,
+   `returning_later`, `asked_resident` — a closed list, so nobody ever types a
+   document number into it), `about_event_id`, and `entry_returned`. It inherits
+   the check's own `expires_at` exactly, so the two are never half a history:
+   an entry that outlived the record saying nobody came in would be worse than
+   no record at all.
 
 4. **`metadata.qr_scanned` became `scanned_code`, and is stored only when
    nothing matched.** When a permit was found, `permit_id` identifies it and the
@@ -368,7 +390,9 @@ Each is recorded in `../decisions/008-checking-a-permit-at-a-door.md`.
    second collection. When nothing matched, the characters submitted are the only
    evidence of what was attempted.
 
-**Indexes needed:** none yet — nothing queries this collection. The entry-history
+**Indexes needed:** none new. Decision 015 looks a note up by
+`about_event_id` alone — a single-field equality match, which Firestore indexes
+on its own. The entry-history
 screen will need `permit_id + created_at` and `location_id + created_at`; they
 are deliberately not declared until a query exists that uses them.
 

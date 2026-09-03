@@ -371,6 +371,9 @@ describe('POST /orgs/{orgId}/authorizations', () => {
         // About the permit, not about the person carrying it.
         'entry_mode',
         'entry_count',
+        // Decision 015: how many entries a guard gave back because nobody
+        // came in. A count of our own decisions, not a fact about the visitor.
+        'entry_returns',
         'first_entry_at',
         'last_entry_at',
         'id',

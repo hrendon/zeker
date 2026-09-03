@@ -489,3 +489,240 @@ describe('how many times a permit works (Decision 014)', () => {
   })
 })
 
+
+// ---------------------------------------------------------------------------
+// Decision 015 — what a guard records when nobody comes in
+// ---------------------------------------------------------------------------
+
+describe('POST /orgs/:orgId/validate/:eventId/nota', () => {
+  function note(
+    uid: string,
+    eventId: string,
+    body: Record<string, unknown>,
+    orgId = ORG,
+  ): ReturnType<ReturnType<typeof request>['post']> {
+    signedInAs(uid)
+    return request(app)
+      .post(`/orgs/${orgId}/validate/${eventId}/nota`)
+      .set('Authorization', 'Bearer token')
+      .send(body)
+  }
+
+  /** Lets somebody in and hands back the id of the check that did it. */
+  async function letSomebodyIn(extra: Record<string, unknown> = {}): Promise<string> {
+    seedPermit(ORG, PERMIT, { entry_mode: 'single', entry_count: 0, ...extra })
+    const answer = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(answer.body.result).toBe('allowed')
+    return String(answer.body.event_id)
+  }
+
+  function permit(orgId = ORG, permitId = PERMIT): Record<string, unknown> {
+    return store.docs.get(`orgs/${orgId}/authorizations/${permitId}`) as Record<string, unknown>
+  }
+
+  /** Rewrites a check's timestamp, to test the window without waiting. */
+  function ageCheck(eventId: string, minutes: number, orgId = ORG) {
+    const path = `orgs/${orgId}/access_events/${eventId}`
+    const stored = store.docs.get(path) as Record<string, unknown>
+    const at = new Date(Date.now() - minutes * 60 * 1000)
+    store.docs.set(path, { ...stored, created_at: { toDate: () => at } })
+  }
+
+  it('gives a one-entry permit back when the visitor did not come in', async () => {
+    const eventId = await letSomebodyIn()
+    expect(permit().entry_count).toBe(1)
+
+    const res = await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.entry_returned).toBe(true)
+    expect(permit().entry_count).toBe(0)
+    expect(permit().entry_returns).toBe(1)
+  })
+
+  it('lets the same person in again after the entry is given back', async () => {
+    // The whole point of the decision, stated as the thing a person does: the
+    // permit was spent by mistake and now works again.
+    const eventId = await letSomebodyIn()
+    expect((await check(GUARD, { location_id: GATE, code: CODE })).body.reason).toBe('already_used')
+
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect((await check(GUARD, { location_id: GATE, code: CODE })).body.result).toBe('allowed')
+  })
+
+  it('clears the last entry when the permit is back to none', async () => {
+    // A permit with no entries and a timestamp saying when somebody last came
+    // in is a lie, and the detail screen reads exactly that field.
+    const eventId = await letSomebodyIn()
+    expect(permit().last_entry_at).toBeTruthy()
+
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect(permit().last_entry_at).toBeNull()
+    expect(permit().first_entry_at).toBeNull()
+  })
+
+  it('keeps the count honest on a permit that allows many entries', async () => {
+    seedPermit(ORG, PERMIT, { entry_mode: 'multiple', entry_count: 0 })
+    await check(GUARD, { location_id: GATE, code: CODE })
+    const second = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(permit().entry_count).toBe(2)
+
+    await note(GUARD, String(second.body.event_id), { note: 'no_entry' })
+
+    expect(permit().entry_count).toBe(1)
+    // Somebody is still inside, so the last entry stays.
+    expect(permit().last_entry_at).toBeTruthy()
+  })
+
+  it('never edits the check — a note is a second record', async () => {
+    // events.ts: a log that can be edited is not evidence.
+    const eventId = await letSomebodyIn()
+    const before = { ...(store.docs.get(`orgs/${ORG}/access_events/${eventId}`) as object) }
+
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect(store.docs.get(`orgs/${ORG}/access_events/${eventId}`)).toEqual(before)
+    expect(events()).toHaveLength(2)
+    const written = events().find((one) => one.action === 'note')!
+    expect(written.about_event_id).toBe(eventId)
+    expect(written.note).toBe('no_entry')
+    expect(written.entry_returned).toBe(true)
+    expect(written.checked_by).toBe(GUARD)
+  })
+
+  it('records a reason that changes nothing', async () => {
+    const eventId = await letSomebodyIn()
+
+    const res = await note(GUARD, eventId, { note: 'returning_later' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.entry_returned).toBe(false)
+    expect(permit().entry_count).toBe(1)
+    expect(permit().entry_returns ?? 0).toBe(0)
+  })
+
+  it('accepts each of the four reasons and no others', async () => {
+    const eventId = await letSomebodyIn()
+    // The list is closed on purpose. A free-text field is a field somebody
+    // eventually fills with an ID number.
+    expect((await note(GUARD, eventId, { note: 'llego tarde, traia una caja' })).status).toBe(400)
+    expect((await note(GUARD, eventId, { note: 'sent_to_other_entrance' })).status).toBe(201)
+  })
+
+  it('refuses anything beyond the reason', async () => {
+    const eventId = await letSomebodyIn()
+
+    const res = await note(GUARD, eventId, { note: 'no_entry', comentario: 'CC 1020304050' })
+
+    expect(res.status).toBe(400)
+    expect(permit().entry_count).toBe(1)
+  })
+
+  it('refuses once the window has passed', async () => {
+    const eventId = await letSomebodyIn()
+    ageCheck(eventId, 11)
+
+    const res = await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect(res.status).toBe(409)
+    expect(permit().entry_count).toBe(1)
+    expect(events()).toHaveLength(1)
+  })
+
+  it('still allows it just inside the window', async () => {
+    const eventId = await letSomebodyIn()
+    ageCheck(eventId, 9)
+
+    expect((await note(GUARD, eventId, { note: 'no_entry' })).status).toBe(201)
+  })
+
+  it('refuses a second note on the same check', async () => {
+    // Without this, the button pressed twice takes the count below what
+    // actually happened.
+    const eventId = await letSomebodyIn()
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    const res = await note(GUARD, eventId, { note: 'no_entry' })
+
+    expect(res.status).toBe(409)
+    expect(permit().entry_count).toBe(0)
+    expect(permit().entry_returns).toBe(1)
+  })
+
+  it('writes the note but returns nothing when the check was a refusal', async () => {
+    seedPermit(ORG, PERMIT, { entry_mode: 'single', entry_count: 0, location_id: BACK_GATE })
+    const answer = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(answer.body.result).toBe('denied')
+
+    const res = await note(GUARD, String(answer.body.event_id), { note: 'sent_to_other_entrance' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.entry_returned).toBe(false)
+    expect(permit().entry_count ?? 0).toBe(0)
+  })
+
+  it('lets an administrator record it too', async () => {
+    const eventId = await letSomebodyIn()
+
+    expect((await note(ADMIN, eventId, { note: 'no_entry' })).status).toBe(201)
+  })
+
+  it('refuses a responsable, like a check does', async () => {
+    const eventId = await letSomebodyIn()
+
+    const res = await note(RESIDENT, eventId, { note: 'no_entry' })
+
+    expect(res.status).toBe(403)
+    expect(permit().entry_count).toBe(1)
+  })
+
+  it('tells somebody from another organization that nothing is here', async () => {
+    // 404, not 403, and deliberately: a stranger must not be able to learn
+    // that this organization exists by being told they may not touch it.
+    const eventId = await letSomebodyIn()
+
+    const res = await note(OUTSIDER, eventId, { note: 'no_entry' })
+
+    expect(res.status).toBe(404)
+    expect(permit().entry_count).toBe(1)
+  })
+
+  it('refuses a check that does not exist', async () => {
+    await letSomebodyIn()
+
+    expect((await note(GUARD, 'event_nada', { note: 'no_entry' })).status).toBe(404)
+  })
+
+  it('refuses a note about another note', async () => {
+    const eventId = await letSomebodyIn()
+    const first = await note(GUARD, eventId, { note: 'returning_later' })
+
+    const res = await note(GUARD, String(first.body.event_id), { note: 'no_entry' })
+
+    expect(res.status).toBe(404)
+  })
+
+  it('keeps a note exactly as long as the check it is about', async () => {
+    // Anything else produces a half-history: an entry that outlives the record
+    // saying nobody actually came in.
+    const eventId = await letSomebodyIn()
+    const original = events().find((one) => one.id === eventId)!
+
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    const written = events().find((one) => one.action === 'note')!
+    expect(written.expires_at).toEqual(original.expires_at)
+  })
+
+  it('never copies the code onto the note', async () => {
+    const eventId = await letSomebodyIn()
+
+    await note(GUARD, eventId, { note: 'no_entry' })
+
+    const written = events().find((one) => one.action === 'note')!
+    expect(written.scanned_code).toBeNull()
+    expect(JSON.stringify(written)).not.toContain(CODE)
+  })
+})

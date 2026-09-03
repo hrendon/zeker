@@ -134,7 +134,7 @@ describe('what the reader sees', () => {
 
 describe('whether anybody has come in on a permit (Decision 014)', () => {
   const format = (iso: string) => `[${iso}]`
-  const base = { entry_count: 0, last_entry_at: null, state: 'active' as const }
+  const base = { entry_count: 0, entry_returns: 0, last_entry_at: null, state: 'active' as const }
 
   it('says nobody has used it yet, while it could still be used', () => {
     expect(useLine(base, format)).toBe(es.permits.notUsedYet)
@@ -143,7 +143,7 @@ describe('whether anybody has come in on a permit (Decision 014)', () => {
 
   it('says when somebody came in', () => {
     const line = useLine(
-      { entry_count: 1, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'used' },
+      { entry_count: 1, entry_returns: 0, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'used' },
       format,
     )
     expect(line).toContain('[2026-09-02T20:14:00.000Z]')
@@ -154,7 +154,7 @@ describe('whether anybody has come in on a permit (Decision 014)', () => {
 
   it('adds the count only once it stops being obvious', () => {
     const line = useLine(
-      { entry_count: 4, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'active' },
+      { entry_count: 4, entry_returns: 0, last_entry_at: '2026-09-02T20:14:00.000Z', state: 'active' },
       format,
     )
     expect(line).toContain(es.permits.usedTimes)
@@ -166,6 +166,24 @@ describe('whether anybody has come in on a permit (Decision 014)', () => {
     // on a screen that already says it expired.
     expect(useLine({ ...base, state: 'expired' }, format)).toBeNull()
     expect(useLine({ ...base, state: 'revoked' }, format)).toBeNull()
+  })
+
+  it('tells a permit nobody used from one whose visitor was turned around', () => {
+    // Decision 015. Both are at zero entries, and they are not the same fact.
+    // An administrator asked for exactly this difference.
+    expect(useLine(base, format)).toBe(es.permits.notUsedYet)
+    expect(useLine({ ...base, entry_returns: 1 }, format)).toBe(es.permits.visitorNeverCame)
+  })
+
+  it('still says when somebody came in, even after an earlier one was given back', () => {
+    // A permit for free entries: two people came in, one was given back. What
+    // matters is that somebody is inside, not the correction.
+    const line = useLine(
+      { entry_count: 1, entry_returns: 1, last_entry_at: '2026-09-03T14:00:00.000Z', state: 'active' },
+      format,
+    )
+    expect(line).toContain('[2026-09-03T14:00:00.000Z]')
+    expect(line).not.toBe(es.permits.visitorNeverCame)
   })
 
   it('names the spent state, and does not reuse another one for it', () => {

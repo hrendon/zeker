@@ -4,17 +4,31 @@ import { z } from 'zod'
 import { requireAuth } from '../middleware/auth.js'
 import { requireOrgMember } from '../middleware/orgAccess.js'
 import { validateRateLimit } from '../middleware/rateLimit.js'
-import { conflict, forbidden, invalidRequest, notFound } from '../lib/errors.js'
+import {
+  conflict,
+  forbidden,
+  invalidRequest,
+  noteAlreadyRecorded,
+  noteTooLate,
+  notFound,
+} from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
 import { interiorRef } from '../lib/interiors.js'
 import type { InteriorDocument } from '../lib/interiors.js'
 import { locationRef } from '../lib/locations.js'
 import type { LocationDocument } from '../lib/locations.js'
 import { db } from '../lib/firebase.js'
-import { entryCountOf, normalizeCode, permitsCollection, stateOf } from '../lib/permits.js'
+import { entryCountOf, normalizeCode, permitRef, permitsCollection, stateOf } from '../lib/permits.js'
 import type { PermitDocument } from '../lib/permits.js'
-import { eventsCollection, newEventId, retentionDate } from '../lib/events.js'
-import type { AccessEventDocument, DenyReason } from '../lib/events.js'
+import {
+  CHECK_NOTES,
+  NOTE_WINDOW_MINUTES,
+  eventsCollection,
+  newEventId,
+  noteRetentionDate,
+  retentionDate,
+} from '../lib/events.js'
+import type { AccessEventDocument, CheckNote, DenyReason } from '../lib/events.js'
 
 /**
  * Checking a permit at a door (US-005).
@@ -192,6 +206,10 @@ validateRouter.post(
           action: 'entry',
           result,
           deny_reason: reason,
+          // A check is not a note about anything — see the note endpoint below.
+          note: null,
+          about_event_id: null,
+          entry_returned: null,
           // Only when nothing matched. A live code is not copied into a second
           // collection — see the note in lib/events.ts.
           scanned_code: permit ? null : parsed.data.code.slice(0, 64),
@@ -252,6 +270,189 @@ validateRouter.post(
     }
   },
 )
+
+const NoteSchema = z
+  .object({
+    note: z.enum(CHECK_NOTES),
+  })
+  .strict()
+
+/**
+ * POST /orgs/{orgId}/validate/{eventId}/nota — what happened, after the check
+ * (Decision 015).
+ *
+ * Decision 014 left a hole on purpose: a one-entry permit scanned by mistake
+ * stays spent, and the person at the gate cannot come back. This is what
+ * closes it.
+ *
+ * **A note is a new record, never an edit.** `events.ts` says nothing in this
+ * codebase updates an event once written, and that is not a detail — a log
+ * that can be edited is not evidence. So the note is its own document pointing
+ * at the check, and both survive.
+ *
+ * **Only `no_entry` changes anything**, and only when there is something to
+ * give back: the check let somebody in, it happened within
+ * `NOTE_WINDOW_MINUTES`, and nobody has already noted this check. The other
+ * three reasons are recorded and change nothing, which is the point — they are
+ * what an administrator reads later, not instructions to the system.
+ *
+ * **What this deliberately cannot do**, and the Founder accepted it in those
+ * words: it does not stop a dishonest guard from letting somebody in and then
+ * marking "no entró". Nothing at this layer can. What it does is leave it
+ * written — who, when, and against which permit.
+ */
+validateRouter.post(
+  '/:eventId/nota',
+  requireAuth,
+  requireOrgMember,
+  validateRateLimit,
+  async (req, res, next) => {
+    const parsed = NoteSchema.safeParse(req.body ?? {})
+    if (!parsed.success) {
+      next(
+        invalidRequest(
+          'The request body is not valid.',
+          parsed.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        ),
+      )
+      return
+    }
+
+    const orgId = String(req.params.orgId)
+    const eventId = String(req.params.eventId)
+    const uid = req.user!.uid
+    const role = req.orgMembership?.role
+    const note: CheckNote = parsed.data.note
+    const now = new Date()
+
+    // The same people who may check may say what happened. A responsable is
+    // refused here for the same reason they are refused a check.
+    if (role !== 'security' && role !== 'admin') {
+      next(forbidden('Only security staff, or an administrator, can record what happened.'))
+      return
+    }
+
+    try {
+      const noteId = newEventId(orgId)
+
+      const { entryReturned } = await db().runTransaction(async (tx) => {
+        const checkSnapshot = await tx.get(eventsCollection(orgId).doc(eventId))
+        if (!checkSnapshot.exists) throw notFound('Check not found.')
+
+        const check = checkSnapshot.data() as Partial<AccessEventDocument>
+
+        // A note is about a check, never about another note.
+        if (check.action !== 'entry') throw notFound('Check not found.')
+
+        const checkedAt = toDate(check.created_at)
+        const ageMinutes = checkedAt ? (now.getTime() - checkedAt.getTime()) / 60000 : Infinity
+        if (ageMinutes > NOTE_WINDOW_MINUTES) {
+          throw noteTooLate('That check is too old to record anything against.')
+        }
+
+        // One note per check. Without this, "no entró" pressed twice takes the
+        // count below what actually happened.
+        const existing = await tx.get(
+          eventsCollection(orgId).where('about_event_id', '==', eventId).limit(1),
+        )
+        if (!existing.empty) {
+          throw noteAlreadyRecorded('Somebody already recorded what happened at this check.')
+        }
+
+        // Only an entry that actually happened can be given back. A refusal let
+        // nobody in, so there is nothing to return — the note is still written.
+        let entryReturned = false
+        if (note === 'no_entry' && check.result === 'allowed' && check.permit_id) {
+          const ref = permitRef(orgId, String(check.permit_id))
+          const permitSnapshot = await tx.get(ref)
+          if (permitSnapshot.exists) {
+            const permit = permitSnapshot.data() as Partial<PermitDocument>
+            const count = entryCountOf(permit)
+            if (count > 0) {
+              tx.update(ref, {
+                entry_count: count - 1,
+                // Kept on the permit so an administrator can tell "nobody ever
+                // used this" from "the visitor never arrived" — Decision 015's
+                // fourth consequence. The event log holds the detail; this is
+                // what the screens can read today, before the entry history
+                // exists.
+                entry_returns: FieldValue.increment(1),
+                // A permit back at zero entries has no last entry to show.
+                // Left as null rather than removed: the field is read as
+                // "when was somebody last let in", and null is the true
+                // answer, where a stale timestamp is a lie.
+                ...(count - 1 === 0 ? { last_entry_at: null, first_entry_at: null } : {}),
+              })
+              entryReturned = true
+            }
+          }
+        }
+
+        tx.set(eventsCollection(orgId).doc(noteId), {
+          id: noteId,
+          org_id: orgId,
+          location_id: String(check.location_id ?? ''),
+          permit_id: check.permit_id ?? null,
+          interior_id: check.interior_id ?? null,
+          action: 'note',
+          // A note is not an entry and not a refusal. It carries the result of
+          // the check it is about, so the history can be read without joining.
+          result: check.result === 'allowed' ? 'allowed' : 'denied',
+          deny_reason: null,
+          note,
+          about_event_id: eventId,
+          entry_returned: entryReturned,
+          // The code is never copied. Whatever was scanned is already on the
+          // check this note points at.
+          scanned_code: null,
+          checked_by: uid,
+          request_id: req.id,
+          created_at: FieldValue.serverTimestamp(),
+          expires_at: noteRetentionDate(
+            check.expires_at,
+            retentionDate(now, check.result === 'allowed' ? 'allowed' : 'denied'),
+          ),
+        } satisfies Record<keyof AccessEventDocument, unknown>)
+
+        return { entryReturned }
+      })
+
+      logger.info(
+        {
+          audit: 'check.noted',
+          user_id: uid,
+          org_id: orgId,
+          about_event_id: eventId,
+          event_id: noteId,
+          note,
+          entry_returned: entryReturned,
+          request_id: req.id,
+        },
+        'Check noted',
+      )
+
+      res.status(201).json({
+        event_id: noteId,
+        note,
+        entry_returned: entryReturned,
+        request_id: req.id,
+      })
+    } catch (error) {
+      next(error)
+    }
+  },
+)
+
+/** Firestore hands timestamps back as objects with toDate(); the test double stores Dates. */
+function toDate(value: unknown): Date | undefined {
+  if (value instanceof Date) return value
+  const maybe = value as { toDate?: () => Date } | null | undefined
+  if (maybe && typeof maybe.toDate === 'function') return maybe.toDate()
+  return undefined
+}
 
 /** The apartment number and visitor details the guard's screen shows. */
 async function summarize(orgId: string, permit: PermitDocument): Promise<PermitSummary> {

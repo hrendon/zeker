@@ -6,8 +6,15 @@ import { OrgGate, OrgHeader, useOrgId } from '@/components/OrgShell'
 import { QrScanner } from '@/components/QrScanner'
 import { Field, FullPageMessage, Notice, SubmitButton } from '@/components/ui'
 import { toSpanish } from '@/lib/errors'
-import { checksApi, locationsApi, type CheckResult, type Location, type Org } from '@/lib/api'
-import { cleanCode, denyMessage, groupCode } from '@/lib/gate'
+import {
+  checksApi,
+  locationsApi,
+  type CheckNote,
+  type CheckResult,
+  type Location,
+  type Org,
+} from '@/lib/api'
+import { cleanCode, denyMessage, groupCode, noteLabel, notesFor } from '@/lib/gate'
 import { formatMoment, purposeLabel } from '@/lib/permits'
 import { es } from '@/lib/strings'
 
@@ -183,7 +190,7 @@ function GateScreen({ org }: { org: Org }) {
           </div>
 
           {answer ? (
-            <Answer answer={answer} onAgain={reset} />
+            <Answer answer={answer} onAgain={reset} orgId={org.id} />
           ) : (
             <>
               {failure ? <Notice kind="error">{failure}</Notice> : null}
@@ -271,7 +278,15 @@ function EntrancePicker({
  * colour is never the only signal — the words say allowed or denied on their
  * own, for a guard who cannot tell green from red.
  */
-function Answer({ answer, onAgain }: { answer: CheckResult; onAgain: () => void }) {
+function Answer({
+  answer,
+  onAgain,
+  orgId,
+}: {
+  answer: CheckResult
+  onAgain: () => void
+  orgId: string
+}) {
   const allowed = answer.result === 'allowed'
   const permit = answer.permit
 
@@ -322,6 +337,8 @@ function Answer({ answer, onAgain }: { answer: CheckResult; onAgain: () => void 
 
       <p className="text-sm text-[var(--color-ink-soft)]">{es.gate.recorded}</p>
 
+      <WhatHappened orgId={orgId} eventId={answer.event_id} allowed={allowed} />
+
       <button
         type="button"
         onClick={onAgain}
@@ -332,3 +349,85 @@ function Answer({ answer, onAgain }: { answer: CheckResult; onAgain: () => void 
     </div>
   )
 }
+
+/**
+ * What happened, after the check (Decision 015).
+ *
+ * Four fixed options and no text box. A guard is rotating staff from a
+ * contracted security firm, typing with somebody waiting at the gate; what
+ * lands in a free field in practice is cedulas, phone numbers and descriptions
+ * of third parties who consented to nothing. A closed list is also the only
+ * version an administrator can count.
+ *
+ * **"El visitante no entró" only appears after a "puede entrar."** Offering it
+ * under a refusal would ask the guard to record what the screen just said, and
+ * there would be no entry to give back anyway.
+ *
+ * One press, then the panel is done: the API refuses a second note on the same
+ * check, and a button that looks live but always fails is worse than no button.
+ */
+function WhatHappened({
+  orgId,
+  eventId,
+  allowed,
+}: {
+  orgId: string
+  eventId: string
+  allowed: boolean
+}) {
+  const [saving, setSaving] = useState<CheckNote | null>(null)
+  const [done, setDone] = useState<{ returned: boolean } | null>(null)
+  const [failure, setFailure] = useState<string | null>(null)
+
+  const options = notesFor(allowed)
+
+  async function record(note: CheckNote) {
+    setFailure(null)
+    setSaving(note)
+    try {
+      const answer = await checksApi.note(orgId, eventId, note)
+      setDone({ returned: answer.entry_returned })
+    } catch (cause) {
+      setFailure(toSpanish(cause))
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  if (done) {
+    return (
+      <Notice kind="ok">
+        {done.returned ? es.gate.noteSavedReturned : es.gate.noteSaved}
+      </Notice>
+    )
+  }
+
+  return (
+    <div className="border-t border-[var(--color-line)]/60 pt-4">
+      <h3 className="text-sm font-medium">{es.gate.noteTitle}</h3>
+      <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{es.gate.noteHint}</p>
+
+      {failure ? (
+        <div className="mt-3">
+          <Notice kind="error">{failure}</Notice>
+        </div>
+      ) : null}
+
+      <ul className="mt-3 space-y-2">
+        {options.map((option) => (
+          <li key={option}>
+            <button
+              type="button"
+              disabled={saving !== null}
+              onClick={() => void record(option)}
+              className="h-14 w-full rounded-xl border border-[var(--color-line)] px-4 text-left text-base font-medium hover:border-[var(--color-brand)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {saving === option ? es.gate.noteSaving : noteLabel(option)}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+

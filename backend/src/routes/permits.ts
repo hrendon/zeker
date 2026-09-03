@@ -199,6 +199,7 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
             status: 'active',
             entry_mode: parsed.data.entry_mode ?? 'single',
             entry_count: 0,
+            entry_returns: 0,
             first_entry_at: null,
             last_entry_at: null,
             created_by: uid,

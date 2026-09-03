@@ -1043,6 +1043,103 @@ match, which Firestore indexes on its own.
 
 ---
 
+### POST /orgs/{orgId}/validate/{eventId}/nota
+
+Records what happened, after a check (Decision 015).
+
+Decision 014 left a hole on purpose: a one-entry permit scanned by mistake stays
+spent, and the person at the gate cannot come back. This closes it.
+
+**Who may call it:** the same people who may check — security staff and
+administrators. A responsable is refused with 403; anyone outside the
+organization gets 404.
+
+**Request:**
+```json
+{ "note": "no_entry" }
+```
+
+`note` is one of exactly four values, and nothing else is accepted:
+
+| Value | What the guard taps |
+|---|---|
+| `no_entry` | El visitante no entró |
+| `sent_to_other_entrance` | Lo envié a otra entrada |
+| `returning_later` | Dijo que vuelve más tarde |
+| `asked_resident` | Pedí confirmación al residente |
+
+**There is no free-text field, and that is the decision, not an omission.** A
+guard is rotating staff from a contracted security firm, typing with somebody
+waiting at the gate; what lands in a free field in practice is document
+numbers, phone numbers and descriptions of third parties who consented to
+nothing — the exact thing Decisions 005, 007 and 008 already refused. A closed
+list is also the only version that can be counted: *"how many permits were
+issued for somebody who never arrived"* is a question an administrator will
+ask, and free text cannot answer it.
+
+**Response (201):**
+```json
+{
+  "event_id": "event_9tKcQq1sVzR4pLm2NhWd",
+  "note": "no_entry",
+  "entry_returned": true,
+  "request_id": "req_abc123xyz"
+}
+```
+
+**A note is a new record pointing at the check, never an edit of it.** Nothing
+in this codebase updates an access event once written — a log that can be
+edited is not evidence. The note is its own document with `action: "note"`,
+`about_event_id` naming the check, and `entry_returned` saying whether it
+actually gave an entry back. Both documents survive, and the note is deleted at
+exactly the same moment as the check it belongs to, so the history can never
+become half a story.
+
+**Only `no_entry` changes anything**, and only when there is something to give
+back: the check let somebody in, the permit still exists, and its count is
+above zero. The permit's `entry_count` goes down by one and `entry_returns`
+goes up by one, in the same transaction that writes the note. When the count
+reaches zero, `first_entry_at` and `last_entry_at` are set to null — a permit
+with no entries and a timestamp saying when somebody last came in is a lie, and
+that field is what the detail screen reads.
+
+`entry_returns` is what lets an administrator tell a permit **nobody ever used**
+from one whose **visitor was turned around at the door**. The event log holds
+the detail; this counter is what a screen can read before the entry history
+exists.
+
+The other three reasons are recorded and change nothing. That is the point —
+they are what somebody reads later, not instructions to the system.
+
+**What this deliberately cannot do**, accepted by the Founder in those words: it
+does not stop a dishonest guard from letting somebody in and then marking "no
+entró". Nothing at this layer can. What it does is leave it written — who,
+when, and against which permit.
+
+**Errors:**
+- `400 invalid_request` — `note` missing, not one of the four, or any extra field
+- `403 forbidden` — a responsable, or any role other than security/admin
+- `404 not_found` — no such check, the caller is not a member, or the target is
+  itself a note (a note is about a check, never about another note)
+- `409 note_too_late` — more than **10 minutes** since the check
+- `409 note_already_recorded` — somebody already recorded something about it
+
+**Two separate 409 codes on purpose.** A guard told only "that clashes with
+something that already exists" can explain nothing to the person in front of
+them — the same rule that gives every refusal at the gate its own sentence.
+
+**The ten-minute window is the Founder's number** (2026-09-03). It is the line
+between correcting a mistake with the person still at the gate and re-opening a
+credential later. Past it, the residente issues a new permit, which costs
+nothing.
+
+**One note per check**, enforced inside the transaction. Without it, the button
+pressed twice takes the count below what actually happened.
+
+**Rate limit:** shares the gate's 100 per minute per user.
+
+---
+
 ## Access Events Endpoint
 
 > ⚠️ **PARTLY BUILT.** The validation endpoint above **writes** access events

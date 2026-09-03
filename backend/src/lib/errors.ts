@@ -11,6 +11,12 @@ export const ErrorCode = {
   quota_exceeded: 403,
   not_found: 404,
   conflict: 409,
+  // Two separate 409 codes, for the same reason quota_exceeded is a separate
+  // 403: a guard at a gate who is told only "that clashes with something"
+  // cannot explain anything to the person in front of them (Decision 008's
+  // rule, applied to Decision 015's refusals).
+  note_too_late: 409,
+  note_already_recorded: 409,
   rate_limited: 429,
   internal_server_error: 500,
 } as const
@@ -51,3 +57,10 @@ export const notFound = (message = 'Resource not found.'): AppError =>
   new AppError('not_found', message)
 
 export const conflict = (message: string): AppError => new AppError('conflict', message)
+
+/** Decision 015. The ten-minute window has passed. */
+export const noteTooLate = (message: string): AppError => new AppError('note_too_late', message)
+
+/** Decision 015. One note per check, so a count can never go below the truth. */
+export const noteAlreadyRecorded = (message: string): AppError =>
+  new AppError('note_already_recorded', message)

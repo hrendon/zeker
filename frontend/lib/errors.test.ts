@@ -86,3 +86,29 @@ describe('when the app is opened from an address the API key does not allow', ()
   })
 })
 
+
+describe('the two refusals a guard can hit after a check (Decision 015)', () => {
+  // Both are 409s. Telling a guard "esa acción choca con algo que ya existe"
+  // while somebody waits at the gate is the same failure Decision 008 fixed
+  // for refusals: a person who is only told "no" can explain nothing.
+  it('says the window has passed, and what to do instead', () => {
+    const message = toSpanish(
+      new ApiError(409, { error: 'note_too_late', message: 'too old' }),
+    )
+    expect(message).toBe(es.gate.noteTooLate)
+    expect(message).not.toBe(es.errors.conflict)
+    expect(message).not.toBe(es.errors.unknown)
+  })
+
+  it('says somebody already recorded it', () => {
+    const message = toSpanish(
+      new ApiError(409, { error: 'note_already_recorded', message: 'already noted' }),
+    )
+    expect(message).toBe(es.gate.noteAlready)
+    expect(message).not.toBe(es.errors.conflict)
+  })
+
+  it('does not give the two the same words', () => {
+    expect(es.gate.noteTooLate).not.toBe(es.gate.noteAlready)
+  })
+})

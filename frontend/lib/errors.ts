@@ -73,6 +73,10 @@ const API_MESSAGES: Record<string, string> = {
   invalid_request: es.errors.invalidRequest,
   quota_exceeded: es.errors.quotaExceeded,
   conflict: es.errors.conflict,
+  // Decision 015. Both are 409s, and telling a guard "eso choca con algo que
+  // ya existe" at a gate is the same failure Decision 008 fixed for refusals.
+  note_too_late: es.gate.noteTooLate,
+  note_already_recorded: es.gate.noteAlready,
   rate_limited: es.errors.tooManyAttempts,
   internal_server_error: es.errors.serverError,
 }
