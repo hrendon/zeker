@@ -50,6 +50,7 @@ Map of authoritative sources for project knowledge.
 | — 012 | `decisions/012-one-free-organization.md` | One free organization per person, counted by who created it | Founder + Product Owner + Security |
 | — 013 | `decisions/013-meeting-cadence.md` | Which meetings Zeker holds, which are merged, and which are dormant | Founder + PM |
 | — 014 | `decisions/014-permit-use-and-what-it-leaves-behind.md` | One entry or free entries, chosen when the permit is created; the permit itself records that it was used | Founder + Product Owner + Architect |
+| — 015 | `decisions/015-what-the-guard-records-when-nobody-comes-in.md` | Four fixed reasons a guard can touch, never free text; "no entró" gives a one-entry permit back | Founder + Security + Product Owner |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |

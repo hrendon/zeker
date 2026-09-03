@@ -141,6 +141,24 @@ Security policy on what personal data we collect, store, and why.
 
 ### Tier 3: NEVER STORE
 
+**Free text written by a guard about a person** (added 2026-09-02, Decision 015):
+- ❌ A notes or comment field on a check at the gate
+- ❌ A notes field on a permit (already refused in Decision 007)
+
+Not because free text is personal data in itself, but because of **what
+reliably ends up in it**. A guard is rotating staff from a contracted security
+firm, not the customer's employee, typing with a person waiting at the door.
+What lands there is cédula numbers, phone numbers, physical and ethnic
+descriptions, and facts about third parties who consented to nothing — every
+one of them already on this list below.
+
+The Founder asked for exactly this feature on 2026-09-02 and, given the reason,
+chose a closed list of four reasons a guard touches instead. **Detecting an ID
+number before saving was also considered and rejected**: at a gate it fails in
+both directions, letting real personal data through while refusing a legitimate
+note at the worst possible moment. A field that cannot hold the data is the only
+control that holds.
+
 **Identity Documents:**
 - ❌ Cédula number (Colombian ID)
 - ❌ Passport number

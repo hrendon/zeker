@@ -90,6 +90,11 @@ these units, so the product could not deliver what it sells without them.
   - Valid from: date + time
   - Valid to: date + time
   - Purpose: chosen from a list, not free text
+  - **How many times it works: one entry, or free entries until it expires**
+    (Decision 014, 2026-09-02). Defaults to one entry — a permit is for a visit
+    unless the person issuing it says otherwise
+- [x] **The permit says whether anybody came in on it**, and when. Discovered by
+      the Founder minutes after first using the product for real, on 2026-09-02
 - [x] Authorization assigned unique ID
 - [x] QR code generated locally (client-side)
 - [x] Numeric code generated (fallback if QR doesn't scan)
@@ -137,9 +142,15 @@ these units, so the product could not deliver what it sells without them.
       is always available, because a refused camera permission must never
       become a visitor who cannot get in)
 - [x] System validates authorization in real-time, in this fixed order:
-      no such code → revoked → not started → finished → wrong entrance.
-      The permit's own state is settled before the entrance, so a revoked
-      permit never produces "try the other gate"
+      no such code → revoked → **already used** → not started → finished →
+      wrong entrance. The permit's own state is settled before the entrance, so
+      a revoked permit never produces "try the other gate"
+- [x] **A one-entry permit is spent by being used.** The answer and the count
+      are written in one transaction, so two guards scanning the same code at
+      the same instant cannot both be told yes (Decision 014)
+- [ ] ⚠️ **What the guard records when nobody comes in — not built.** Four fixed
+      reasons, no free text, and "el visitante no entró" gives a one-entry
+      permit back (Decision 015, decided 2026-09-02). The next unit
 - [x] Response within 2 seconds
 - [x] Clear success (green): name, interior, purpose, valid until
 - [x] Clear failure (red): the reason in words, plus who was turned away when

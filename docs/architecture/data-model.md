@@ -235,6 +235,10 @@ Access permit (core entity). **Built 2026-08-29.**
   "valid_to":   "2026-08-30T22:00:00.000Z",  // ISO 8601 string, UTC
   "code": "4J044ZMF",                  // 8 chars, random, unique within the org
   "status": "active",                  // "active" | "revoked" — NOT "expired"
+  "entry_mode": "single",              // "single" | "multiple" — Decision 014
+  "entry_count": 0,                    // written by the gate, in the same transaction
+  "first_entry_at": null,              // server timestamp on the first entry
+  "last_entry_at": null,               // server timestamp on every entry
   "created_by": "user1",
   "created_at": 2026-08-29T22:19:41Z,  // server timestamp
   "revoked_at": null,                  // server timestamp once revoked
@@ -243,6 +247,14 @@ Access permit (core entity). **Built 2026-08-29.**
 ```
 
 **Constraints:**
+- **A permit stored without `entry_mode` is read as `multiple`.** Everything
+  issued before 2026-09-02 is in that state: it was created under a rule that
+  offered no alternative, and converting it would revoke access nobody agreed
+  to revoke
+- **`entry_count` is written inside the transaction that answers the guard**, never
+  after it. A one-entry permit is spent by being used, so an answer decided
+  first and counted afterwards lets two guards scanning at the same instant
+  both be told yes
 - `valid_from` must be before `valid_to`
 - `valid_to` must be in the future when the permit is created. `valid_from` may
   be in the past — "valid since this morning" is ordinary
@@ -267,7 +279,9 @@ Each is recorded in `../decisions/007-entry-permits.md`.
 | `codes.numeric` derived from the id | `code`, from `crypto.randomInt` | That code alone opens a door. Anything predictable from a visible id is a way in |
 | `status: "expired"` | computed, never stored | Nothing runs to set it, so it would never arrive — and the delete guards would then block forever on a permit that ended last year |
 | `time_from` / `time_to` daily window | not stored | Needs each building's local time, which we do not keep |
-| `days_of_week`, `max_entries`, `notes` | not stored | No requirement demands them today |
+| `days_of_week` | not stored | No requirement demands it today |
+| `max_entries` — a number | `entry_mode`, two values | **Decision 014, 2026-09-02.** The Founder asked to see whether a permit had been used, and underneath that was a rule nobody had decided: a permit worked an unlimited number of times because that is what the code happened to do. A free number was not needed — the real cases are "one visit" and "in and out until it expires" — and a number invites a screen that asks "how many?", which nobody at a gate can answer |
+| `notes` — free text | **deliberately never stored** | **Decision 015, 2026-09-02.** Considered outright, at the Founder's request, and rejected on the Security Engineer's position: a guard is rotating staff from a contracted firm typing with a person waiting at the gate, and what lands in that field is ID numbers, phone numbers and descriptions of people. A closed list of reasons on the *event* carries the same information and can also be counted |
 
 **The code.** Eight characters from `0123456789ABCDEFGHJKMNPQRSTVWXYZ` — 32
 symbols with no I, L, O or U, the letters a guard misreads in bad light. About

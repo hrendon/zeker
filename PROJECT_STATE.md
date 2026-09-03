@@ -4,10 +4,99 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-02
 
-**Session closed 2026-09-01. The framework grew a heartbeat, and the product's
-front door turned out to have been locked shut the whole time.**
+**Session closed 2026-09-02. Somebody used Zeker for real, for the first time —
+after three separate locks on the same door were found and opened.**
 
-## What this session was for
+---
+
+# Session 2026-09-02
+
+## Objective
+
+Open the door. The previous session ended with the Founder unable to sign in and
+a proved diagnosis; this one was to apply the fix, verify it by hand, and get on
+with the people screen.
+
+## What actually happened
+
+**The fix from 2026-09-01 was correct and was not enough.** Two more locks sat
+behind it, each producing the same symptom, which is why every partial fix
+looked like a failure:
+
+| # | Lock | Found how |
+|---|---|---|
+| 1 | The browser key never allowed Firebase's own password page | Proved 2026-09-01, applied today: `403` → `400` |
+| 2 | Cloud Run answers on **two** addresses; only one was on the key. The canonical one — what the console shows and a person bookmarks — was blocked | The same call from both origins (R-25) |
+| 3 | **Firebase keeps a second, different permission list.** Authorized domains held neither address the product runs on, so every request carrying a return address was refused outright | Sending the browser's exact request from a terminal, with and without the return address (R-26) |
+
+The two look-alike permissions were mistaken for one for most of the day. **The
+key decides who may call Google; the domain list decides where a person may be
+returned to.**
+
+Lock 3 is the one that reached beyond the Founder: **no invitation and no
+recovery has ever left this application, for anyone.** Under Decision 006 that
+is every resident and every guard.
+
+## The milestone
+
+**The Founder received the email, set a password, signed in, and issued an entry
+permit from a phone.** First time end to end in the product's life. R-19 closed
+— by a person doing the thing, not by a suite going green.
+
+## The lesson, which is R-19's lesson a second time in two days
+
+**A password request for an address with no account is answered "done" without
+checking anything else**, so as not to reveal who has an account. Correct
+behaviour, and it means the obvious smoke test is worthless here: the diagnostic
+run at 11:20 reported success against a completely broken system. Recorded as
+R-27, and written at the top of the script that fixes it.
+
+## What was built
+
+* **The people screen tells having an account from having access.** "Aún no ha
+  entrado", a resend for exactly those people, and spam wording that names the
+  sender. Unknown stays silent rather than guessing.
+* **A blocked origin is now named** instead of "try again in a moment", which is
+  what sent the Founder into a retry loop against something impossible.
+* **Decision 014, built.** One entry or free entries, chosen when issuing; the
+  permit counts its own entries in the same transaction that answers the guard;
+  "ya se usó" is a named refusal; the detail screen says whether anybody came in.
+* **Three scripts**, because pasted commands broke twice on line wrapping:
+  `ver-cuentas.sh`, `arreglar-llave.sh`, `autorizar-dominios.sh`, plus
+  `desplegar.sh`.
+
+## Decisions taken (not proposals)
+
+* **014** — a permit is used, and it says so. One entry by default.
+* **015** — four fixed reasons a guard touches, never free text; "el visitante
+  no entró" gives a one-entry permit back. **Decided, not built.**
+
+## Verification — what actually happened
+
+* 198 backend tests, 66 frontend tests, typecheck and production build: pass.
+* **By hand, by the Founder, on a phone:** email received, password set, sign-in,
+  permit issued. This is the only verification that closed anything today.
+* **By hand, in a real browser, by the AI:** the failure reproduced on the
+  blocked address and confirmed absent on the working one.
+* **Not verified:** everything built after the door opened — the people screen
+  and all of Decision 014. It is committed and **not deployed**.
+
+## Open issues
+
+* Decision 014 is built but has never been driven by a person. `desplegar.sh`
+  publishes it.
+* Decision 015 is written and not built.
+* **R-23/R-24: this laptop holds a standing Google grant to production in the
+  Founder's name, and there is no written way to revoke it.** Five actions,
+  ~25 minutes, all the Founder's hands. Untouched today.
+* R-25 leaves a product question open: **which single address is Zeker's?** Two
+  front doors is the condition that produced lock 2.
+* The US$300 credit expires 2026-11-17 and the billing report has still not been
+  read by SKU.
+
+---
+
+## What the 2026-09-01 session was for
 
 Update the Mantis framework, adopt its new meeting cadence, and answer four
 Founder questions. It became something else on the first message: the Founder
@@ -99,20 +188,18 @@ central finding needs revisiting.
 🟢 **The product is visible in a browser for the first time** (Camino B: Build first, validate after)
 
 ```
-Completed:       The product now does, end to end, the thing it exists to do.
-                 Set-up (sign-in, organizations, sites, interiors + limits,
-                 people), issuing (a permit, a QR and a code, revocable), and
-                 now the door: a guard checks a code and is told in one glance
-                 whether the person may enter — and every check is recorded
-                 (188 backend tests + 45 frontend tests pass)
-In Progress:     Nothing. The next unit is showing that record back:
-                 the entry history
-Blocked:         0 · 2 decisions waiting on Founder (D-005, D-006),
-                 neither blocking today
-Critical Risk:   None open
-Next:            Restrict the Firebase key to the deployed domain, then run the
-                 smoke test by hand — including the phone pass a guard would do.
-                 After that, the entry history — who came in, when, who was refused
+Completed:       A person can now be let into this product and use it. Set-up,
+                 issuing, the door — and as of 2026-09-02 the way in works for
+                 somebody who is not already inside, which it never had
+                 (198 backend + 66 frontend tests pass)
+In Progress:     Decision 014 built, committed, NOT deployed and never driven
+                 by hand. Deploying it is the next action
+Blocked:         0 · D-006 and D-008 still waiting on the Founder,
+                 neither blocking
+Critical Risk:   R-23 — losing this laptop is losing control of production.
+                 Five actions, ~25 minutes, only the Founder can do them
+Next:            Deploy and verify Decision 014 by hand on a phone. Then build
+                 Decision 015. Then the entry history
 ```
 
 **Latest Update (2026-08-30): a guard can now check a permit at a door.**
