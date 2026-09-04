@@ -25,8 +25,8 @@ Antes de empezar, anote qué revisión está viva.
 | TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ✅ pasó 2026-09-03 (el paso D, por prueba y no a mano) |
 | TC-016-01 | Un permiso con días y horas: sirve dentro, no sirve fuera | ✅ pasó 2026-09-04, los ocho pasos |
 | TC-016-02 | Los permisos sin horario siguen sirviendo a cualquier hora | ✅ pasó 2026-09-04 |
-| TC-018-01 | Un edificio nuevo no puede agregar gente hasta que alguien lo apruebe | ⬜ nunca corrido |
-| TC-018-02 | Los edificios que ya existían no cambiaron | ⬜ nunca corrido |
+| TC-018-01 | Un edificio nuevo no puede agregar gente hasta que alguien lo apruebe | ✅ pasó 2026-09-04, los seis pasos |
+| TC-018-02 | Los edificios que ya existían no cambiaron | ✅ pasó 2026-09-04 |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -812,3 +812,47 @@ lectura lo confirma en vez de suponerlo.
   otra zona horaria o un edificio fuera de Colombia; hoy no existe ninguno de los
   dos. Cubierto por prueba automática y por nada más.
 - **El cambio de hora (horario de verano).** Colombia no lo tiene.
+
+
+## 2026-09-04 (tarde) — TC-018-01 y TC-018-02
+
+**Contra lo publicado:** `zeker-web-00011-zpj` y `zeker-api-00011-5rc`. Leído en
+vivo antes de empezar: `CORS_ORIGINS` sobrevivió a la publicación (R-28).
+
+**TC-018-02 se corrió primero**, a propósito: es la que más caro cuesta si falla.
+
+| Caso | Paso | Qué contestó | |
+|---|---|---|---|
+| 018-02 | A | "compartir" (creada antes de hoy) sigue mostrando **"Agregar persona"** | ✅ |
+| 018-02 | B | y sigue mostrando **"Crear permiso"** | ✅ |
+| 018-01 | A | El edificio nuevo se creó sin fricción | ✅ |
+| 018-01 | B | Sede e interior se crearon **sin aprobación**, que es lo que la persona puede hacer mientras espera | ✅ |
+| 018-01 | C | Personas: **no hay botón**. Dice *"Estamos revisando este edificio"* y explica que es por los datos de los residentes. **No promete ningún correo** | ✅ |
+| 018-01 | D | Permisos: tampoco hay botón, y dice que un permiso guarda el nombre de quien entra | ✅ |
+| 018-01 | E | `npm run aprobar` lo lista con nombre, ciudad, quién lo creó y cuánto lleva armado — **y ningún nombre de residente ni de visitante** | ✅ |
+| 018-01 | F | Después de aprobar, el botón de agregar apareció | ✅ |
+
+### Tres cosas que salieron de conducirlo a mano, y ninguna prueba automática vería
+
+1. **En Personas quedó una frase de más.** Encima del aviso sigue el texto sobre
+   el correo de contraseña — que habla de invitar gente, que es justo lo que ahí
+   no se puede hacer. No es falso, es ruido en el peor momento. → Contenido.
+2. **En Permisos, "primero agregue un interior" gana sobre el aviso de revisión.**
+   Es correcto y accionable, pero significa que la persona choca con dos muros
+   seguidos en vez de uno. Observación, no falla.
+3. **Se vio por fin en un navegador el arreglo del 2026-09-03** — el que estaba
+   pendiente en la lista del Fundador. **Funciona:** un apartamento con
+   responsable ya no se lee como "sin asignar", que era lo peligroso (un
+   administrador podía entregárselo a otra persona). Lo que queda es que dice
+   *"asignado, sin nombre registrado"*, y la causa quedó medida en vez de
+   supuesta: **de las cuatro cuentas que existen, solo una no tiene nombre — la
+   del Fundador**, creada antes de que el registro lo pidiera. El formulario de
+   registro sí lo pide hoy. **El hueco real es otro: no existe ninguna pantalla
+   donde una persona corrija su propio nombre.**
+
+### Lo que estos casos no cubren
+
+**La persona que espera aprobación no tiene cómo escribirnos.** Zeker no manda
+correos, no hay dirección de contacto y D-008 sigue sin respuesta. Los dos casos
+pueden pasar enteros y un desconocido real quedaría sentado frente a una pantalla
+sin nadie a quien preguntarle.

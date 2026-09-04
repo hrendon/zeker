@@ -323,6 +323,36 @@ building's residents and visitors is what R-01 describes.
 clean. Run against production: the script answers correctly with nothing
 pending.
 
+### Published and driven by hand
+
+`zeker-web-00011-zpj` and `zeker-api-00011-5rc`. **TC-018-02 was run first, on
+purpose** — it is the one that costs most if it fails — and the organization
+created before today still shows both "Agregar persona" and "Crear permiso".
+Nothing that already existed changed.
+
+**TC-018-01 passes all six steps.** A new building was created without friction,
+its entrance and its interior were added **without approval**, Personas and
+Permisos both showed the explanation instead of a button, `npm run aprobar`
+listed it with what is needed to decide and no resident's or visitor's name, and
+the button appeared after approval.
+
+### Three things that came out of driving it by hand
+
+1. **A leftover sentence on Personas.** Above the notice sits the text about the
+   password email — which is about inviting people, the one thing that screen
+   cannot do in that state. Not false; noise at the worst moment. → Content.
+2. **On Permisos, "add an interior first" wins over the review notice.** Correct
+   and actionable, but it means two walls in a row rather than one. Observation.
+3. **The 2026-09-03 fix was finally seen in a browser** — item 2 on the Founder's
+   own list. **It works:** an interior with a responsable no longer reads as
+   unclaimed, which was the dangerous half (an administrator could hand somebody
+   else's apartment away). What remains is the wording *"asignado, sin nombre
+   registrado"*, and the cause was **measured rather than assumed**: of the four
+   accounts that exist, **exactly one has no name — the Founder's**, created
+   before the signup form asked for it. The form asks today. **The real gap is
+   different and now recorded: there is no screen anywhere in the product where a
+   person can correct their own name.**
+
 ### The gap this leaves, named rather than discovered later
 
 **An unapproved administrator has no way to reach us.** Zeker sends no email,
@@ -356,8 +386,15 @@ infrastructure.
    **20,000 COP** and the warning **5,000**. Then `zeker.com.co` in Cloudflare.
 3. **Confirm the cleanup rule actually deleted something**, against its written
    pass/fail line.
-4. Two copy questions for Content: the gate saying "a esta hora" when the *day*
-   is wrong, and "Este permiso ya terminó" on a permit that was used.
+4. **A person cannot correct their own name anywhere in the product.** Found by
+   measuring the cause of the "sin nombre registrado" wording rather than
+   guessing at it. Small, and it will hit every self-signup that mistypes.
+5. **D-008 stopped being a copy question.** An unapproved administrator has no
+   way to reach us: no email from Zeker, no contact address, and the domain that
+   would give us one does not resolve. Decision 018 needs it to be humane.
+6. Three copy questions for Content: the gate saying "a esta hora" when the
+   *day* is wrong, "Este permiso ya terminó" on a permit that was used, and the
+   leftover password-email sentence on an unapproved Personas screen.
 
 ---
 
