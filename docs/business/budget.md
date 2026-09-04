@@ -206,3 +206,31 @@ consolidated position remains:
 **The one action that changes this line from "unknown" to a number** is still
 the same one: the billing report grouped **by SKU**, with the **credits column
 shown**. Minutes, in the console, and only the Founder can do it.
+
+
+### Puesto el mismo día: la regla de limpieza
+
+**Aplicada 2026-09-04 sobre `cloud-run-source-deploy`**, con la aprobación del
+Fundador después de ver exactamente qué se borraría:
+
+* **Conservar las 3 versiones más recientes** de cada servicio — la que está
+  viva, más dos para volver atrás al instante.
+* **Borrar el resto**, sin condición de antigüedad. Ocho imágenes de catorce.
+
+Confirmado leyendo el repositorio después de aplicarla: las dos reglas están
+puestas y **el modo de prueba está apagado**, así que borra de verdad.
+
+**Y aquí está la parte que este proyecto tiene que dejar de repetir:** en el
+momento de escribir esto **no ha borrado nada**. El repositorio marca 300,9 MB,
+más que antes, porque la publicación de hoy entró primero. Google ejecuta estas
+reglas por su cuenta, normalmente dentro de un día.
+
+Así que hoy esto es **declarado y confirmado configurado, con su efecto sin
+comprobar** — la quinta vez que aparece la misma forma (R-16, R-25, R-26, R-28).
+La diferencia es que esta vez está escrito antes de que alguien lo dé por hecho.
+
+**La comprobación, para la próxima sesión:** correr `npm run costs` o pedir el
+tamaño del repositorio. **Pasa** si bajó de 300 MB a cerca de 150 MB y quedan
+seis imágenes. **Falla** si sigue en 300 y hay catorce — y entonces la regla
+está puesta y no está corriendo, que es peor que no tenerla, porque parece
+resuelto.

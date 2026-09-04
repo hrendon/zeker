@@ -14,7 +14,7 @@ Map of authoritative sources for project knowledge.
 | APIs | `architecture/api.md` | Endpoints, request/response, authentication | Software Architect |
 | Design (UX/UI) | `architecture/design.md` | Layout, language, components, accessibility, and the setup flow. The responsable and security experiences are still to be designed | UI/UX Designer |
 | Metrics | ⛔ not written | Metric definitions and what each one actually measures | Data Analyst |
-| Customer evidence | ⛔ not written | What was assumed, what was tested, what was learned | Customer Discovery & Validation Advisor |
+| Customer evidence | `product/customer-discovery.md` | The opening question, the order the assumptions are tested in, what a "no" looks like — all decided **before** the first call — and the (empty) log of what administrators actually said | Customer Discovery & Validation Advisor |
 | Developer guide | `architecture/developer-guide.md` | How to run, test, and deploy the code, plus `npm run report` (the business) and `npm run costs` (the money) | Backend Developer |
 | Cost watch | `../backend/scripts/cost-watch.ts` | How full each free tier is, against the ceiling. **Not the bill** — it says so itself | FP&A Manager |
 | **Security** | | | |
@@ -35,6 +35,7 @@ Map of authoritative sources for project knowledge.
 | Meeting records | `meetings/` | One file per occurrence, `YYYY-MM-DD-<slug>.md`. Episodic — durable knowledge is promoted out of them to the artifacts below | The convening role |
 | — 2026-09-01 | `meetings/2026-09-01-revision-semanal.md` | First weekly review: the locked-out Founder, the recovery path, D-005's consequences, the next unit | Product Owner + Architect + Security + QA + Interface Auditor |
 | — 2026-09-01 | `meetings/2026-09-01-mbr-comite-gasto.md` | First monthly review and spend committee: spend is unverified, eleven decisions audited, the domain deferred | FP&A + Procurement + Decision Auditor |
+| — 2026-09-04 | `meetings/2026-09-04-revision-semanal.md` | Second weekly review, three units late: the consultants' claim was half wrong and checking it saved weeks, the billing account is in pesos, the image store fills itself, and seventeen days without a customer conversation | Product Owner + Architect + Security + QA + Discovery + FP&A + both domain consultants |
 | Interface audit | `architecture/interface-audit.md` | Independent review of whether the interface works for a stranger | Interface & Experience Auditor |
 | Decision log | `decisions/` | Significant decisions with context & rationale | All roles |
 | — audit | `decisions/decision-audit.md` | Did decisions deliver what they predicted | Decision & Outcomes Auditor |
@@ -108,7 +109,6 @@ looks for them:
 | Document | Owner | Needed by |
 |----------|-------|-----------|
 | `product/roadmap.md` | Product Owner | Not urgent — `PROJECT_STATE.md` carries the ordering |
-| `product/customer-discovery.md` | Customer Discovery & Validation Advisor | **Now, and it is written before the first call, not after.** The hypothesis and evidence log. `product/brief.md` now names the ten assumptions, the first question, the sample size and what a "no" looks like — this file is where the answers land |
 | `product/segment-residential.md` | Residential Property Administration Consultant | Its first consultation (2026-09-04) is summarised inside `product/brief.md` and exists in no artifact of its own |
 | `product/physical-security-advisory.md` | Physical Security Consultant | Same — consulted 2026-09-04 for the corporate half of Decision 010's segment, summarised in the brief only |
 | `architecture/analytics.md` | Data Analyst | When the first real users arrive. Metric definitions, so "organizations created" is not mistaken for a sign of anything |
@@ -117,4 +117,4 @@ looks for them:
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-09-04
+**Last updated:** 2026-09-04 (segunda vez)

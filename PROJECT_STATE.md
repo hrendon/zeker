@@ -4,7 +4,7 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-04
 
-**Session open 2026-09-04. The document that says who we sell to has been
+**Session closed 2026-09-04. The document that says who we sell to has been
 rewritten for the market the Founder chose four days ago, and it now says in
 writing that Zeker has no evidence for that market at all. Two domain experts,
 asked separately, named the same gap; checking their claim against the code
@@ -181,17 +181,55 @@ one field, and the Founder chose it knowing so.
   billing report, the budget alert on the billing account, `zeker.com.co`, and
   R-23's five actions) are all untouched and all still the Founder's hands.
 
-## Next
+## Then: closing the session properly
 
-1. **The Artifact Registry cleanup policy.** 53% of the free tier, filled
-   entirely by our own publishes with zero customers. It is the only charge
-   this project is on course to receive, and it is mine to fix, not the
-   Founder's.
-2. `docs/product/customer-discovery.md`, written before the first call. Decision
-   016 now has a prediction that only a conversation can check.
-3. The Founder's hands, with a deadline: the billing report, the budget alert on
-   the **billing account**, `zeker.com.co` in Cloudflare.
-4. See the "asignado, sin nombre registrado" fix in a browser.
+Three things, none of them product.
+
+* **The image store's cleanup rule is applied.** Keep the three most recent
+  versions per service, delete the rest — approved by the Founder after seeing
+  the exact list of eight images it would remove. Confirmed live, and confirmed
+  **not** in dry-run. **It has deleted nothing yet**: Google runs these on its
+  own schedule, and the store still reads 300.9 MB. Recorded as R-32, declared
+  and unproven, with its pass/fail line written for the next session — near
+  150 MB and six images passes; 300 MB and fourteen fails, and then the rule is
+  set and not running, which looks solved and is not.
+* **`docs/product/customer-discovery.md` exists**, written **before** the first
+  call — which is the only time it can be written honestly. It carries the
+  opening question, the order the assumptions are tested in, the sample size,
+  and what a "no" looks like, all decided in advance so a "no" cannot later be
+  read as a "not quite yet". Its conversation table is empty, and that emptiness
+  is the company's entire market evidence.
+* **The weekly review ran**, three units late. Decision 013 requires it whenever
+  a unit closes; four closed with one review between them. Recorded as a rule
+  not being kept, not as a one-off. Its output is the ordered list below.
+
+## Session close — 2026-09-04
+
+### The one thing worth carrying forward
+
+**Checking the consultants' claim against the code before building saved weeks.**
+Two domain roles, asked separately, both said the product could not express a
+recurring visitor. Both had read Decision 007 and neither had seen Decision 014,
+from two days earlier. Most of it already existed; what was missing was the
+schedule. **The general rule is not about those two roles — it is that an expert
+opinion about our own product gets verified against the code before anyone acts
+on it**, exactly the way declared infrastructure gets verified against live
+infrastructure.
+
+### Next
+
+1. **Five to eight conversations with building administrators.** The script, the
+   order and the stop condition are written. Seventeen days of building, zero
+   conversations, and now something concrete to show. **Founder's hours; nothing
+   else substitutes for them.**
+2. **The Founder's console items, and the last excuse is gone:** the billing
+   report by SKU with credits shown, and the budget alert on the **billing
+   account** — the currency question that blocked it is answered, the amount is
+   **20,000 COP** and the warning **5,000**. Then `zeker.com.co` in Cloudflare.
+3. **Confirm the cleanup rule actually deleted something**, against its written
+   pass/fail line.
+4. Two copy questions for Content: the gate saying "a esta hora" when the *day*
+   is wrong, and "Este permiso ya terminó" on a permit that was used.
 
 ---
 
