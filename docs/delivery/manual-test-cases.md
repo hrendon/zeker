@@ -25,6 +25,8 @@ Antes de empezar, anote qué revisión está viva.
 | TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ✅ pasó 2026-09-03 (el paso D, por prueba y no a mano) |
 | TC-016-01 | Un permiso con días y horas: sirve dentro, no sirve fuera | ✅ pasó 2026-09-04, los ocho pasos |
 | TC-016-02 | Los permisos sin horario siguen sirviendo a cualquier hora | ✅ pasó 2026-09-04 |
+| TC-018-01 | Un edificio nuevo no puede agregar gente hasta que alguien lo apruebe | ⬜ nunca corrido |
+| TC-018-02 | Los edificios que ya existían no cambiaron | ⬜ nunca corrido |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -462,6 +464,108 @@ esta cubre que lo publicado la tenga.
 ## Qué anotar
 
 La fecha de creación del permiso que usó, y qué contestó la portería.
+
+---
+
+# TC-018-01 — Un edificio nuevo espera aprobación
+
+**Qué decisión prueba:** la 018, y con ella cierra R-01, el riesgo más viejo del
+proyecto. Un edificio recién creado puede armarse solo, y **no puede meter datos
+de terceros** hasta que una persona lo apruebe.
+
+**Por qué importa que sea a mano:** hay pruebas automáticas para cada regla. Lo
+que ninguna puede ver es si el administrador entiende **qué le está pasando** y
+**qué puede hacer mientras tanto**. Una pantalla que solo dice "no" en el momento
+en que alguien acaba de registrar su edificio es una persona que se va.
+
+## Antes de empezar
+
+- Estar dentro de la aplicación con su cuenta.
+- **Anote qué revisión está viva.** Si es anterior a la del 2026-09-04 por la
+  tarde, la Decisión 018 no está publicada y este caso no aplica.
+
+## Los pasos
+
+**A. Crear una organización nueva.** Inicio → Crear organización.
+
+- **Pasa:** se crea sin fricción y sin preguntar nada raro. Crear el edificio
+  nunca se bloquea — lo que espera es otra cosa.
+- **Falla:** no deja crearla. Entonces el muro quedó en el sitio equivocado.
+
+**B. Armar una sede y un interior en ese edificio nuevo.**
+
+- **Pasa:** las dos cosas funcionan normalmente. Eso es lo que la persona puede
+  hacer mientras espera, y si no funciona, la espera es una pared en blanco.
+- **Falla:** alguna de las dos se bloquea.
+
+**C. Intentar agregar una persona.** Pestaña Personas.
+
+- **Pasa:** **no hay botón de agregar.** En su lugar hay un texto que dice
+  *"Estamos revisando este edificio"* y explica que es por los datos de los
+  residentes, y que mientras tanto puede armar sedes e interiores.
+- **Pasa:** el texto **no promete un correo**. Zeker no envía correos propios; si
+  la pantalla dice "le avisamos", está mintiendo.
+- **Falla:** aparece el botón. Peor aún si deja llenar el formulario y falla al
+  enviarlo — eso es hacerle escribir a alguien para nada.
+
+**D. Intentar crear un permiso.** Pestaña Permisos.
+
+- **Pasa:** tampoco hay botón, y el texto explica que un permiso guarda el nombre
+  de quien entra.
+- **Falla:** aparece el botón.
+
+**E. Aprobarlo.** En una terminal:
+
+    cd backend && npm run aprobar
+
+- **Pasa:** el edificio nuevo aparece en la lista, con su nombre, su ciudad,
+  quién lo creó y cuánto lleva armado.
+- **Pasa:** **no aparece ningún nombre de residente ni de visitante.** Si
+  apareciera, la herramienta de aprobar se volvió una lista de quién vive dónde.
+- **Falla:** la lista sale vacía. Entonces el edificio se creó ya aprobado.
+
+Después: `npm run aprobar -- <el id que salió>`.
+
+**F. Volver al navegador y recargar Personas.**
+
+- **Pasa:** el botón de agregar apareció, y agregar una persona funciona.
+- **Falla:** sigue diciendo que está en revisión. Entonces la aprobación no
+  llegó, o la pantalla la está leyendo mal.
+
+## Qué anotar
+
+El id del edificio, la hora, y **el texto literal** que mostraron las pantallas
+en C y D. Si algo falló, ese texto es el primer dato.
+
+## Lo que esta prueba no cubre, y hay que decirlo
+
+**La persona que espera no tiene cómo escribirnos.** Zeker no manda correos, no
+hay dirección de contacto y D-008 sigue sin respuesta. Esta prueba puede pasar
+entera y aun así, un desconocido de verdad quedaría sentado frente a una pantalla
+sin nadie a quien preguntarle. Está escrito en la Decisión 018 como un hueco
+conocido, no como un descuido.
+
+---
+
+# TC-018-02 — Los edificios que ya existían no cambiaron
+
+**Qué prueba:** que "sin campo de aprobación" se lea como **aprobado**. Si esto
+falla, el Fundador queda encerrado fuera de su propio edificio por una regla que
+no existía cuando lo creó.
+
+## Los pasos
+
+**A. Abrir la organización "compartir"** (creada antes del 2026-09-04) y entrar a
+Personas.
+
+- **Pasa:** el botón de agregar está ahí, como siempre.
+- **Falla:** dice que está en revisión. Revertir de inmediato: eso es cerrarle la
+  puerta a alguien sin que nadie lo haya decidido.
+
+**B. Crear un permiso en ese edificio.**
+
+- **Pasa:** funciona.
+- **Falla:** lo niega.
 
 ---
 
