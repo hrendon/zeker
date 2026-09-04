@@ -23,8 +23,8 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
 | TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
 | TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ✅ pasó 2026-09-03 (el paso D, por prueba y no a mano) |
-| TC-016-01 | Un permiso con días y horas: sirve dentro, no sirve fuera | ⬜ nunca corrido |
-| TC-016-02 | Los permisos sin horario siguen sirviendo a cualquier hora | ⬜ nunca corrido |
+| TC-016-01 | Un permiso con días y horas: sirve dentro, no sirve fuera | ✅ pasó 2026-09-04, los ocho pasos |
+| TC-016-02 | Los permisos sin horario siguen sirviendo a cualquier hora | ✅ pasó 2026-09-04 |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -642,3 +642,69 @@ cuenta de residente de una de administrador, un cliente tampoco lo hará.
 **Una función vieja verificada de rebote:** al crear a Vecina Prueba, la
 pantalla de personas mostró *"Aún no ha entrado"* — el estado construido el
 2026-09-02 y nunca visto funcionando hasta hoy.
+
+
+## 2026-09-04 — TC-016-01 y TC-016-02
+
+**Contra lo publicado:** `zeker-web-00009-z7b` y `zeker-api-00009-gpb`, publicadas
+ese mismo día. Antes de empezar se leyó en vivo que `CORS_ORIGINS` sobrevivió a la
+publicación (R-28).
+
+**Hora de la corrida:** viernes 4 de septiembre, entre las **12:55 y la 1:05 p. m.**,
+hora de Bogotá. Toda la prueba depende de esa hora, así que queda escrita.
+
+**Quién:** el Fundador entró con su cuenta; el resto lo condujo la sesión en el
+navegador del Fundador, contra producción.
+
+### TC-016-01 — los ocho pasos, todos pasan
+
+| Paso | Qué se hizo | Qué contestó | |
+|---|---|---|---|
+| A | Abrir el formulario | *"¿Sirve a cualquier hora?"*, puesta en **"Sí, a cualquier hora"**, con su explicación debajo | ✅ |
+| B | Cambiar a "solo ciertos días y horas" | Siete botones, **lunes primero y domingo último**, puestos de lunes a viernes 7:00–16:00, y la línea *"Las horas son las del edificio"* | ✅ |
+| C | Poner 10:00 p. m. → 6:00 a. m. | *"Un horario no puede pasar de la medianoche. Si necesita la noche, haga dos permisos."* En rojo, sin recargar, y **el permiso no se creó** | ✅ |
+| D | Crear "Prueba 016 Dentro": **viernes, 12:00 p. m. a 3:00 p. m.** | La pantalla del permiso muestra *"Días y horas: viernes, de 12:00 p. m. a 3:00 p. m."* — en palabras | ✅ |
+| E | Verificarlo en la portería, **1:00 p. m.** | **"Puede entrar"** | ✅ |
+| F | "Prueba 016 Hora Fuera": **viernes, 6:00 a 7:00 a. m.**, verificado a la 1:01 p. m. | **"No puede entrar"** · *"Este permiso no sirve a esta hora."* · **"Sirve: viernes, de 6:00 a. m. a 7:00 a. m."** | ✅ |
+| G | "Prueba 016 Dia Fuera": **sábado, 12:00 p. m. a 3:00 p. m.**, verificado a la 1:03 p. m. | Lo niega igual, con *"Sirve: sábado, de 12:00 p. m. a 3:00 p. m."* | ✅ |
+| H | Abrir el historial | Los dos rechazos aparecen con el motivo **en español**, no un código | ✅ |
+
+**Un dato que salió de regalo en el paso H:** "Prueba 016 Dentro" registró **una
+sola entrada**, a la 1:00 p. m. Durante la corrida se había pulsado "Verificar"
+dos veces por dudas de la automatización, y el historial prueba que solo se
+registró una. La transacción de la Decisión 014 hace lo que dice.
+
+### TC-016-02 — los permisos viejos no cambiaron de regla
+
+Se usó **"Prueba 015 Devolucion"**, creado el 3 de septiembre, todavía dentro de
+sus fechas al momento de la prueba.
+
+| Paso | Qué contestó | |
+|---|---|---|
+| A | La pantalla del permiso **no muestra** la línea "Días y horas" | ✅ |
+| B | La portería contesta *"Este permiso era para una sola entrada y ya se usó. Pídale al residente que haga uno nuevo."* — la regla vieja, **no** el horario | ✅ |
+
+**Evidencia que la pantalla no podía dar, leída directo de la base de datos:** ese
+permiso **no tiene el campo `schedule` en absoluto** — no lo tiene en `null`, no lo
+tiene. Ese es exactamente el caso que este caso de prueba existe para cubrir, y la
+lectura lo confirma en vez de suponerlo.
+
+### Dos observaciones, ninguna es una falla
+
+1. **Cuando el día es el equivocado, el mensaje dice "no sirve a esta hora".** Es
+   cierto en el sentido de "en este momento", y la línea de abajo aclara cuándo sí
+   sirve. Pero un vigilante apurado puede mirar el reloj en vez del calendario.
+   Vale la pena que Contenido decida si el mensaje debería distinguir el día de la
+   hora. **No cambia lo que hace el producto.**
+2. **Dos de las tres verificaciones necesitaron un segundo toque en "Verificar".**
+   Puede ser la automatización (los clics sintéticos llegan antes de que la
+   pantalla termine de actualizarse) y no el producto. **No se puede distinguir
+   desde aquí**, y por eso queda anotado en vez de convertido en defecto: se
+   confirma con un dedo de verdad en TC-PHONE-01.
+
+### Lo que sigue sin probarse
+
+- **Que la hora sea la del edificio y no la del teléfono.** Necesita un teléfono en
+  otra zona horaria o un edificio fuera de Colombia; hoy no existe ninguno de los
+  dos. Cubierto por prueba automática y por nada más.
+- **El cambio de hora (horario de verano).** Colombia no lo tiene.

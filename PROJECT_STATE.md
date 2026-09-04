@@ -128,15 +128,40 @@ one field, and the Founder chose it knowing so.
   and production build: pass.
 * The new tests are built so that **reading the time in UTC fails them** — every
   case is chosen at an hour where Bogotá and UTC disagree about the day.
-* **Not verified by a person yet.** TC-016-01 and TC-016-02 are written, with
-  their pass/fail lines, and neither has been run. **Nothing here has been seen
-  in a browser.**
+* **Published and driven by hand against production**, revisions
+  `zeker-web-00009-z7b` and `zeker-api-00009-gpb`. The Founder signed in; the
+  session drove the rest in their browser, on Friday 2026-09-04 between 12:55
+  and 13:05 Bogotá time — the hour is recorded because the whole test depends
+  on it.
+* **TC-016-01 passes, all eight steps.** The permit inside its hours was let in
+  at 13:00; the one for 06:00–07:00 was refused with *"Este permiso no sirve a
+  esta hora"* **and the line saying when it does serve**; the Saturday permit
+  was refused on a Friday; the midnight-crossing schedule was refused at the
+  form with the sentence that says to make two permits; and both refusals reach
+  the entry history in Spanish.
+* **TC-016-02 passes.** A permit created on 2026-09-03 was read straight out of
+  Firestore and **has no `schedule` field at all** — not null, absent. At the
+  gate it answered with the old rule (*"ya se usó"*), never with the schedule.
+  **No door was closed that nobody decided to close.**
+* **Read live, not assumed:** `CORS_ORIGINS` present on the running API after
+  the publish (R-28), both revisions ready, and the old permit's stored fields.
+* **A bonus from the history:** the permit used at 13:00 recorded **one** entry,
+  though "Verificar" was pressed twice during the run. Decision 014's
+  transaction does what it says.
+* **Not verified:** that the hours are the building's and not the reader's
+  phone — it needs a phone in another timezone or a building outside Colombia,
+  and neither exists. Covered by automated test and by nothing else.
 
 ## Open issues
 
-* **Decision 016 is deployed-and-unproven until TC-016-01 and TC-016-02 are run
-  by hand.** This project has had a fully green suite over a broken product
-  three times.
+* **A copy question for Content, not a defect.** When the *day* is wrong, the
+  gate says *"no sirve a esta hora"*. True in the sense of "not at this moment",
+  and the line below names the right day — but a guard in a hurry may check the
+  clock instead of the calendar.
+* **Two of three checks needed a second press of "Verificar".** Possibly the
+  automation's synthetic clicks landing before the screen settles, possibly the
+  product. **Cannot be told apart from here**, so it is recorded rather than
+  called a defect; a real thumb settles it in TC-PHONE-01.
 * **R-29, new and untested:** the gate is staffed by somebody who does not work
   for the buyer, and their employer can close the sale before the product is
   evaluated.
@@ -158,9 +183,10 @@ one field, and the Founder chose it knowing so.
 
 ## Next
 
-1. **Run TC-016-01 and TC-016-02 by hand against production.** Until then the
-   schedule is code that passes tests, which this project has learned is not
-   the same as a product that works.
+1. **The Artifact Registry cleanup policy.** 53% of the free tier, filled
+   entirely by our own publishes with zero customers. It is the only charge
+   this project is on course to receive, and it is mine to fix, not the
+   Founder's.
 2. `docs/product/customer-discovery.md`, written before the first call. Decision
    016 now has a prediction that only a conversation can check.
 3. The Founder's hands, with a deadline: the billing report, the budget alert on
