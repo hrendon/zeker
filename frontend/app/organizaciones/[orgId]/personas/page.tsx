@@ -339,6 +339,21 @@ function MembersScreen({ org }: { org: Org }) {
                   </button>
                 </div>
               </form>
+            ) : org.approved === false ? (
+              /*
+                Decision 018. The button is removed rather than left to be
+                refused — the same rule the plan limit already follows on the
+                setup screens. A control that exists only to say no is a worse
+                answer than a sentence explaining what is happening.
+              */
+              <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-3">
+                <p className="text-sm font-medium text-[var(--color-ink)]">
+                  {es.members.waitingApprovalTitle}
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+                  {es.members.waitingApprovalBody}
+                </p>
+              </div>
             ) : (
               <button
                 type="button"

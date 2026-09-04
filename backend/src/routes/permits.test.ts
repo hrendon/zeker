@@ -745,3 +745,57 @@ describe('the days and hours a permit may be used', () => {
     expect(res.body.details?.[0]?.field).toBe('schedule')
   })
 })
+
+// ---------------------------------------------------------------------------
+// Decision 018 — no permit exists until somebody approved the building
+// ---------------------------------------------------------------------------
+
+describe('issuing a permit in a building nobody has approved', () => {
+  it('is refused, because a permit holds a real visitor s name', () => {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      approved: false,
+    })
+    signedInAs(RESIDENT)
+
+    return request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send(NEW_PERMIT)
+      .expect(403)
+      .expect((res) => {
+        expect(res.body.error).toBe('org_not_approved')
+      })
+  })
+
+  it('is allowed once a person has approved it', () => {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      approved: true,
+    })
+    signedInAs(RESIDENT)
+
+    return request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send(NEW_PERMIT)
+      .expect(201)
+  })
+
+  it('leaves checking a permit at the gate alone', async () => {
+    // The wall is on data going in, not on a building that is already running.
+    // A guard holding somebody at a door is never the right place to discover
+    // an administrative state.
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      approved: false,
+    })
+    signedInAs(RESIDENT)
+
+    const res = await request(app)
+      .get(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+
+    expect(res.status).toBe(200)
+  })
+})

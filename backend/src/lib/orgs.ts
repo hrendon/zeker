@@ -42,6 +42,17 @@ import type { OrgRole } from './users.js'
  */
 export const DEFAULT_TIMEZONE = 'America/Bogota'
 
+/**
+ * Whether this building has been approved (Decision 018).
+ *
+ * Absent reads as **approved**, deliberately — see `OrgDocument.approved`.
+ * Only an explicit `false` withholds it, which is what a newly created
+ * organization is written with from 2026-09-04 onward.
+ */
+export function isApproved(stored: Partial<OrgDocument> | undefined): boolean {
+  return stored?.approved !== false
+}
+
 /** The timezone to reason in for this organization. Never empty. */
 export function timezoneOf(stored: Partial<OrgDocument> | undefined): string {
   const stated = typeof stored?.timezone === 'string' ? stored.timezone.trim() : ''
@@ -152,6 +163,22 @@ export interface OrgDocument {
   invites_day?: string
   /** How many people this organization has added on `invites_day` (R-02). */
   invites_today?: number
+  /**
+   * Whether a person has approved this building (Decision 018, closing R-01).
+   *
+   * **Absent means approved.** Every organization that existed before
+   * 2026-09-04 is in that state, and reading a missing field as "not approved"
+   * would lock the Founder out of their own building to enforce a rule that did
+   * not exist when it was created.
+   *
+   * Until it is approved, nothing about a third person may enter: no member can
+   * be added and no permit can be issued. The creator can still build out their
+   * own entrances and interiors, which concern nobody but them.
+   */
+  approved?: boolean
+  approved_at?: unknown
+  /** The Google identity that approved it. An operator, never a product role. */
+  approved_by?: string
   created_by: string
   created_at?: unknown
   updated_at?: unknown
@@ -183,6 +210,12 @@ export interface OrgResponse {
   country: string | null
   /** Always present in a response, even where the stored document has none. */
   timezone: string
+  /**
+   * Decision 018. `true` for everything created before 2026-09-04, and for
+   * anything a person has since approved. The screens read this to explain why
+   * adding people and issuing permits are not available yet.
+   */
+  approved: boolean
   created_by: string
   created_at: string | null
   updated_at: string | null
@@ -202,6 +235,7 @@ export function toOrgResponse(stored: Partial<OrgDocument>, role?: OrgRole): Org
     city: stored.city ?? null,
     country: stored.country ?? null,
     timezone: timezoneOf(stored),
+    approved: isApproved(stored),
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),
     updated_at: toIso(stored.updated_at),

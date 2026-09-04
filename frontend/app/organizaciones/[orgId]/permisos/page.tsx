@@ -432,6 +432,20 @@ function PermitsScreen({ org }: { org: Org }) {
                   </button>
                 </div>
               </form>
+            ) : org.approved === false ? (
+              /*
+                Decision 018. A permit holds a real visitor's name, so it waits
+                for the same approval the people screen waits for — and says so
+                in the same words, because it is the same reason.
+              */
+              <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-canvas)] px-4 py-3">
+                <p className="text-sm font-medium text-[var(--color-ink)]">
+                  {es.members.waitingApprovalTitle}
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+                  {es.permits.waitingApprovalBody}
+                </p>
+              </div>
             ) : (
               <button
                 type="button"

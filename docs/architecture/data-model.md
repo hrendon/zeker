@@ -87,6 +87,15 @@ Organization (tenant) data.
 >   consequence is bounded and deliberate: an old organization gets a slightly
 >   larger allowance than a new one, never a smaller one.
 >
+> - **Added (Decision 018):** `approved`, `approved_at`, `approved_by`. A new
+>   organization is written with `approved: false` and cannot add a member or
+>   issue a permit until a person flips it. **Absent means approved** — every
+>   organization created before 2026-09-04 is in that state, and reading a
+>   missing field as "not approved" would lock people out of buildings they
+>   already run, to enforce a rule that did not exist when they created them.
+>   `approved_by` records the operator who approved it, as Google knows them;
+>   it is never a Zeker account, because no such privileged account exists.
+>
 > - `status` is `active` or `deleted`. Deletion is soft, so the audit trail
 >   underneath survives its retention period.
 

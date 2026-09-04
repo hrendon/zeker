@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "costs": "tsx scripts/cost-watch.ts"
+    "costs": "tsx scripts/cost-watch.ts",
+    "aprobar": "tsx scripts/approve-org.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

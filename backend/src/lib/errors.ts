@@ -9,6 +9,11 @@ export const ErrorCode = {
   // A separate 403 code so the interface can show the plan-limit message in
   // the user's language instead of a generic "not allowed" (Decision 003).
   quota_exceeded: 403,
+  // Decision 018. The organization exists and the caller belongs to it; what
+  // is missing is that a person has approved the building. Its own code so the
+  // screen can explain that instead of showing "no tiene permiso", which would
+  // be false and would send an administrator looking for a role they lack.
+  org_not_approved: 403,
   not_found: 404,
   conflict: 409,
   // Two separate 409 codes, for the same reason quota_exceeded is a separate
@@ -70,6 +75,13 @@ export const noteTooLate = (message: string): AppError => new AppError('note_too
 /** Decision 015. One note per check, so a count can never go below the truth. */
 export const noteAlreadyRecorded = (message: string): AppError =>
   new AppError('note_already_recorded', message)
+
+/** Decision 018. Nobody has approved this building yet. */
+export const orgNotApproved = (): AppError =>
+  new AppError(
+    'org_not_approved',
+    'This organization is waiting to be approved. You can set up its entrances and interiors meanwhile.',
+  )
 
 /** R-02. This organization has invited as many people today as it may. */
 export const inviteLimitReached = (limit: number): AppError =>

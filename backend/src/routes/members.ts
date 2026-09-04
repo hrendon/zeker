@@ -4,7 +4,7 @@ import type { Transaction } from 'firebase-admin/firestore'
 import { z } from 'zod'
 import { auth, db } from '../lib/firebase.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requireOrgAdmin } from '../middleware/orgAccess.js'
+import { requireApprovedOrg, requireOrgAdmin } from '../middleware/orgAccess.js'
 import { conflict, invalidRequest, notFound } from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
 import { orgRef } from '../lib/orgs.js'
@@ -152,7 +152,9 @@ async function accountsOf(uids: string[]): Promise<Map<string, Account>> {
  * Firebase to send them a "set your password" email — this server never handles
  * a password (Decision 002) and sends no email of its own.
  */
-membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => {
+// Decision 018 sits between the role check and the work: an unapproved
+// building may be set up, and may not cause an account to exist for anybody.
+membersRouter.post('/', requireAuth, requireOrgAdmin, requireApprovedOrg, async (req, res, next) => {
   const parsed = AddMemberSchema.safeParse(req.body ?? {})
   if (!parsed.success) {
     next(badRequest(parsed.error))

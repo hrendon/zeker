@@ -56,6 +56,7 @@ Map of authoritative sources for project knowledge.
 | — 015 | `decisions/015-what-the-guard-records-when-nobody-comes-in.md` | Four fixed reasons a guard can touch, never free text; "no entró" gives a one-entry permit back | Founder + Security + Product Owner |
 | — 016 | `decisions/016-days-and-hours-a-permit-may-be-used.md` | A permit may carry days of the week and a range of hours, read in the building's own clock; the organization gains a timezone | Founder + Product Owner + Architect |
 | — 017 | `decisions/017-how-the-domain-attaches-to-the-product.md` | The domain attaches by Cloud Run domain mapping, not a load balancer that would cost 3.6×–5× the whole ceiling; and the verification step nobody had written down | Architect + FP&A |
+| — 018 | `decisions/018-a-person-approves-each-new-building.md` | A person approves each new building before anybody else's data can enter it. Closes D-006 and R-01, open since 2026-08-27 | Founder + Security |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |

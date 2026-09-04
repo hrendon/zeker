@@ -72,6 +72,10 @@ const API_MESSAGES: Record<string, string> = {
   not_found: es.errors.notFound,
   invalid_request: es.errors.invalidRequest,
   quota_exceeded: es.errors.quotaExceeded,
+  // Decision 018. A 403 that is not about the caller's role, so it must not
+  // fall through to "no tiene permiso" — that sends an administrator looking
+  // for a permission they already have.
+  org_not_approved: es.errors.orgNotApproved,
   conflict: es.errors.conflict,
   // Decision 015. Both are 409s, and telling a guard "eso choca con algo que
   // ya existe" at a gate is the same failure Decision 008 fixed for refusals.

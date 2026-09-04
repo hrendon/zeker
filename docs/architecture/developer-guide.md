@@ -193,6 +193,37 @@ Google Cloud Logging expects, so levels and messages display correctly.
 
 ---
 
+## Approving a new building (Decision 018)
+
+```bash
+cd backend && npm run aprobar              # what is waiting, and who created it
+cd backend && npm run aprobar -- org_abc   # approve that one
+```
+
+**A new organization cannot add anybody or issue a permit until a person has
+approved it.** It can be created and set up — entrances, interiors — because
+none of that is about anybody except the person doing it. What waits is
+everything that would put a third person's data into the system: a member (which
+makes Google send them an email carrying our name) and a permit (which stores a
+real visitor's name).
+
+The listing prints what is needed to decide — the building's name, its city, who
+created it, how far it has been set up — and **never a resident's name, a
+visitor's name or a permit code.** Deciding whether a building is real needs
+none of those.
+
+**Like `npm run report`, it is an operator tool and not a route**, for the reason
+that matters most in this codebase: a route that could approve any customer's
+organization would be a privileged role living inside the product, and since
+Decision 004 the backend's own membership check is the only thing keeping one
+customer out of another's data. Access here is Google IAM — remove the person's
+project access and the tool stops working, with nothing to revoke inside Zeker.
+
+⚠️ **Nobody is told they were approved.** Zeker sends no email of its own. If
+the person should know today, the Founder tells them.
+
+---
+
 ## Watching the business
 
 ```bash

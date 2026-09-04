@@ -31,6 +31,14 @@ export interface PlanLimits {
   max_locations: number
   /** Counted across the whole organization, not per location (Decision 003). */
   max_interiors: number
+  /** How many people may belong at once (R-02). Goes down when one is removed. */
+  max_members: number
+  /**
+   * How many people may be **added** in one day (R-02). Never goes back up
+   * within the day — a limit that only counted current members would be
+   * defeated by adding people and removing them, and the emails have gone.
+   */
+  max_invites_per_day: number
 }
 
 export interface Org {
@@ -40,9 +48,17 @@ export interface Org {
   description: string
   plan: OrgPlan
   limits: PlanLimits
-  counts: { locations: number; interiors: number }
+  counts: { locations: number; interiors: number; members?: number }
   city: string | null
   country: string | null
+  /** IANA timezone (Decision 016). A permit's schedule is read in it. */
+  timezone: string
+  /**
+   * Decision 018. `false` until a person has approved the building. Until then
+   * no member can be added and no permit issued — the screens explain that
+   * rather than showing an action that will be refused.
+   */
+  approved: boolean
   created_by: string
   created_at: string
   updated_at: string

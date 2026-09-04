@@ -194,6 +194,7 @@ how the freemium model is enforced and are never set by the customer.
     "max_invites_per_day": 15
   },
   "counts": { "locations": 0, "interiors": 0, "members": 0 },
+  "approved": false,
   "city": "Bogotá",
   "country": "CO",
   "timezone": "America/Bogota",
@@ -207,6 +208,20 @@ how the freemium model is enforced and are never set by the customer.
 
 `timezone` is always present in a response, including for organizations created
 before Decision 016 that have none stored — those read as `America/Bogota`.
+
+`approved` is Decision 018. **A new organization is created with `false`**, and
+until a person approves it, two routes refuse with `org_not_approved` (403):
+`POST /orgs/{orgId}/members` and `POST /orgs/{orgId}/authorizations`. Everything
+else works — the creator can add entrances and interiors, which concern nobody
+but them. **A stored organization with no `approved` field reads as approved**,
+which is every organization created before 2026-09-04.
+
+`org_not_approved` is deliberately not `forbidden`: an administrator told "you
+do not have permission" goes looking for a role they already hold. Approval is
+done with an operator script (`npm run aprobar`), never through the API — a
+route that could approve any customer's organization would be a privileged role
+inside the product, and since Decision 004 the backend's own membership check is
+the only wall there is.
 
 `limits` come from the plan (Decision 003). Free is 1 location and 10 interiors
 in total across the organization, **25 people at once, and 15 people added per

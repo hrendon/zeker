@@ -275,6 +275,62 @@ two ways it has already broken.
 **Still blocked on the Founder:** `zeker.com.co` has no nameservers. Confirmed
 again today.
 
+## Then: a person approves each building (D-006 answered, Decision 018)
+
+**D-006 had been open since 2026-08-27** — the oldest question in the queue, and
+the one attached to the project's most serious risk. The Founder answered it on
+2026-09-04: **a person approves each new building.**
+
+It had to be answered today because the Founder's other decision removed the
+only control there was. R-01's mitigation, in writing, was *"the URL is
+unpublicised"* — security by obscurity on a public deployment. "Let the market
+decide" is a decision to publicise it.
+
+### The boundary, and it is the whole decision
+
+An unapproved building can do **everything that concerns only its creator**:
+create the organization, add entrances, add interiors, look around.
+
+It cannot do anything that puts **a third person's data into the system**: no
+member (which makes Google send that address an email carrying our name), and no
+permit (which stores a real visitor's name).
+
+**The line is not "can the product be used". It is "can data about somebody
+other than the account holder enter it".** A stranger setting up a fictional
+building alone is harmless and reversible. A stranger collecting a real
+building's residents and visitors is what R-01 describes.
+
+### Built
+
+* `orgs/{orgId}` gains `approved`. **Absent means approved**, so nothing that
+  exists today changed — proven by the fact that all 276 existing tests kept
+  passing before a single new one was written.
+* One middleware, mounted on exactly two routes. Its own error code, because an
+  administrator told *"no tiene permiso"* goes looking for a role they already
+  hold.
+* **Approval is an operator script, never a route** (`npm run aprobar`). A route
+  that could approve any customer's organization would be a privileged role
+  living inside the product, and since Decision 004 the backend's own membership
+  check is the only wall there is. The script reads Firestore as whoever runs
+  it, governed by Google IAM — there is no account to steal and nothing to
+  revoke inside Zeker. It prints what is needed to decide and **never a
+  resident's name, a visitor's name or a permit code**.
+* The screens say what is happening and what can be done meanwhile, and
+  **deliberately do not promise an email**: Zeker sends none of its own, and a
+  screen that says *"le avisamos"* lies.
+
+**283 backend tests** (was 276), 110 frontend, typecheck and production build
+clean. Run against production: the script answers correctly with nothing
+pending.
+
+### The gap this leaves, named rather than discovered later
+
+**An unapproved administrator has no way to reach us.** Zeker sends no email,
+D-008 is unanswered, and the domain that would give us an address does not
+resolve. That is the interface audit's "left with no next action" failure, made
+on purpose, with the alternative being worse. It is now a prerequisite rather
+than a small copy question.
+
 ## Session close — 2026-09-04
 
 ### The one thing worth carrying forward
@@ -1674,6 +1730,21 @@ The recommendation below was to talk first, and it is left standing rather than
 edited away. **It was not followed, and that is the Founder's call to make.**
 
 ---
+
+### ✅ D-006 — ANSWERED 2026-09-04: a person approves each building
+
+Open since 2026-08-27, and the oldest question in this queue. The Founder chose
+manual approval over opening registration with the risk accepted, and over not
+opening registration at all. Recorded in full as
+`docs/decisions/018-a-person-approves-each-new-building.md`, with what it costs
+written next to it: it puts the Founder in the path of every new customer, and
+it is a wall in front of the very thing the market is meant to decide.
+
+### ✅ D-010 — ANSWERED 2026-09-04: the market decides, not interviews
+
+*"La entrevista a los cinco administradores no es opción para mí. Quiero que el
+mercado decida."* The recommendation it overrides is left standing in this file
+rather than edited away.
 
 ### D-009 — the card as it was raised 🔴 Founder-only
 

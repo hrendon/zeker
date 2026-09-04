@@ -556,3 +556,81 @@ describe('the limits on adding people (R-02)', () => {
     expect(res.status).toBe(201)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Decision 018 — a person approves the building before anybody else exists in it
+// ---------------------------------------------------------------------------
+
+describe('a building nobody has approved yet', () => {
+  function unapproved() {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      approved: false,
+    })
+  }
+
+  it('cannot add a person, and says why in its own words', async () => {
+    unapproved()
+    accountDoesNotExist()
+    createUser.mockResolvedValueOnce({ uid: RESIDENT })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send(NEW_MEMBER)
+
+    expect(res.status).toBe(403)
+    // Not `forbidden`: an administrator told "no tiene permiso" goes looking
+    // for a role they lack, when what is missing is an approval.
+    expect(res.body.error).toBe('org_not_approved')
+    // And nothing happened at Google: no account, so no email.
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('can still be looked at — the wall is on writing about other people', async () => {
+    unapproved()
+    seedMember(RESIDENT, ORG, 'responsable')
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .get(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+
+    expect(res.status).toBe(200)
+  })
+
+  it('lets a building with no approval field through, because absent means approved', async () => {
+    // Every organization created before 2026-09-04 is in exactly this state.
+    // Reading a missing field as "not approved" would lock people out of
+    // buildings they already run, to enforce a rule that did not exist when
+    // they created them.
+    accountDoesNotExist()
+    createUser.mockResolvedValueOnce({ uid: RESIDENT })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send(NEW_MEMBER)
+
+    expect(res.status).toBe(201)
+  })
+
+  it('lets an approved building through', async () => {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      approved: true,
+    })
+    accountDoesNotExist()
+    createUser.mockResolvedValueOnce({ uid: RESIDENT })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send(NEW_MEMBER)
+
+    expect(res.status).toBe(201)
+  })
+})

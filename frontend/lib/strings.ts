@@ -219,6 +219,12 @@ export const es = {
   },
 
   members: {
+    // Decisión 018. Dice qué pasa y qué SÍ se puede hacer mientras tanto.
+    // Deliberadamente NO promete un correo: Zeker no envía correos propios, y
+    // una pantalla que diga "le avisamos" está mintiendo.
+    waitingApprovalTitle: 'Estamos revisando este edificio',
+    waitingApprovalBody:
+      'Antes de que un edificio pueda agregar personas, revisamos que quien lo registró de verdad lo administre. Es por los datos de sus residentes. Mientras tanto puede armar sus sedes y sus interiores: nada de eso se pierde.',
     title: 'Personas',
     subtitle:
       'Quién puede entrar a esta organización: los responsables de cada interior y el personal de seguridad.',
@@ -268,6 +274,10 @@ export const es = {
   },
 
   permits: {
+    // Decisión 018. Mismo motivo que en Personas, dicho para lo que aquí se
+    // guarda: el nombre de un visitante, que es una persona real.
+    waitingApprovalBody:
+      'Un permiso guarda el nombre de quien entra, así que esperamos a revisar el edificio antes de crear el primero. Mientras tanto puede armar sus sedes y sus interiores.',
     title: 'Permisos de entrada',
     subtitle: 'Quién puede entrar, a dónde y hasta cuándo.',
     empty: 'Todavía no hay permisos.',
@@ -512,6 +522,10 @@ export const es = {
     notAllowed: 'No tiene permiso para hacer esto.',
     notFound: 'No encontramos lo que buscaba.',
     invalidRequest: 'Los datos enviados no son válidos. Revíselos.',
+    // Decisión 018. Ni "no tiene permiso" ni "algo salió mal": ninguna de las
+    // dos es cierta, y las dos mandan a la persona a buscar donde no es.
+    orgNotApproved:
+      'Todavía estamos revisando este edificio. Mientras tanto puede armar sus sedes y sus interiores.',
     // R-02. Su propio mensaje, porque tiene una acción distinta a la del
     // límite del plan: aquí no hay que cambiar de plan, hay que esperar.
     inviteLimitReached:

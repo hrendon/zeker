@@ -4,7 +4,7 @@ import type { Transaction } from 'firebase-admin/firestore'
 import { z } from 'zod'
 import { db } from '../lib/firebase.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requireOrgMember } from '../middleware/orgAccess.js'
+import { requireApprovedOrg, requireOrgMember } from '../middleware/orgAccess.js'
 import { conflict, forbidden, invalidRequest, notFound } from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
 import { interiorRef, interiorsCollection } from '../lib/interiors.js'
@@ -162,7 +162,9 @@ async function interiorNumbers(orgId: string): Promise<Map<string, string>> {
  * code would mean one visitor's code opening another visitor's permit, and a
  * check made before the write could be overtaken by a second request.
  */
-permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) => {
+// Decision 018. A permit holds a visitor's name — a real person who agreed to
+// nothing — so no permit exists until somebody approved the building.
+permitsRouter.post('/', requireAuth, requireOrgMember, requireApprovedOrg, async (req, res, next) => {
   const parsed = CreatePermitSchema.safeParse(req.body ?? {})
   if (!parsed.success) {
     next(badRequest(parsed.error))

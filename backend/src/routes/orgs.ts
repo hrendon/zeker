@@ -123,6 +123,11 @@ orgsRouter.post('/', requireAuth, async (req, res, next) => {
     city: parsed.data.city ?? null,
     country: parsed.data.country ?? null,
     timezone: parsed.data.timezone ?? DEFAULT_TIMEZONE,
+    // Decision 018. Written explicitly false, because absent means approved —
+    // that is what keeps every organization created before today working.
+    approved: false,
+    approved_at: null,
+    approved_by: null,
     created_by: uid,
     created_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),

@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
-import { forbidden, notFound } from '../lib/errors.js'
+import { forbidden, notFound, orgNotApproved } from '../lib/errors.js'
 import { userRef } from '../lib/users.js'
 import type { OrgMembership, UserDocument } from '../lib/users.js'
-import { orgRef } from '../lib/orgs.js'
+import { isApproved, orgRef } from '../lib/orgs.js'
 import type { OrgDocument } from '../lib/orgs.js'
 
 /**
@@ -78,4 +78,29 @@ export function requireOrgAdmin(req: Request, res: Response, next: NextFunction)
     }
     next()
   })
+}
+
+/**
+ * Requires that a person has approved this building (Decision 018).
+ *
+ * Mounted **only** on the routes that would put a third person's data into the
+ * system: adding a member, and issuing a permit. Not on the organization, its
+ * entrances or its interiors — a stranger setting up a fictional building on
+ * their own is harmless and reversible, and walling that off would stop the
+ * thing we want them to do while they wait.
+ *
+ * Runs after `requireOrgMember`, which has already loaded the organization, so
+ * this costs no extra read.
+ *
+ * **Absent means approved** (`isApproved`), so every organization created
+ * before 2026-09-04 passes. The refusal carries its own code: a member being
+ * told "no tiene permiso" would go looking for a role they lack, when what is
+ * missing is a person's approval of the building.
+ */
+export function requireApprovedOrg(req: Request, _res: Response, next: NextFunction): void {
+  if (!isApproved(req.org)) {
+    next(orgNotApproved())
+    return
+  }
+  next()
 }
