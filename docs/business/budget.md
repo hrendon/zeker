@@ -145,3 +145,64 @@ containing a renewal is not later misread as a breach.
    not 20,000 — entering "20000" would create a US$20,000 budget that never fires.
 
 Both need the console. Both are the Founder's to close.
+
+
+---
+
+## Updated 2026-09-04 — read live from the billing account, not inferred
+
+Three things were read directly from Google on 2026-09-04, at the Founder's
+request for a consolidated figure. Two of them close open questions in this file.
+
+### 1. ✅ The billing account is denominated in **COP**
+
+    gcloud billing accounts describe 01C0F1-38F3BC-DE3AFA → currencyCode: COP
+
+**This closes the ⚠️ warning above.** The budget alert amount is **20,000**, and
+the 25% threshold is **5,000** — both in pesos, as written. There was a real risk
+of entering "20000" into a USD-denominated budget and creating a US$20,000
+ceiling that would never fire. That risk is now gone, and the Founder can create
+the alert with the numbers exactly as this file states them.
+
+### 2. 🔴 The billing alert still does not exist
+
+    gcloud billing budgets list → Cloud Billing Budget API has not been used
+    in project zeker-505918 before or it is disabled
+
+The API a budget is created through has **never been enabled**. That is not
+absolute proof no budget exists — a budget lives on the billing account, not the
+project — but combined with `cost-watch`'s own reading it is as close as this
+repository can get without the console. **Treat the 2026-08-19 alert as not
+real** until the Founder sees it in the console.
+
+### 3. 🟡 Artifact Registry doubled in three days
+
+| Date | Measured | Share of the 500 MB free tier |
+|---|---|---|
+| 2026-09-01 | 107.4 MB → 133.2 MB | 21% → 27% |
+| **2026-09-04** | **267.4 MB** | **53%** |
+
+Nothing else in this project grows on its own. **Every megabyte of that is our
+own deploys**, with zero customers — seven publishes since 2026-09-02. At this
+rate the free tier is full in roughly a dozen more, and the first Google charge
+this project ever takes will be for storing container images nobody runs.
+
+The fix is already named and not done: an Artifact Registry cleanup policy
+(step 11 on the ordered list). It costs nothing and it is not the Founder's
+hands — it is mine.
+
+### What can still not be read from here, and it is the important one
+
+**The actual bill.** Google exposes cost through the console or a BigQuery
+export this project does not have; there is no `gcloud` command for it. So the
+consolidated position remains:
+
+| | Amount | Confidence |
+|---|---|---|
+| Domain (`zeker.com.co`, Cloudflare, annual) | **~60,000 COP paid 2026-09-01**, plus ~2–3% card and FX | **Confirmed.** A card was charged |
+| Everything at Google, since 2026-08-19 | **Unknown** | **Never read.** Believed inside free tiers; a shared US$300 credit expiring **2026-11-17** makes any "US$0.00" unreadable either way |
+| **Committed run rate** | **~5,000 COP/month** = 25% of the ceiling | Confirmed, amortized |
+
+**The one action that changes this line from "unknown" to a number** is still
+the same one: the billing report grouped **by SKU**, with the **credits column
+shown**. Minutes, in the console, and only the Founder can do it.
