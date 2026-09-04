@@ -30,7 +30,7 @@ Map of authoritative sources for project knowledge.
 | Budget | `business/budget.md` | Monthly spending ceiling and what it covers | Founder + FP&A Manager |
 | Indicators | `business/indicators.md` | The live scoreboard: target, current value, status. Each role owns its own rows. **UNMEASURED is a valid value; a guess is not** | Each owning role |
 | Risk register | `business/risks.md` | What has not happened, could, and would cost something. An accepted risk stays here with its acceptance recorded | Each owning role |
-| Vendors | `business/vendors.md` | Who we buy from, renewal dates, exit terms. Recorded **before** the card is charged | Procurement / Vendor Manager |
+| Vendors | `business/vendors.md` | Who we buy from, renewal dates, exit terms. Recorded **before** the card is charged. Also holds the payment-provider comparison started 2026-09-04, with what is verified and what is not | Procurement / Vendor Manager |
 | **Meetings** | | | |
 | Meeting records | `meetings/` | One file per occurrence, `YYYY-MM-DD-<slug>.md`. Episodic — durable knowledge is promoted out of them to the artifacts below | The convening role |
 | — 2026-09-01 | `meetings/2026-09-01-revision-semanal.md` | First weekly review: the locked-out Founder, the recovery path, D-005's consequences, the next unit | Product Owner + Architect + Security + QA + Interface Auditor |

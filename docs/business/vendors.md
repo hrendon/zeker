@@ -253,3 +253,102 @@ action-link domain, and — most bindingly — **in the DKIM/SPF records that gi
 sender its reputation. Email sender reputation is built on a domain over months and
 does not transfer.** Changing the domain after the spam fix means starting reputation
 from zero and reliving the current 🔴 issue.
+
+---
+
+## Payment provider — the comparison, started 2026-09-04
+
+**Why this exists:** D-011 made payment the identity check and D-012 asked for a
+quote before any code. A payment provider is a recurring-cost decision under
+`budget.md`'s Budget Gate — proposed with its cost, never adopted quietly.
+
+### The reframing that comes first, because it changes what to compare
+
+**A per-transaction fee does not consume the 20,000 COP ceiling.** The ceiling
+exists for what the company pays whether or not revenue exists. A percentage of
+a sale comes out of that sale and costs nothing when nobody pays.
+
+**Only a fixed monthly fee, a monthly minimum, or a setup cost can breach it.**
+So the first question to every provider is not "what is your rate".
+
+### ePayco — figures published on their own page, read 2026-09-04
+
+| | Plan Agregador | Plan Gateway |
+|---|---|---|
+| **Afiliación** | **Gratuita** | **$490.000 IVA incluido, una vez** |
+| **Cuota mensual** | **$0,00** | no se cobra aparte |
+| Tarjeta (cuenta en otro banco) | **3,29% + $700** + IVA | desde **$101** + IVA por transacción exitosa |
+| Tarjeta (cuenta Davivienda) | **2,64% + $690** + IVA | — |
+| PSE bajo $60.000 | **$2.000** + IVA | — |
+| **Retiro de fondos** | **$6.500 + IVA por transferencia** | depósito directo del banco |
+| Disponibilidad | 24 / 72 horas | activación de 20 a 30 días |
+
+**Plan Gateway: descartado por ahora.** $490.000 de afiliación es **24 veces el
+techo mensual completo** en un solo desembolso, y `budget.md` exige aprobación
+explícita para cualquier salida de caja sobre 50.000 COP. Su tarifa por
+transacción es mucho mejor y sólo tiene sentido con volumen que hoy no existe.
+
+**Plan Agregador: cabe en el techo sin tocarlo.** Afiliación gratis y
+mantenimiento en cero. Es el punto de partida.
+
+### El hallazgo que cambia el precio del producto, no el del proveedor
+
+El costo real no es el porcentaje: es **el fijo por transacción más el retiro**.
+
+Sobre un cobro mensual de **20.000 COP** (el orden de magnitud del techo):
+
+* Comisión: 3,29% × 20.000 = 658, más $700 fijos = 1.358, más IVA ≈ **1.616**
+* Eso es **8% del cobro**, no 3,29%.
+* Y **cada retiro cuesta $6.500 + IVA ≈ 7.735**, sin importar cuánto se retire.
+  Con **un** cliente pagando 20.000, retirar se lleva **el 39% del ingreso**.
+
+**Consecuencias, y son comerciales más que técnicas:**
+
+1. **Un precio mensual bajo se lo come la comisión.** El fijo por transacción
+   castiga los cobros pequeños; el porcentaje casi no importa.
+2. **Cobrar anual, o al menos ofrecerlo, cambia la aritmética por completo** —
+   una transacción al año en vez de doce.
+3. **Retirar con poca frecuencia**, no cada vez que entra un pago.
+4. Nada de esto decide el precio de Zeker, que sigue siendo la Decisión 001
+   (después de ver uso real). Lo que sí decide es el **piso**: por debajo de
+   cierto precio mensual, la pasarela se queda con una porción indefendible.
+
+### Wompi — no se pudo verificar, y el motivo importa
+
+Su página de tarifas **no se pudo leer**: responde 403 a consultas automáticas y
+el bloque de precios carga vacío en un navegador real. Lo único confirmado, de su
+propia página de preguntas:
+
+> En el plan Gateway, Wompi **no cobra comisión**; se paga *"la tarifa negociada
+> con el banco para cada medio de pago"*.
+
+**Es decir: en Wompi el precio no es una tabla, es una negociación bancaria.**
+Cualquier cifra de blog es una referencia, no un precio nuestro. Wompi es de
+Bancolombia, así que la tarifa depende de con qué banco esté la empresa — el
+mismo patrón que la fila Davivienda de ePayco.
+
+⚠️ **Ninguna cifra de esta página es un precio hasta que se cotice a nombre de la
+empresa.** Están tomadas de páginas públicas el 2026-09-04 y todas dependen del
+banco, del volumen y de la negociación.
+
+### Las cuatro preguntas, para cualquier proveedor
+
+1. **¿Cuota mensual, mínimo mensual o costo de afiliación?** ← la única que puede
+   romper el techo
+2. **¿Cobro recurrente con tarjeta guardada** (tokenización)? Sin eso no hay
+   suscripción: hay una factura a mano cada mes, doce veces al año, para siempre
+3. ¿Cuánto cuesta **cada retiro**, y con qué frecuencia se puede retirar?
+4. **¿Qué se necesita para afiliarse?** Si piden NIT y certificado de Cámara de
+   Comercio, **esa es exactamente la verificación de identidad que D-011
+   eligió** — el proveedor hace el trabajo que nosotros no queremos hacer
+
+### Lo que falta antes de proponer nada
+
+* Las tarifas de **Wompi**, **Bold** y **Mercado Pago**, cotizadas a nombre de la
+  empresa y no leídas de una página.
+* **Cuál de ellos soporta suscripción recurrente de verdad.** ePayco la ofrece y
+  está confirmado que existe; de los demás no se ha comprobado.
+* **Zeker no tiene NIT ni existencia legal registrada en este repositorio.**
+  Ninguna pasarela afilia a una persona natural para cobrar suscripciones de
+  software sin preguntar por eso. **Esto puede ser el bloqueo real**, y es
+  anterior a elegir proveedor. General Counsel no está activo.
