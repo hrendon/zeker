@@ -4,7 +4,11 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-04
 
-**Session closed 2026-09-04. The document that says who we sell to has been
+**Session closed 2026-09-04. Six units, four published and driven by hand. The
+oldest risk in the register is closed, the published application can no longer be
+used as a mail relay, and all three preconditions the Founder named for billing
+are met. Work sits committed and unpublished; the next session publishes before
+it builds. The document that says who we sell to has been
 rewritten for the market the Founder chose four days ago, and it now says in
 writing that Zeker has no evidence for that market at all. Two domain experts,
 asked separately, named the same gap; checking their claim against the code
@@ -397,6 +401,138 @@ wording:**
 production build clean. **Not published, and not seen in a browser.**
 
 ## Session close — 2026-09-04
+
+### Objective
+
+Open on `PROJECT_STATE.md` alone and continue. The stated objective changed three
+times, each time by a Founder decision, and each change is recorded as theirs:
+
+1. Rewrite the product brief for the market chosen on 2026-08-31.
+2. **Build the weekly schedule** instead of talking to five administrators (D-009).
+3. **Let the market decide, not interviews** (D-010) — which turned the work from
+   product into "can a stranger find this, get in, and can we see what happened".
+
+### Completed
+
+**Six units, four of them published and driven by hand against production.**
+
+* **The brief is rewritten** for Decision 010's segment, four days late. Every
+  claim is labelled fact, consultant judgement or assumption — **there is no
+  fourth label, because there is no customer evidence to label**. The ten
+  assumptions now exist; eight of them had been named in a meeting and written
+  down nowhere.
+* **Decision 016 — a permit may carry days and hours**, read in the building's
+  own clock. Published and hand-run: eight steps, all pass.
+* **Decision 017 — how the domain attaches**, at no cost. The obvious path would
+  have cost 3.6x to 5x the entire monthly ceiling, permanently.
+* **Decision 018 — a person approves each new building.** Published and hand-run:
+  six steps, all pass. **Closes R-01, the oldest risk in the register.**
+* **R-02 capped.** The published application could have been used as a mail relay
+  by anyone who found the address. Two limits, not one.
+* **Decision 011's last precondition closed** — permits are capped per day. **All
+  three preconditions the Founder named for billing are now met.**
+* `customer-discovery.md` exists, written **before** the first call.
+* A person can correct their own name. There had been nowhere to do it.
+
+### Changed
+
+* **Code** — `POST /orgs/{orgId}/authorizations` (schedule, daily cap),
+  `POST /orgs/{orgId}/members` (two caps, approval gate), `PUT /auth/me` (new),
+  `POST /orgs` (timezone, unapproved by default), the gate's schedule refusal,
+  `lib/time.ts` (new), `lib/quota.ts`, `middleware/orgAccess.ts`, and the permits,
+  people, gate and home screens.
+* **Data** — organizations gained `timezone`, `approved`, `counts.members`,
+  `invites_day`/`invites_today`, `permits_day`/`permits_today`; permits gained
+  `schedule`.
+* **Operations** — `npm run aprobar` (new), `scripts/conectar-dominio.sh` (new),
+  an Artifact Registry cleanup policy applied.
+* **Deployment** — three publishes. **Live: `zeker-web-00011-zpj` and
+  `zeker-api-00011-5rc`.**
+
+### Decisions
+
+Accepted, all the Founder's: **D-009** (build the schedule before talking to
+customers), **D-010** (the market decides, not interviews), **D-006** (a person
+approves each building, recorded as Decision 018), **D-011** (payment is the proof
+of identity), **D-012** (start billing, quote first). Architecture: **Decision
+016** and **Decision 017**.
+
+**Not decided, and not to be mistaken for decided:** what a paid plan contains,
+what it costs, which payment provider, and whether a free tier exists at market.
+
+### Requirements
+
+* **US-003 gained the optional weekly schedule.** US-008 and US-010's actors were
+  reframed from a school director and a parent to the people who actually use the
+  product; **no acceptance criterion changed.**
+* The organization type values were left as the code defines them, with the
+  mismatch written down rather than quietly "fixed" in a document.
+
+### Verification
+
+* **293 backend tests** (from 236), **113 frontend** (from 98), typecheck and
+  production build clean.
+* **By hand, against production:** TC-016-01 (eight steps), TC-016-02, TC-018-01
+  (six steps), TC-018-02. All pass, with the clock times recorded because the
+  schedule tests depend on them.
+* **Read live rather than assumed:** `CORS_ORIGINS` on the running revision after
+  every publish; the billing account's currency; the Artifact Registry size; an
+  old permit's stored fields, straight out of Firestore.
+* **Not verified:** everything committed after `zeker-api-00011-5rc`. The permit
+  cap, the name editor and the three copy fixes are **written, tested and not
+  published**.
+* **Cannot be verified from here:** that a permit's hours are the building's and
+  not the reader's phone. It needs a phone in another timezone or a building
+  outside Colombia, and neither exists.
+
+### Issues
+
+* **Unpublished work sits in `master`.** The next session publishes before it
+  builds anything else.
+* **The Artifact Registry cleanup rule has deleted nothing yet.** Applied and
+  confirmed not in dry-run; Google runs it on its own schedule. Its pass/fail line
+  is written (R-32).
+* **Zeker has no NIT and no registered legal existence** anywhere in this
+  repository. **No payment provider affiliates a natural person to collect
+  software subscriptions.** This is prior to choosing a provider, and it is the
+  Founder's.
+* **An unapproved administrator has no way to reach us.** D-008 stopped being a
+  copy question and became a prerequisite for Decision 018 to be humane.
+* **R-29, R-30 and R-31 are new and untested with anyone.** The guard does not
+  work for the buyer; the security contract may already own the entry log;
+  "entries only" breaks named things at the corporate end.
+* **The weekly review ran three units late**, recorded as a rule not being kept
+  rather than a one-off.
+* **Test data left in production:** the organization `Prueba 018 Aprobacion` and
+  four `Prueba 016` permits, in the Founder's own account.
+* Untouched from previous sessions: R-23/R-24 (this laptop's standing grant to
+  production), the billing report, the budget alert, `zeker.com.co`.
+
+### Contradiction check
+
+* **Resolved:** this file's ordered list of 2026-09-01 was still presented as
+  current while most of it had been done. **Marked superseded**, not deleted.
+* **Resolved:** `requirements.md` described a market the project abandoned on
+  2026-08-31.
+* **Resolved:** the "Este permiso ya terminó" complaint turned out to be a defect
+  rather than wording — every unusable state showed the expired message.
+* **Recorded, unresolved:** `data-minimization.md` still frames its examples
+  around a child being picked up. It belongs to Security Engineer and was
+  deliberately not touched by a Product Owner unit.
+* **Recorded, unresolved:** `delivery-framework.md` still requires pull requests;
+  every commit still goes straight to `master`. Accepted by the Founder on
+  2026-08-29 and unchanged.
+
+### Continuity check
+
+**A new session can continue from `PROJECT_STATE.md`, `docs/` and the git log
+alone.** Everything decided today lives in `decisions/016`, `017` and `018`, in
+the Pending Decisions queue, in `business/vendors.md` (the payment comparison and
+the LATAM finding), in `business/budget.md` (the billing account is in pesos), in
+`business/risks.md` (R-29 to R-32) and in the 2026-09-04 weekly review. **The
+three things the next session must not have to rediscover** are the unpublished
+commits, the missing NIT, and that the cleanup rule has not run — all three are
+under "Issues" above.
 
 ### The one thing worth carrying forward
 
@@ -2416,7 +2552,17 @@ responsable, with the responsable proven unable to see another apartment's entri
 
 ---
 
-### The single ordered list — updated 2026-09-01
+### The single ordered list — updated 2026-09-01 ⛔ SUPERSEDED 2026-09-04
+
+**Do not work from the list below.** It is kept because it holds the evidence of
+how the lockout was diagnosed and closed, and that reasoning is still worth
+reading. Most of its items are done: the API key (2026-09-02), the entry history
+(09-03), capping member creation, rewriting the brief, and the domain attachment
+path (all 09-04).
+
+**The current list is in `docs/meetings/2026-09-04-revision-semanal.md`.**
+
+### The list as it stood on 2026-09-01 (historical)
 
 Everything outstanding, in one sequence. Earlier records scattered these across two
 meeting records, four decisions and a risk register; this is the one place that says
