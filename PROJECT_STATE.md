@@ -4,14 +4,132 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-03
 
-**Decisions 014 and 015 are both live and both proven by hand. A permit that
-may be used once is used once — and a permit burned by mistake now comes back.
-Publishing 014 exposed a fourth configuration that existed nowhere but a
-console; publishing 015 proved that fix holds.**
+**Session closed 2026-09-03. Three units closed in one day, each published and
+driven by a person: a permit is used once and says so, one burned by mistake
+comes back, and there is now a history of the doors that the neighbour cannot
+read.**
 
 ---
 
 # Session 2026-09-03
+
+## Session close — 2026-09-03
+
+### Objective
+
+Close Decision 014, which had been built the day before and never driven by a
+person. The session went further than that on the Founder's direction: Decision
+015 and the entry history were also built, published and hand-run.
+
+### Completed
+
+Three units closed, each published and driven by hand against production:
+
+* **Decision 014** — a permit is used once or many times, chosen when issuing;
+  the permit counts its own entries; "ya se usó" is a named refusal.
+* **Decision 015** — four fixed reasons a guard taps after a check, no free
+  text; "el visitante no entró" gives a one-entry permit back within ten
+  minutes (the Founder's number).
+* **The entry history (US-007)** — what happened at the doors, with a date
+  range and "solo los rechazados". An administrator sees the organization; a
+  responsable sees only their own interiors; a guard cannot open it at all.
+
+### Changed
+
+* **Code** — `POST /orgs/{orgId}/validate/{eventId}/nota`,
+  `GET /orgs/{orgId}/events`, the gate's four-reason panel, the history screen,
+  `lib/history.ts`, `lib/navigation.ts`, `lib/interiors.ts`.
+* **Data** — permits gained `entry_returns`; events gained `note`,
+  `about_event_id`, `entry_returned`, and `action: "note"`.
+* **Configuration** — `CORS_ORIGINS` now lives in `scripts/desplegar.sh`; the
+  script names one address instead of two.
+* **Database** — three composite indexes on `access_events`, deployed and
+  confirmed `READY` **before** the query that needs them was written.
+* **Deployment** — four publishes. Live: `zeker-web-00008-4lt`,
+  `zeker-api-00008-ksl`.
+* **Tests** — backend 198 → 236, frontend 66 → 98.
+* **Test double** — `fakeFirestore` can now order by a timestamp (it silently
+  could not), supports `in` with Firestore's real 30-value cap, and has a
+  positional `startAfter`. Made **more faithful**, never more permissive.
+* **Documentation** — `docs/delivery/manual-test-cases.md` created;
+  `api.md`, `data-model.md`, US-007's acceptance criteria, `risks.md`,
+  `vendors.md`, `context-index.md` updated.
+
+### Decisions taken
+
+* **Ten minutes** is the window for giving a burned permit back — the Founder's
+  number, chosen as the line between fixing a mistake at the gate and
+  re-opening a credential later.
+* **The history's first version filters by date and by refusal only.** Filtering
+  by entrance and jumping from a permit to its history were deliberately left
+  out: each is another index to deploy and prove. Founder's choice.
+* **Not restoring `LOG_LEVEL=debug`**, erased by a publish. The code's declared
+  default is `info`; debug writes far more log, and logs are read by more people
+  than permits are. Reversible on request.
+* **Buy no further domain until a customer outside Colombia exists.**
+
+### Requirements
+
+* **US-007 rewritten.** It carried the school framing Decision 010 superseded,
+  and said nothing about the responsable isolation, the guard exclusion, or the
+  indexes being deployed rather than declared.
+* **TC-AUTH-RESET-01 and TC-PHONE-01 had been cited since 2026-09-01 and
+  existed nowhere.** They exist now.
+
+### Verification
+
+* 236 backend tests, 98 frontend tests, typecheck and production build: pass.
+* **By hand, against production:** TC-014-01/02/03 (all steps), TC-015-01 (all
+  applicable steps), TC-HIST-01 (six of seven).
+* **By the Founder's own hands:** the responsable isolation — signed in as the
+  responsable of apartment 202 and saw *"Todavía no ha entrado nadie"* while
+  eleven events existed on apartment 101.
+* **Read live, not assumed:** six indexes `READY`; `CORS_ORIGINS` present on the
+  running revision after each publish; roles and interior assignments read
+  straight from Firestore before the isolation step was run.
+* **Not verified:** the ten-minute window (covered by test, would need ten
+  minutes at a screen); a guard being unable to open the history (covered by
+  test — no security account exists); the "asignado, sin nombre registrado" fix
+  (deployed and tested, **not yet seen in a browser**).
+
+### Open issues
+
+* **R-28, new.** A publish erases any API setting not declared in the deploy
+  script. Fixed for `CORS_ORIGINS` and proved over three later publishes.
+  **Nothing checks that the script's list is complete.**
+* **R-23/R-24 untouched.** This laptop still holds a standing grant to
+  production. Five actions, the Founder's hands. Deferred by the Founder today.
+* **The money.** The US$300 credit expires **2026-11-17** and is shared. The
+  billing report by SKU has still never been read, and the budget alert is still
+  not on the billing account.
+* **`zeker.com.co` still does not resolve.** Bought at Cloudflare Registrar, so
+  the whole fix happens in one place.
+* **A product observation, not a defect.** The Founder could not tell a
+  responsable's account from an administrator's at a glance — four tabs out of
+  six, on similar-looking screens. If the person who owns the product cannot
+  see the difference, a customer will not either.
+* Copy: a spent permit says *"Este permiso ya terminó"*, which reads as expired
+  rather than used.
+
+### Next
+
+1. The Founder's hands, with a deadline: the billing report, the budget alert
+   on the **billing account**, and `zeker.com.co` in Cloudflare.
+2. See the "asignado, sin nombre registrado" fix in a browser.
+3. The brief rewrite — after it, Zeker has no evidenced market case at all.
+4. R-23's five actions, when the Founder chooses.
+
+### Knowledge updated
+
+`PROJECT_STATE.md`, `docs/delivery/manual-test-cases.md`,
+`docs/architecture/api.md`, `docs/architecture/data-model.md`,
+`docs/product/requirements.md`, `docs/business/risks.md`,
+`docs/business/vendors.md`, `docs/context-index.md`, `scripts/desplegar.sh`.
+
+**A new session can continue from `PROJECT_STATE.md` alone.** Nothing needed
+tomorrow lives only in today's conversation.
+
+---
 
 ## Objective
 

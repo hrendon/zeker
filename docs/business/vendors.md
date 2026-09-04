@@ -85,6 +85,36 @@ entire monthly budget, permanently, for a name, buying zero delivery capability.
 raises the odds it is registered, parked, or priced as a **premium** domain (hundreds
 to thousands of USD — treat that outcome as "taken"). Check in this order:
 
+> ### ✅ Checked independently 2026-09-03, and the fallback was right
+>
+> The Founder asked whether buying a Colombian domain was a mistake for a
+> product that might one day be sold across LATAM. It was not, and this is the
+> evidence rather than the reassurance. Every obvious global name **already had
+> an owner before the purchase** — each one resolves to real nameservers:
+>
+> | Name | 2026-09-03 |
+> |---|---|
+> | `zeker.com` | taken |
+> | `zeker.app` | taken |
+> | `zeker.io` | taken |
+> | `zeker.co` | taken |
+> | `zekerapp.com` | taken |
+> | `zeker.cl` | taken |
+>
+> `zeker.com.co` was not a consolation prize: it was the last surviving step of
+> a fallback pattern agreed **before** the search, which is exactly how this
+> ought to go.
+>
+> **Not delegated, so probably free** — a strong signal, not proof; only the
+> registrar's own search proves it: `usezeker.com`, `zeker.lat`, `zeker.mx`.
+>
+> **And a domain is not a market commitment.** The product runs at any address.
+> Selling in Mexico needs a customer in Mexico, not a `.com` — a second domain
+> is an addition, and nothing already built changes. **Recommendation: buy
+> nothing until a customer outside Colombia exists.** Each domain takes another
+> ~20% of a 20,000 COP ceiling, permanently, to serve nobody.
+
+
 1. `zeker.com` — available at standard price / premium / taken
 2. `zeker.com.co` — price, and confirm it is not premium either
 3. `zeker.co` — check only to know the number; the answer is still no
