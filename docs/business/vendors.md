@@ -352,3 +352,48 @@ banco, del volumen y de la negociación.
   Ninguna pasarela afilia a una persona natural para cobrar suscripciones de
   software sin preguntar por eso. **Esto puede ser el bloqueo real**, y es
   anterior a elegir proveedor. General Counsel no está activo.
+
+### ¿Y si el producto va a toda LATAM? — consultado 2026-09-04
+
+El Fundador preguntó si Mercado Pago sirve, con la mira puesta en toda la región.
+
+**Mercado Pago cubre Argentina, Brasil, Chile, Colombia, México, Perú y
+Uruguay** — de verdad es regional. Pero hay una restricción estructural que
+importa más que la cobertura:
+
+> **Mercado Pago exige una cuenta separada en cada país**, lo que implica
+> entidad o presencia local en cada mercado.
+
+**Entonces el obstáculo no es la pasarela: es que cobrar dinero en un país
+normalmente exige estar registrado en ese país.** Cambiar de proveedor no lo
+quita. Cualquier pasarela local —Wompi, ePayco, Mercado Pago Colombia— resuelve
+Colombia y solo Colombia.
+
+**Lo que sí resuelve varios países desde una sola entidad** son los procesadores
+transfronterizos. En la comparación aparece **dLocal Go** (dLocal es uruguaya y
+lleva años en la región) como la recomendada cuando se vende en dos o más países
+de LATAM, se quiere liquidación en dólares, o el negocio es SaaS con clientes
+repartidos. La otra familia son los *merchant of record*, que venden a nombre
+propio y asumen el impuesto local — más caros, y quitan el problema de la entidad
+por país.
+
+**Lo que esto significa para Zeker, y es una decisión de secuencia, no de
+proveedor:**
+
+* **Colombia primero, con una pasarela local** es lo más barato y lo más rápido,
+  y **no cierra ninguna puerta**: cambiar de pasarela después es trabajo, no es
+  una pérdida.
+* **Empezar directamente transfronterizo** solo tiene sentido si el segundo país
+  llega pronto. Hoy no hay ni un cliente en el primero.
+* La Decisión 010 ya eligió Colombia como primer mercado, y el 2026-09-03 se
+  registró la conclusión emparejada: **no comprar nada para otros países hasta
+  que exista un cliente fuera de Colombia.** Lo mismo aplica aquí.
+
+**Recomendación:** pasarela colombiana ahora; volver a esta página el día que
+haya un cliente fuera de Colombia, no antes. ⚠️ **Y todo esto sigue detrás del
+mismo bloqueo: Zeker no tiene NIT ni existencia legal registrada.** Ninguna de
+estas opciones, local o transfronteriza, afilia a nadie sin eso.
+
+**Fuentes leídas el 2026-09-04:** una comparativa de pasarelas LATAM 2026 y una
+comparación dLocal Go vs Mercado Pago. **Cifras y coberturas por confirmar
+directamente con cada proveedor** antes de decidir nada.
