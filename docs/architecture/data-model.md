@@ -59,6 +59,34 @@ Organization (tenant) data.
 >   and `counts { locations, interiors }`. These replace the old "max 100
 >   locations" cap and are never settable by the customer.
 >
+> - **Added (Decision 016):** `timezone`, an IANA name defaulting to
+>   `America/Bogota`. It is what a permit's weekly schedule is read in, and it
+>   is absent on every organization created before 2026-09-04 — those read as
+>   Colombia, which is what they were.
+>
+> - **Added (R-02, 2026-09-04):** `limits.max_members` (25) and
+>   `limits.max_invites_per_day` (15), plus `counts.members`, `invites_day` and
+>   `invites_today`.
+>
+>   **These are two different controls and conflating them defeats both.**
+>   `counts.members` goes down when somebody is removed — it backs the plan
+>   limit. `invites_today` **does not**, and that is the whole point: adding a
+>   person makes Google send that address an email carrying our project's name,
+>   so a cap that only counts current members is defeated by adding twenty
+>   people and removing them, while the twenty emails have already left.
+>
+>   `invites_day` is `YYYY-MM-DD` in **UTC**, deliberately not the
+>   organization's own timezone: it is an abuse control no customer reads, and
+>   using their timezone would let somebody pick a zone to get two resets in a
+>   day. A counter whose day does not match today reads as zero rather than
+>   being carried forward.
+>
+>   `counts.members` is absent on organizations created before 2026-09-04 and
+>   reads as 0. That **understates** them — nothing counted members before that
+>   date, and back-filling would need a scan of every user document. The
+>   consequence is bounded and deliberate: an old organization gets a slightly
+>   larger allowance than a new one, never a smaller one.
+>
 > - `status` is `active` or `deleted`. Deletion is soft, so the audit trail
 >   underneath survives its retention period.
 

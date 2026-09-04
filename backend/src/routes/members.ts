@@ -8,6 +8,12 @@ import { requireOrgAdmin } from '../middleware/orgAccess.js'
 import { conflict, invalidRequest, notFound } from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
 import { orgRef } from '../lib/orgs.js'
+import type { OrgDocument } from '../lib/orgs.js'
+import {
+  checkMemberAllowance,
+  memberAddedUpdate,
+  memberRemovedUpdate,
+} from '../lib/quota.js'
 import { ORG_ROLES, userRef, usersCollection } from '../lib/users.js'
 import type { OrgRole, UserDocument } from '../lib/users.js'
 import {
@@ -66,7 +72,18 @@ function errorCode(error: unknown): string | undefined {
  * Firebase will not send a password-reset email to an account that has no
  * password, and that email is how the person sets their own.
  */
-async function findOrCreateAccount(input: { email: string; displayName: string }): Promise<{
+async function findOrCreateAccount(input: {
+  email: string
+  displayName: string
+  /**
+   * Runs after the lookup and **before** an account is created, only when
+   * there is nothing to find. It is where the limits of R-02 are applied, so
+   * that a refusal never leaves an orphan account behind — and so that adding
+   * somebody who already has an account, to change their role, is not refused
+   * by a limit that exists to stop new accounts being made.
+   */
+  beforeCreate?: () => void
+}): Promise<{
   uid: string
   hasSignedIn: boolean
 }> {
@@ -76,6 +93,8 @@ async function findOrCreateAccount(input: { email: string; displayName: string }
   } catch (error) {
     if (errorCode(error) !== 'auth/user-not-found') throw error
   }
+
+  input.beforeCreate?.()
 
   try {
     const created = await auth().createUser({
@@ -142,11 +161,33 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => 
 
   const orgId = String(req.params.orgId)
   const { email, first_name: firstName, last_name: lastName, role } = parsed.data
+  const now = new Date()
 
   try {
+    // Both limits are checked **before** a Firebase account is created (R-02).
+    // The email that makes this worth abusing is sent by the browser after a
+    // 201, so refusing anywhere before that stops it — but an account created
+    // and then refused still leaves an orphan in Firebase, and the cheapest
+    // way to not have orphans is to not create them.
+    //
+    // It runs only on the path that would create one. An address that already
+    // has an account is somebody being given a role, which makes no account
+    // and sends no email, and must not be refused by an organization that is
+    // full — otherwise the limit traps the administrator instead of the abuser.
+    //
+    // This read is not authoritative. Two administrators adding people at the
+    // same instant can both pass it; the copy inside the transaction below is
+    // what actually decides.
+    const orgBefore = await orgRef(orgId).get()
+
     const { uid, hasSignedIn } = await findOrCreateAccount({
       email,
       displayName: `${firstName} ${lastName}`,
+      beforeCreate: () =>
+        checkMemberAllowance(
+          orgBefore.exists ? (orgBefore.data() as Partial<OrgDocument>) : undefined,
+          now,
+        ),
     })
 
     if (uid === req.user!.uid) {
@@ -160,8 +201,22 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => 
 
     const stored = await db().runTransaction(async (tx: Transaction) => {
       const ref = userRef(uid)
+      // Every read before the first write, and the organization is read here
+      // rather than reused from above because the count may have moved.
       const snapshot = await tx.get(ref)
+      const org = await tx.get(orgRef(orgId))
       const current = snapshot.exists ? (snapshot.data() as Partial<UserDocument>) : undefined
+
+      // Somebody who already belongs here is having their role changed, which
+      // adds nobody and sends nothing. It must not consume an allowance, and
+      // it must not be refused when the organization is full.
+      const alreadyMember = (current?.orgs ?? []).some((entry) => entry.org_id === orgId)
+
+      checkMemberAllowance(
+        org.exists ? (org.data() as Partial<OrgDocument>) : undefined,
+        now,
+        alreadyMember,
+      )
 
       const document: Record<string, unknown> = {
         id: uid,
@@ -177,6 +232,12 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, async (req, res, next) => 
       if (!snapshot.exists) document.created_at = FieldValue.serverTimestamp()
 
       tx.set(ref, document, { merge: true })
+      if (!alreadyMember) {
+        tx.update(
+          orgRef(orgId),
+          memberAddedUpdate(org.exists ? (org.data() as Partial<OrgDocument>) : undefined, now),
+        )
+      }
       return { ...current, ...document } as Partial<UserDocument>
     })
 
@@ -308,9 +369,16 @@ membersRouter.delete('/:userId', requireAuth, requireOrgAdmin, async (req, res, 
       return
     }
 
-    await ref.update({
-      orgs: withoutMembership(stored, orgId),
-      updated_at: FieldValue.serverTimestamp(),
+    // The membership and the count move together, so a removed person always
+    // frees their place — the same rule `deleteCounted` follows for interiors.
+    // The day's invitation count is deliberately not given back: removing
+    // somebody does not un-send the email their address already received.
+    await db().runTransaction(async (tx: Transaction) => {
+      tx.update(ref, {
+        orgs: withoutMembership(stored, orgId),
+        updated_at: FieldValue.serverTimestamp(),
+      })
+      tx.update(orgRef(orgId), memberRemovedUpdate())
     })
 
     logger.info(

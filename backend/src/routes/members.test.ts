@@ -424,3 +424,135 @@ describe('organization isolation', () => {
     expect(orgsOf(RESIDENT)).toEqual([{ org_id: ORG, role: 'responsable' }])
   })
 })
+
+// ---------------------------------------------------------------------------
+// R-02 — how many people one organization may add, and how many in a day
+// ---------------------------------------------------------------------------
+
+describe('the limits on adding people (R-02)', () => {
+  /** Puts the organization's counters wherever a test needs them. */
+  function orgWith(fields: Record<string, unknown>) {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      ...fields,
+    })
+  }
+
+  function org(): Record<string, unknown> {
+    return store.docs.get(`orgs/${ORG}`) as Record<string, unknown>
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  function addSomebody(uid: string, email: string) {
+    accountDoesNotExist()
+    createUser.mockResolvedValueOnce({ uid })
+    signedInAs(ADMIN)
+    return request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send({ ...NEW_MEMBER, email })
+  }
+
+  it('counts a person on the organization when one is added', async () => {
+    await addSomebody(RESIDENT, 'maria@example.com')
+
+    expect(org().counts).toMatchObject({ members: 1 })
+    expect(org().invites_today).toBe(1)
+    expect(org().invites_day).toBe(today)
+  })
+
+  it('refuses once the organization is full, and says it is a plan limit', async () => {
+    orgWith({ counts: { locations: 1, interiors: 0, members: 25 } })
+
+    const res = await addSomebody(RESIDENT, 'maria@example.com')
+
+    expect(res.status).toBe(403)
+    expect(res.body.error).toBe('quota_exceeded')
+    // Refused before the account exists: no orphan, and no email.
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('refuses after the day s invitations are used up, with its own code', async () => {
+    orgWith({ invites_day: today, invites_today: 15 })
+
+    const res = await addSomebody(RESIDENT, 'maria@example.com')
+
+    expect(res.status).toBe(429)
+    expect(res.body.error).toBe('invite_limit_reached')
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('gives the day s allowance back when the day changes, and never carries yesterday forward', async () => {
+    orgWith({ invites_day: '2020-01-01', invites_today: 15 })
+
+    const res = await addSomebody(RESIDENT, 'maria@example.com')
+
+    expect(res.status).toBe(201)
+    // Replaced, not incremented: yesterday's 15 must not become today's 16.
+    expect(org().invites_today).toBe(1)
+    expect(org().invites_day).toBe(today)
+  })
+
+  it('gives a place back when somebody is removed', async () => {
+    orgWith({ counts: { locations: 1, interiors: 0, members: 3 } })
+    seedMember(RESIDENT, ORG, 'responsable')
+    signedInAs(ADMIN)
+
+    await request(app)
+      .delete(`/orgs/${ORG}/members/${RESIDENT}`)
+      .set('Authorization', 'Bearer token')
+
+    expect(org().counts).toMatchObject({ members: 2 })
+  })
+
+  it('does NOT give the day s invitation back when somebody is removed', async () => {
+    // The whole point of the daily counter. Removing a person does not un-send
+    // the email their address already received, so add-and-remove must not be
+    // a way to send an unlimited number of them.
+    orgWith({
+      counts: { locations: 1, interiors: 0, members: 3 },
+      invites_day: today,
+      invites_today: 9,
+    })
+    seedMember(RESIDENT, ORG, 'responsable')
+    signedInAs(ADMIN)
+
+    await request(app)
+      .delete(`/orgs/${ORG}/members/${RESIDENT}`)
+      .set('Authorization', 'Bearer token')
+
+    expect(org().invites_today).toBe(9)
+  })
+
+  it('lets a full organization still change somebody s role', async () => {
+    // Being at the limit must not trap an administrator: changing a role adds
+    // nobody and sends nothing.
+    orgWith({ counts: { locations: 1, interiors: 0, members: 25 } })
+    seedMember(RESIDENT, ORG, 'responsable')
+    getUserByEmail.mockResolvedValueOnce({ uid: RESIDENT })
+    signedInAs(ADMIN)
+
+    const res = await request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send({ ...NEW_MEMBER, role: 'security' })
+
+    expect(res.status).toBe(201)
+    expect(orgsOf(RESIDENT)).toEqual([{ org_id: ORG, role: 'security' }])
+    // And it consumed neither allowance.
+    expect(org().counts).toMatchObject({ members: 25 })
+    expect(org().invites_today ?? 0).toBe(0)
+  })
+
+  it('reads an organization created before today as having no members counted', async () => {
+    // Nothing counted members before 2026-09-04. Such an organization gets a
+    // slightly larger allowance than a new one, never a smaller one — and it
+    // must never be refused for a counter that was never written.
+    orgWith({ counts: { locations: 1, interiors: 0 } })
+
+    const res = await addSomebody(RESIDENT, 'maria@example.com')
+
+    expect(res.status).toBe(201)
+  })
+})

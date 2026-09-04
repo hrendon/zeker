@@ -17,6 +17,12 @@ export const ErrorCode = {
   // rule, applied to Decision 015's refusals).
   note_too_late: 409,
   note_already_recorded: 409,
+  // A separate 429 from the general rate limit, and it is not about speed:
+  // it is the number of accounts one organization may cause to exist in a
+  // day. Adding a person makes Google send them an email with our name on it
+  // (R-02), so an uncapped organization is a spam relay wearing our identity.
+  // Its own code so the screen can say what actually happened.
+  invite_limit_reached: 429,
   rate_limited: 429,
   internal_server_error: 500,
 } as const
@@ -64,3 +70,11 @@ export const noteTooLate = (message: string): AppError => new AppError('note_too
 /** Decision 015. One note per check, so a count can never go below the truth. */
 export const noteAlreadyRecorded = (message: string): AppError =>
   new AppError('note_already_recorded', message)
+
+/** R-02. This organization has invited as many people today as it may. */
+export const inviteLimitReached = (limit: number): AppError =>
+  new AppError(
+    'invite_limit_reached',
+    `This organization can add ${limit} people per day. Try again tomorrow.`,
+    { limit },
+  )

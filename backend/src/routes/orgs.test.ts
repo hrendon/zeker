@@ -106,7 +106,15 @@ describe('POST /orgs', () => {
       .send({ name: 'Unidad Residencial Y', type: 'residence' })
 
     expect(res.body.plan).toBe('free')
-    expect(res.body.limits).toEqual({ max_locations: 1, max_interiors: 10 })
+    expect(res.body.limits).toEqual({
+      max_locations: 1,
+      max_interiors: 10,
+      // R-02, added 2026-09-04. A plan limit an administrator would recognise,
+      // and a daily one that exists because adding a person makes Google send
+      // an email with our name on it.
+      max_members: 25,
+      max_invites_per_day: 15,
+    })
     expect(res.body.counts).toEqual({ locations: 0, interiors: 0 })
   })
 

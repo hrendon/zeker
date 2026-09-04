@@ -203,6 +203,78 @@ Three things, none of them product.
   a unit closes; four closed with one review between them. Recorded as a rule
   not being kept, not as a one-off. Its output is the ordered list below.
 
+## Reopened the same day: the Founder ruled out interviews
+
+**D-010, the Founder's:** *"La entrevista a los cinco administradores no es
+opción para mí. Quiero que el mercado decida."*
+
+Recorded as theirs, and the recommendation it overrides is left standing rather
+than edited away. It is a legitimate position — behavioural evidence instead of
+stated preference — and it was said once that it is **more** work, not less, and
+almost all of it mine.
+
+**What "let the market decide" actually requires:** that a stranger can find the
+product, get in unaided, and that we can see what happened. The third half
+exists (`npm run report` counts organizations, permits and entries without ever
+printing a name). The other two do not.
+
+### Built: the front door can no longer be used as a mailer (R-02)
+
+Checking the code first turned up something more urgent than the market: **the
+application is already public.** It is unadvertised, not private — anyone who
+finds the address can sign up, and once inside could make Google send emails to
+arbitrary addresses, unmetered, with our project's name on them. Nothing had
+happened only because nobody knows we exist, which is precisely the protection
+the Founder wants to remove.
+
+**Two limits, because one is not enough:**
+
+* `max_members` (25) — the plan limit. Goes down when somebody is removed.
+* `max_invites_per_day` (15) — the abuse control. **Never given back on
+  removal.** A cap that only counts current members is defeated by adding twenty
+  people and removing them, and those twenty emails have already left.
+
+Both are checked **before** the Firebase account is created, so a refusal leaves
+no orphan account and sends nothing. The daily counter resets on the UTC day
+boundary, and a counter from another day reads as zero rather than carrying
+forward.
+
+**A real bug the tests caught before it shipped:** the first version refused to
+let a *full* organization change an existing member's role — trapping the
+administrator instead of the abuser. Adding somebody who already has an account
+creates nothing and sends nothing, so it now consumes neither allowance.
+
+Nine tests. **276 backend, 110 frontend**, typecheck and production build clean.
+The refusal has its own Spanish sentence: *"Ya agregó todas las personas que se
+pueden agregar hoy… Puede seguir mañana"* — not "demasiados intentos", which
+would send an administrator looking for a mistake they did not make.
+
+### Decided: how the domain attaches, and it costs nothing (Decision 017)
+
+Open since the domain was bought. The obvious path — an external load balancer —
+costs **3.6× to 5× the entire monthly ceiling, permanently**. Rejected. Chosen:
+**Cloud Run domain mapping**, direct, free, for both services.
+
+**Running the script against the real project found two things that reasoning
+about it would not have:**
+
+1. **Google refuses to map a domain that is not verified for the account.** That
+   step appears in no document in this repository, and it would have shown up
+   for the first time in the middle of the sitting where the domain was meant to
+   go live. It is the Founder's hands, once, and it lasts forever.
+2. **Our own guard lied.** The script's DNS check reported "✅ resolves" for a
+   domain that does not exist, because `nslookup` exits 0 on NXDOMAIN. **The
+   same shape as R-27** — a check that passes when the thing it checks is
+   absent. Fixed to read the answer instead of the exit code.
+
+`scripts/conectar-dominio.sh` now stops on either condition with the steps
+written out in Spanish, and ends by naming the three lists that must learn the
+new address in the same sitting (R-25, R-26, R-28) or the product breaks in the
+two ways it has already broken.
+
+**Still blocked on the Founder:** `zeker.com.co` has no nameservers. Confirmed
+again today.
+
 ## Session close — 2026-09-04
 
 ### The one thing worth carrying forward

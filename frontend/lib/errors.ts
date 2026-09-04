@@ -77,6 +77,11 @@ const API_MESSAGES: Record<string, string> = {
   // ya existe" at a gate is the same failure Decision 008 fixed for refusals.
   note_too_late: es.gate.noteTooLate,
   note_already_recorded: es.gate.noteAlready,
+  // R-02. A 429 like rate_limited, and deliberately not the same sentence:
+  // "demasiados intentos" tells an administrator they did something wrong,
+  // when what happened is that the day's allowance is used up and tomorrow
+  // works.
+  invite_limit_reached: es.errors.inviteLimitReached,
   rate_limited: es.errors.tooManyAttempts,
   internal_server_error: es.errors.serverError,
 }

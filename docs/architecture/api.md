@@ -187,8 +187,13 @@ how the freemium model is enforced and are never set by the customer.
   "type": "school",
   "description": "Private bilingual school",
   "plan": "free",
-  "limits": { "max_locations": 1, "max_interiors": 10 },
-  "counts": { "locations": 0, "interiors": 0 },
+  "limits": {
+    "max_locations": 1,
+    "max_interiors": 10,
+    "max_members": 25,
+    "max_invites_per_day": 15
+  },
+  "counts": { "locations": 0, "interiors": 0, "members": 0 },
   "city": "Bogotá",
   "country": "CO",
   "timezone": "America/Bogota",
@@ -204,7 +209,16 @@ how the freemium model is enforced and are never set by the customer.
 before Decision 016 that have none stored — those read as `America/Bogota`.
 
 `limits` come from the plan (Decision 003). Free is 1 location and 10 interiors
-in total across the organization.
+in total across the organization, **25 people at once, and 15 people added per
+day** (R-02, added 2026-09-04).
+
+The last two are not the same kind of limit. `max_members` is the plan: it goes
+down when somebody is removed, and it is the one an administrator would
+recognise. `max_invites_per_day` is an abuse control — adding a person makes
+Google send that address an email carrying our project's name, and **a limit
+that only counts current members is defeated by adding twenty people and
+removing them.** The daily counter is never given back on removal, resets on the
+UTC day boundary, and changing an existing member's role consumes neither.
 
 **Errors:**
 - `400 invalid_request` — missing name, unknown type, or an unknown field

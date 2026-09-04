@@ -512,6 +512,10 @@ export const es = {
     notAllowed: 'No tiene permiso para hacer esto.',
     notFound: 'No encontramos lo que buscaba.',
     invalidRequest: 'Los datos enviados no son válidos. Revíselos.',
+    // R-02. Su propio mensaje, porque tiene una acción distinta a la del
+    // límite del plan: aquí no hay que cambiar de plan, hay que esperar.
+    inviteLimitReached:
+      'Ya agregó todas las personas que se pueden agregar hoy en esta organización. Puede seguir mañana.',
     quotaExceeded:
       'Alcanzó el límite de su plan. Mejore su plan para agregar más.',
     conflict: 'Esa acción choca con algo que ya existe.',

@@ -58,6 +58,38 @@ export interface PlanLimits {
   max_locations: number
   /** Total across the whole organization, not per location (Decision 003). */
   max_interiors: number
+  /**
+   * How many people may belong to this organization at once (R-02).
+   *
+   * A **business** limit, and the one an administrator will ever see. It is
+   * generous on purpose: a free building with ten interiors can have ten
+   * residents in charge, an administrator and a few guards, and must not hit a
+   * wall doing the ordinary thing.
+   *
+   * It is **not** the anti-abuse control. On its own it is defeated by churn —
+   * add twenty, remove twenty, add twenty more, and every one of those sent an
+   * email with our name on it. `max_invites_per_day` is the control that
+   * actually bounds that, and the two exist separately because they answer
+   * different questions.
+   *
+   * Absent on organizations created before 2026-09-04, which read the free
+   * plan's value.
+   */
+  max_members: number
+  /**
+   * How many people this organization may **add** in one day (R-02).
+   *
+   * A **security** limit. Adding a person makes Google send that address an
+   * email naming them, from our project — so an uncapped organization is a
+   * spam relay wearing our identity, and the only thing standing in the way
+   * today is that nobody has been told the address exists.
+   *
+   * Counted per day rather than for the lifetime of the organization on
+   * purpose: guards are rotating staff from a contracted security firm, so a
+   * real building legitimately churns accounts over months. A lifetime ceiling
+   * would punish that; a daily one bounds the damage without ever touching it.
+   */
+  max_invites_per_day: number
 }
 
 /**
@@ -65,11 +97,31 @@ export interface PlanLimits {
  * decided yet — Decision 001 defers them until after customer validation — so
  * they are deliberately absent rather than invented here.
  */
-export const FREE_PLAN_LIMITS: PlanLimits = { max_locations: 1, max_interiors: 10 }
+export const FREE_PLAN_LIMITS: PlanLimits = {
+  max_locations: 1,
+  max_interiors: 10,
+  // Ten interiors with a resident in charge of each, an administrator, and
+  // room for the guards a small building actually has.
+  max_members: 25,
+  // Enough to set up a whole building in one sitting, and not enough to be
+  // worth using as a mailer.
+  max_invites_per_day: 15,
+}
 
 export interface OrgCounts {
   locations: number
   interiors: number
+  /**
+   * People who belong to the organization right now. Goes down when somebody
+   * is removed — it is the business count, not the abuse count (R-02).
+   *
+   * Absent on organizations created before 2026-09-04. Those are read as 0,
+   * which understates them: nothing counted members before today, and
+   * back-filling would need a scan of every user document. The consequence is
+   * bounded and deliberate — an old organization gets a slightly larger
+   * allowance than a new one, and never a smaller one.
+   */
+  members?: number
 }
 
 export interface OrgDocument {
@@ -88,6 +140,18 @@ export interface OrgDocument {
    * were, since the product has only ever been used there.
    */
   timezone?: string
+  /**
+   * The day the invite counter below belongs to, as `YYYY-MM-DD` in UTC
+   * (R-02). A different day means the counter is stale and reads as zero.
+   *
+   * UTC rather than the organization's own timezone, deliberately: this is an
+   * abuse control, not something a customer reads. A day boundary a customer
+   * never sees does not need to match their calendar, and using their timezone
+   * would let somebody pick a zone to get two resets.
+   */
+  invites_day?: string
+  /** How many people this organization has added on `invites_day` (R-02). */
+  invites_today?: number
   created_by: string
   created_at?: unknown
   updated_at?: unknown

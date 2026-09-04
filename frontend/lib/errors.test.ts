@@ -112,3 +112,28 @@ describe('the two refusals a guard can hit after a check (Decision 015)', () => 
     expect(es.gate.noteTooLate).not.toBe(es.gate.noteAlready)
   })
 })
+
+describe('the limits on adding people (R-02)', () => {
+  it('says the day s allowance is used up, not that something went wrong', () => {
+    // Both are 429s. Telling an administrator "demasiados intentos" when the
+    // truth is "hoy ya no, mañana sí" sends them to look for a mistake they
+    // did not make.
+    const message = toSpanish(
+      new ApiError(429, { error: 'invite_limit_reached', message: 'x', request_id: 'req_1' }),
+    )
+
+    expect(message).toBe(es.errors.inviteLimitReached)
+    expect(message).not.toBe(es.errors.tooManyAttempts)
+  })
+
+  it('keeps the plan limit and the daily limit as different sentences', () => {
+    const planLimit = toSpanish(
+      new ApiError(403, { error: 'quota_exceeded', message: 'x', request_id: 'req_1' }),
+    )
+    const dailyLimit = toSpanish(
+      new ApiError(429, { error: 'invite_limit_reached', message: 'x', request_id: 'req_1' }),
+    )
+
+    expect(planLimit).not.toBe(dailyLimit)
+  })
+})
