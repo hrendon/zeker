@@ -267,3 +267,27 @@ describe('checking a schedule before it is sent', () => {
     expect(checkSchedule([1], '22:00', '06:00')).toBe(es.validation.scheduleNoMidnight)
   })
 })
+
+describe('what a permit that cannot be used says about itself', () => {
+  it('never calls a used permit expired', () => {
+    // The screen used to show "ya terminó" for every state except revoked, so
+    // a permit that simply did its job read as one the clock ran out on.
+    expect(es.permits.used).not.toBe(es.permits.expired)
+    expect(es.permits.used).toContain('ya se usó')
+    expect(es.permits.expired).not.toContain('ya se usó')
+  })
+
+  it('gives a permit that has not started its own sentence too', () => {
+    expect(es.permits.scheduled).not.toBe(es.permits.expired)
+    expect(es.permits.scheduled).not.toBe(es.permits.revoked)
+  })
+})
+
+describe('the gate refusal for days and hours', () => {
+  it('names the day as well as the hour', () => {
+    // Found by running TC-016-01 by hand: a permit refused for the wrong DAY
+    // said "no sirve a esta hora", and a guard in a hurry checks the clock.
+    expect(es.gate.reasonOutsideSchedule).toContain('día')
+    expect(es.gate.reasonOutsideSchedule).toContain('hora')
+  })
+})

@@ -60,6 +60,14 @@ export const es = {
   },
 
   home: {
+    // Existe porque un error de tipeo al registrarse era permanente, y un
+    // interior cuyo responsable no tenía nombre se leía "asignado, sin nombre
+    // registrado" sin ningún sitio a donde ir a corregirlo.
+    editName: 'Cambiar mi nombre',
+    editNameTitle: 'Su nombre',
+    editNameHint:
+      'Así lo ven los administradores de los edificios donde usted está. No es su correo: el correo no se cambia aquí.',
+    editNameSaved: 'Listo, su nombre quedó cambiado.',
     greeting: 'Hola',
     roleLabel: 'Rol',
   },
@@ -368,8 +376,14 @@ export const es = {
     revokeConfirmBody:
       'El código deja de servir de inmediato. El permiso se conserva en la historia de entradas, pero ya no abre nada. Esta acción no se puede deshacer.',
     revoked: 'Este permiso está anulado. Su código ya no sirve.',
-    expired: 'Este permiso ya terminó.',
-    scheduled: 'Este permiso todavía no empieza.',
+    // Corregido 2026-09-04: la pantalla mostraba "ya terminó" para CUALQUIER
+    // estado que no fuera "anulado" — incluido uno que ya se usó y uno que
+    // todavía no empieza. "Terminó" y "se usó" no son lo mismo, y el Fundador
+    // lo señaló el 2026-09-03: "se usó" dice qué le pasó al permiso, "venció"
+    // solo dice qué hizo el reloj.
+    expired: 'Este permiso ya se venció. Ya pasó la fecha hasta la que servía.',
+    used: 'Este permiso era para una sola entrada y ya se usó. Haga uno nuevo si la persona tiene que volver.',
+    scheduled: 'Este permiso todavía no empieza. Su código va a servir desde la fecha de inicio.',
 
     backToList: 'Volver a los permisos',
     filterAll: 'Todos',
@@ -443,7 +457,10 @@ export const es = {
     reasonWrongLocation: 'Ese permiso no es para esta entrada.',
     // Decision 016. Like "ya se usó", this one has something the guard can act
     // on: the visitor is not being turned away for good, only for now.
-    reasonOutsideSchedule: 'Este permiso no sirve a esta hora.',
+    // Corregido 2026-09-04 después de correr TC-016-01 a mano. Decía "no sirve
+    // a esta hora" también cuando el día era el equivocado, y un vigilante de
+    // afán mira el reloj en vez del calendario. Ahora nombra las dos cosas.
+    reasonOutsideSchedule: 'Este permiso no sirve en este día ni a esta hora.',
     /** Followed by the schedule itself, so the guard can say when to come back. */
     scheduleAllows: 'Sirve',
     rightEntrance: 'Es para',

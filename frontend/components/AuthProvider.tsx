@@ -42,6 +42,14 @@ interface AuthState {
   signOut: () => Promise<void>
   /** Used by the sign-up screen to send the name on the very first call. */
   registerNames: (names: { first_name: string; last_name: string }) => void
+  /**
+   * Replaces the cached profile with one the server just returned.
+   *
+   * Used after a person edits their own name, so the greeting changes without
+   * a second round trip and without a reload — the edit already came back with
+   * the whole profile in it.
+   */
+  applyProfile: (profile: UserProfile) => void
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -61,6 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const registerNames = useCallback((names: { first_name: string; last_name: string }) => {
     pendingNames.current = names
+  }, [])
+
+  const applyProfile = useCallback((next: UserProfile) => {
+    setProfile(next)
+    setProfileError(null)
   }, [])
 
   useEffect(() => {
@@ -110,8 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const value = useMemo<AuthState>(
-    () => ({ status, user, profile, profileError, signOut, registerNames }),
-    [status, user, profile, profileError, signOut, registerNames],
+    () => ({ status, user, profile, profileError, signOut, registerNames, applyProfile }),
+    [status, user, profile, profileError, signOut, registerNames, applyProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

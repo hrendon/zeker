@@ -275,6 +275,16 @@ export const authApi = {
   me: () => request<UserProfile>('/auth/me'),
 
   /**
+   * A person corrects their own name. Only their own — there is no id to pass.
+   *
+   * It exists because a typo at sign-up used to be permanent, and an interior
+   * whose responsable had no name read as "asignado, sin nombre registrado"
+   * with nowhere to go and fix it.
+   */
+  updateProfile: (names: { first_name: string; last_name: string }) =>
+    request<UserProfile>('/auth/me', { method: 'PUT', body: names }),
+
+  /**
    * Ends the session on the server, so a stolen refresh token cannot resume it.
    * If this fails the person is NOT logged out and must be told so.
    */

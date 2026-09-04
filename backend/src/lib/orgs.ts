@@ -101,6 +101,23 @@ export interface PlanLimits {
    * would punish that; a daily one bounds the damage without ever touching it.
    */
   max_invites_per_day: number
+  /**
+   * How many permits this organization may issue in one day.
+   *
+   * Named as a precondition by Decision 011: *"nothing caps how many permits a
+   * customer may issue"*, and permits are **the record that actually
+   * accumulates**. An organization that never stops issuing them is an
+   * organization whose storage never stops growing.
+   *
+   * **Per day rather than "how many may exist at once", and the reason is
+   * structural.** A permit is never marked expired — `stateOf` works it out
+   * from the dates, because nothing in this product runs on a schedule
+   * (`lib/permits.ts`). So a stored count of *live* permits could only be kept
+   * correct by a job that does not exist, and would drift the moment one
+   * expired. A daily counter needs no job, bounds the growth to a number a year,
+   * and is the same mechanism the invitation cap already uses.
+   */
+  max_permits_per_day: number
 }
 
 /**
@@ -117,6 +134,10 @@ export const FREE_PLAN_LIMITS: PlanLimits = {
   // Enough to set up a whole building in one sitting, and not enough to be
   // worth using as a mailer.
   max_invites_per_day: 15,
+  // Ten interiors, each expecting a few visitors on a busy day, with room to
+  // spare. A real small building will not see this; something issuing them in a
+  // loop will.
+  max_permits_per_day: 50,
 }
 
 export interface OrgCounts {
@@ -163,6 +184,10 @@ export interface OrgDocument {
   invites_day?: string
   /** How many people this organization has added on `invites_day` (R-02). */
   invites_today?: number
+  /** The day `permits_today` belongs to, `YYYY-MM-DD` in UTC. Same rule as `invites_day`. */
+  permits_day?: string
+  /** How many permits this organization has issued on `permits_day`. */
+  permits_today?: number
   /**
    * Whether a person has approved this building (Decision 018, closing R-01).
    *

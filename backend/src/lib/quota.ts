@@ -1,7 +1,7 @@
 import { FieldValue } from 'firebase-admin/firestore'
 import type { DocumentReference, Transaction } from 'firebase-admin/firestore'
 import { db } from './firebase.js'
-import { AppError, inviteLimitReached, notFound } from './errors.js'
+import { AppError, inviteLimitReached, notFound, permitLimitReached } from './errors.js'
 import { FREE_PLAN_LIMITS, orgRef } from './orgs.js'
 import type { OrgDocument } from './orgs.js'
 
@@ -222,6 +222,53 @@ export function memberAddedUpdate(
 export function memberRemovedUpdate(): Record<string, unknown> {
   return {
     'counts.members': FieldValue.increment(-1),
+    updated_at: FieldValue.serverTimestamp(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Permits (Decision 011's third precondition)
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks how many permits this organization has already issued today, and
+ * throws if it has used them all.
+ *
+ * Counted per day for the reason written on `PlanLimits.max_permits_per_day`:
+ * a count of *live* permits cannot be kept correct without a scheduled job, and
+ * this product deliberately has none.
+ *
+ * **A revoked permit does not give its slot back**, and that is the same rule
+ * the invitation counter follows: the record was created, it is stored, and it
+ * is what the limit is about. Otherwise issue-and-revoke is an unbounded loop.
+ */
+export function checkPermitAllowance(
+  stored: Partial<OrgDocument> | undefined,
+  at: Date = new Date(),
+): { permitsLeft: number } {
+  const limits = stored?.limits ?? FREE_PLAN_LIMITS
+  const max = limits.max_permits_per_day ?? FREE_PLAN_LIMITS.max_permits_per_day
+
+  const today = stored?.permits_day === inviteDay(at) ? (stored?.permits_today ?? 0) : 0
+  const left = Math.max(0, max - today)
+
+  if (left <= 0) throw permitLimitReached(max)
+
+  return { permitsLeft: left }
+}
+
+/** What to write on the organization when a permit is issued. */
+export function permitIssuedUpdate(
+  stored: Partial<OrgDocument> | undefined,
+  at: Date = new Date(),
+): Record<string, unknown> {
+  const today = inviteDay(at)
+
+  return {
+    permits_day: today,
+    // Replaced rather than incremented when the day has turned, so yesterday's
+    // total never eats into today's allowance.
+    permits_today: stored?.permits_day === today ? FieldValue.increment(1) : 1,
     updated_at: FieldValue.serverTimestamp(),
   }
 }

@@ -98,6 +98,39 @@ responsable, security).
 here yet — the frontend should call `POST /auth/session` before continuing.
 
 **Errors:**
+
+---
+
+### PUT /auth/me
+
+A person corrects **their own** name. Added 2026-09-04.
+
+**Request:**
+```json
+{ "first_name": "Hernán", "last_name": "Rendón" }
+```
+
+Both are required, 1–100 characters. **Any other field is rejected outright** —
+the schema is strict, so an attempt to set `orgs`, `id` or a role fails with 400
+rather than being quietly ignored.
+
+**There is no user id in the path and none is accepted.** The profile written is
+always the caller's own. An administrator correcting somebody else's spelling is
+a different feature with a different blast radius, and nobody has asked for it.
+
+**The email is not editable here.** Firebase owns it (Decision 002), our database
+never stores it, and changing it is an authentication event rather than a profile
+edit.
+
+**Response (200):** the same shape as `GET /auth/me`, with the new name.
+
+**Why it exists**, since its absence was invisible until it was not: on
+2026-09-04 an interior read *"Responsable: asignado, sin nombre registrado"* in a
+browser. Of the four accounts that existed, one had no name — and there was
+**nowhere in the product for that person to fix it.** The sign-up form asks for a
+name; a typo in it was permanent.
+
+**Errors:**
 - `401 unauthorized` — missing, malformed, expired or revoked token
 
 ---
@@ -191,7 +224,8 @@ how the freemium model is enforced and are never set by the customer.
     "max_locations": 1,
     "max_interiors": 10,
     "max_members": 25,
-    "max_invites_per_day": 15
+    "max_invites_per_day": 15,
+    "max_permits_per_day": 50
   },
   "counts": { "locations": 0, "interiors": 0, "members": 0 },
   "approved": false,
@@ -224,8 +258,9 @@ inside the product, and since Decision 004 the backend's own membership check is
 the only wall there is.
 
 `limits` come from the plan (Decision 003). Free is 1 location and 10 interiors
-in total across the organization, **25 people at once, and 15 people added per
-day** (R-02, added 2026-09-04).
+in total across the organization, **25 people at once, 15 people added per day**
+(R-02) and **50 permits issued per day** (Decision 011's third precondition) —
+all three added 2026-09-04.
 
 The last two are not the same kind of limit. `max_members` is the plan: it goes
 down when somebody is removed, and it is the one an administrator would
@@ -234,6 +269,13 @@ Google send that address an email carrying our project's name, and **a limit
 that only counts current members is defeated by adding twenty people and
 removing them.** The daily counter is never given back on removal, resets on the
 UTC day boundary, and changing an existing member's role consumes neither.
+
+`max_permits_per_day` follows the same shape and for a structural reason: a
+permit is **never marked expired** — the state is worked out from its dates,
+because nothing in this product runs on a schedule. So a count of *live* permits
+could only be kept correct by a job that does not exist. **Revoking a permit does
+not give the slot back**, or issue-and-revoke would be an unbounded loop.
+Exceeding it answers `permit_limit_reached` (429).
 
 **Errors:**
 - `400 invalid_request` — missing name, unknown type, or an unknown field

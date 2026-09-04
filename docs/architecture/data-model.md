@@ -75,6 +75,15 @@ Organization (tenant) data.
 >   so a cap that only counts current members is defeated by adding twenty
 >   people and removing them, while the twenty emails have already left.
 >
+>   **Added the same day:** `limits.max_permits_per_day` (50), `permits_day` and
+>   `permits_today`, following exactly the same shape. Decision 011 named an
+>   uncapped permit count as a precondition of billing, and permits are the
+>   record that actually accumulates. Counted per day rather than "how many may
+>   be live" because **a permit is never marked expired** — the state is worked
+>   out from its dates, since nothing here runs on a schedule — so a live count
+>   could only be kept correct by a job that does not exist. **Revoking does not
+>   give the slot back.**
+>
 >   `invites_day` is `YYYY-MM-DD` in **UTC**, deliberately not the
 >   organization's own timezone: it is an abuse control no customer reads, and
 >   using their timezone would let somebody pick a zone to get two resets in a

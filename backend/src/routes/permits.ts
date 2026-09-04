@@ -8,6 +8,9 @@ import { requireApprovedOrg, requireOrgMember } from '../middleware/orgAccess.js
 import { conflict, forbidden, invalidRequest, notFound } from '../lib/errors.js'
 import { logger } from '../lib/logger.js'
 import { interiorRef, interiorsCollection } from '../lib/interiors.js'
+import { orgRef } from '../lib/orgs.js'
+import type { OrgDocument } from '../lib/orgs.js'
+import { checkPermitAllowance, permitIssuedUpdate } from '../lib/quota.js'
 import type { InteriorDocument } from '../lib/interiors.js'
 import {
   MAX_PERMIT_DAYS,
@@ -195,7 +198,13 @@ permitsRouter.post('/', requireAuth, requireOrgMember, requireApprovedOrg, async
     const ref = permitRef(orgId, permitId)
 
     const code = await db().runTransaction(async (tx: Transaction) => {
-      // Every read must happen before the first write in a Firestore transaction.
+      // Every read must happen before the first write in a Firestore
+      // transaction. The organization is read here, inside it, so two residents
+      // issuing at the same instant cannot both pass the day's limit.
+      const org = await tx.get(orgRef(orgId))
+      const stored = org.exists ? (org.data() as Partial<OrgDocument>) : undefined
+      checkPermitAllowance(stored, now)
+
       for (let attempt = 0; attempt < 5; attempt += 1) {
         const candidate = newCode()
         const taken = await tx.get(
@@ -227,6 +236,7 @@ permitsRouter.post('/', requireAuth, requireOrgMember, requireApprovedOrg, async
             revoked_at: null,
             revoked_by: null,
           } satisfies Record<keyof PermitDocument, unknown>)
+          tx.update(orgRef(orgId), permitIssuedUpdate(stored, now))
           return candidate
         }
       }

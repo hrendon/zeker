@@ -104,6 +104,89 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
   }
 })
 
+const ProfileBodySchema = z
+  .object({
+    first_name: NameSchema,
+    last_name: NameSchema,
+  })
+  .strict()
+
+/**
+ * PUT /auth/me
+ *
+ * A person corrects their own name.
+ *
+ * **Why this exists at all**, because it looks like an obvious thing that
+ * should have been there from the start and was not: on 2026-09-04 an interior
+ * read *"Responsable: asignado, sin nombre registrado"* in a browser. Measuring
+ * the cause instead of guessing showed one account of four had no name — and,
+ * more to the point, **that there was nowhere in the entire product for that
+ * person to fix it.** The sign-up form asks for a name today; a typo in it was
+ * permanent.
+ *
+ * **Only your own name.** There is no user id in the path and none is accepted:
+ * the profile written is always `req.user.uid`. An administrator wanting to
+ * correct somebody else's spelling is a different feature with a different
+ * blast radius, and nobody has asked for it.
+ *
+ * The email is not editable here and does not belong here — Firebase owns it
+ * (Decision 002), our database never stores it, and changing it is an
+ * authentication event, not a profile edit.
+ */
+authRouter.put('/me', requireAuth, async (req, res, next) => {
+  const parsed = ProfileBodySchema.safeParse(req.body ?? {})
+  if (!parsed.success) {
+    next(
+      invalidRequest(
+        'The request body is not valid.',
+        parsed.error.issues.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      ),
+    )
+    return
+  }
+
+  const user = req.user!
+
+  try {
+    // A merge write rather than an update: somebody who never called
+    // POST /auth/session has no profile document, and refusing to let them fix
+    // their name because of that would be a wall with no explanation behind it.
+    await userRef(user.uid).set(
+      {
+        id: user.uid,
+        deleted: false,
+        first_name: parsed.data.first_name,
+        last_name: parsed.data.last_name,
+      },
+      { merge: true },
+    )
+
+    const snapshot = await userRef(user.uid).get()
+    const stored = snapshot.exists ? (snapshot.data() as Partial<UserDocument>) : undefined
+
+    // Audit trail. The name itself is not logged — it is the person's own
+    // personal data, and "they changed it" is the fact worth keeping.
+    logger.info(
+      { audit: 'profile.renamed', user_id: user.uid, request_id: req.id },
+      'Profile name changed',
+    )
+
+    res.json({
+      ...toUserProfile(user.uid, stored, {
+        email: user.email,
+        emailVerified: user.token.email_verified === true,
+      }),
+      profile_exists: true,
+      request_id: req.id,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 /**
  * POST /auth/logout
  *

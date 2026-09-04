@@ -799,3 +799,78 @@ describe('issuing a permit in a building nobody has approved', () => {
     expect(res.status).toBe(200)
   })
 })
+
+// ---------------------------------------------------------------------------
+// How many permits a customer may issue in a day (Decision 011's precondition)
+// ---------------------------------------------------------------------------
+
+describe('the daily limit on issuing permits', () => {
+  function orgWith(fields: Record<string, unknown>) {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      ...fields,
+    })
+  }
+
+  function org(): Record<string, unknown> {
+    return store.docs.get(`orgs/${ORG}`) as Record<string, unknown>
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  function issue() {
+    signedInAs(RESIDENT)
+    return request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send(NEW_PERMIT)
+  }
+
+  it('counts a permit on the organization when one is issued', async () => {
+    await issue()
+
+    expect(org().permits_today).toBe(1)
+    expect(org().permits_day).toBe(today)
+  })
+
+  it('refuses once the day s permits are used up, with its own code', async () => {
+    orgWith({ permits_day: today, permits_today: 50 })
+
+    const res = await issue()
+
+    expect(res.status).toBe(429)
+    expect(res.body.error).toBe('permit_limit_reached')
+  })
+
+  it('starts the day fresh, and never carries yesterday forward', async () => {
+    orgWith({ permits_day: '2020-01-01', permits_today: 50 })
+
+    const res = await issue()
+
+    expect(res.status).toBe(201)
+    expect(org().permits_today).toBe(1)
+  })
+
+  it('does not give the slot back when a permit is revoked', async () => {
+    // Otherwise issue-and-revoke is an unbounded loop, and the record it
+    // created is still stored. Same rule the invitation counter follows.
+    const created = await issue()
+    expect(org().permits_today).toBe(1)
+
+    signedInAs(RESIDENT)
+    await request(app)
+      .delete(`/orgs/${ORG}/authorizations/${created.body.id}`)
+      .set('Authorization', 'Bearer good')
+
+    expect(org().permits_today).toBe(1)
+  })
+
+  it('reads an organization with no counter as having issued none', async () => {
+    // Every organization created before 2026-09-04 is in that state.
+    orgWith({ permits_day: undefined, permits_today: undefined })
+
+    const res = await issue()
+
+    expect(res.status).toBe(201)
+  })
+})

@@ -28,6 +28,11 @@ export const ErrorCode = {
   // (R-02), so an uncapped organization is a spam relay wearing our identity.
   // Its own code so the screen can say what actually happened.
   invite_limit_reached: 429,
+  // Decision 011's third precondition. Separate from the invitation limit
+  // because the two are reached by completely different people doing
+  // completely different things — a resident issuing permits is not an
+  // administrator adding staff, and one message cannot serve both.
+  permit_limit_reached: 429,
   rate_limited: 429,
   internal_server_error: 500,
 } as const
@@ -75,6 +80,14 @@ export const noteTooLate = (message: string): AppError => new AppError('note_too
 /** Decision 015. One note per check, so a count can never go below the truth. */
 export const noteAlreadyRecorded = (message: string): AppError =>
   new AppError('note_already_recorded', message)
+
+/** This organization has issued as many permits today as its plan allows. */
+export const permitLimitReached = (limit: number): AppError =>
+  new AppError(
+    'permit_limit_reached',
+    `This organization can issue ${limit} permits per day. Try again tomorrow.`,
+    { limit },
+  )
 
 /** Decision 018. Nobody has approved this building yet. */
 export const orgNotApproved = (): AppError =>

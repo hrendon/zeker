@@ -21,6 +21,16 @@ function makeRef(id: string) {
       const doc = store.get(id)
       return { exists: doc?.exists ?? false, data: () => doc?.data }
     },
+    // Added 2026-09-04 for PUT /auth/me, which writes outside a transaction:
+    // it changes one document and has nothing to race against.
+    set: async (data: Record<string, unknown>, options?: { merge?: boolean }) => {
+      writes.push({ op: 'set', id, data })
+      const current = store.get(id)
+      store.set(id, {
+        exists: true,
+        data: options?.merge ? { ...current?.data, ...data } : data,
+      })
+    },
   }
 }
 
@@ -271,5 +281,89 @@ describe('every /auth route requires a verified token', () => {
 
     expect(writes).toHaveLength(0)
     expect(revokeRefreshTokens).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A person correcting their own name
+// ---------------------------------------------------------------------------
+
+describe('PUT /auth/me', () => {
+  it('changes only the caller s own name', async () => {
+    store.set(UID, {
+      exists: true,
+      data: {
+        id: UID,
+        deleted: false,
+        first_name: '',
+        last_name: '',
+        orgs: [{ org_id: 'org_a', role: 'admin' }],
+      },
+    })
+    signedIn()
+
+    const res = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: 'Hernán', last_name: 'Rendón' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.first_name).toBe('Hernán')
+    expect(store.get(UID)!.data!.first_name).toBe('Hernán')
+    // The memberships are untouched: this is a name edit, not a re-write of
+    // who the person is in which building.
+    expect(store.get(UID)!.data!.orgs).toEqual([{ org_id: 'org_a', role: 'admin' }])
+  })
+
+  it('works for somebody who has no profile document yet', async () => {
+    signedIn()
+
+    const res = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: 'Ana', last_name: 'Ruiz' })
+
+    expect(res.status).toBe(200)
+    expect(store.get(UID)!.data!.first_name).toBe('Ana')
+  })
+
+  it('refuses an empty name', async () => {
+    signedIn()
+
+    const res = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: '  ', last_name: 'Ruiz' })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('refuses anything that is not a name — there is no back door here', async () => {
+    // `.strict()`, so an attempt to set a role or an id is rejected outright
+    // rather than quietly ignored.
+    signedIn()
+
+    const res = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: 'Ana', last_name: 'Ruiz', orgs: [{ org_id: 'org_x', role: 'admin' }] })
+
+    expect(res.status).toBe(400)
+    expect(store.get(UID)?.data?.orgs ?? []).toEqual([])
+  })
+
+  it('does not echo the name back into anything but the profile', async () => {
+    // The audit line records that somebody renamed themselves, never what to.
+    // That is checked by reading the route rather than by capturing logs, which
+    // this suite does not do — recorded here so the intent is not lost.
+    signedIn()
+
+    const res = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: 'Hernán', last_name: 'Rendón' })
+
+    expect(res.body.first_name).toBe('Hernán')
+    expect(res.body.email_verified).toBe(true)
   })
 })

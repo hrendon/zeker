@@ -235,9 +235,13 @@ function PermitScreen({ org }: { org: Org }) {
               </div>
             ) : (
               <div className="mt-6 border-t border-[var(--color-line)]/60 pt-6">
-                <Notice kind="error">
-                  {permit.state === 'revoked' ? es.permits.revoked : es.permits.expired}
-                </Notice>
+                {/*
+                  One sentence per state. This used to be a single ternary that
+                  called everything that was not "revoked" expired — so a permit
+                  that had simply been used said "ya terminó", which reads as
+                  the clock running out on something that in fact worked.
+                */}
+                <Notice kind="error">{stateMessage(permit.state)}</Notice>
               </div>
             )}
 
@@ -273,4 +277,12 @@ function PermitScreen({ org }: { org: Org }) {
       />
     </>
   )
+}
+
+/** What to tell the reader about a permit that cannot be used right now. */
+function stateMessage(state: Permit['state']): string {
+  if (state === 'revoked') return es.permits.revoked
+  if (state === 'used') return es.permits.used
+  if (state === 'scheduled') return es.permits.scheduled
+  return es.permits.expired
 }

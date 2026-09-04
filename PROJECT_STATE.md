@@ -361,6 +361,41 @@ resolve. That is the interface audit's "left with no next action" failure, made
 on purpose, with the alternative being worse. It is now a prerequisite rather
 than a small copy question.
 
+## Then: the three things that were mine, and one of them was wider than it looked
+
+**The last precondition Decision 011 named is closed.** Nothing limited how many
+permits a customer could issue, and permits are the record that actually
+accumulates. Now 50 per day on the free plan. **Counted per day, not "how many
+may be live"**, and the reason is structural rather than a preference: a permit
+is never marked expired — `stateOf` works it out from the dates, because nothing
+in this product runs on a schedule — so a live count could only be kept correct
+by a job that does not exist. **Revoking does not give the slot back**, or
+issue-and-revoke is an unbounded loop.
+
+**A person can now correct their own name.** `PUT /auth/me`, and a small editor
+on the home screen. There is no user id in the path and none is accepted: you
+can only rename yourself. It exists because measuring the *"asignado, sin nombre
+registrado"* wording showed the real gap was not the wording — **there was
+nowhere in the entire product to fix a name**, and a typo at sign-up was
+permanent.
+
+**Three copy fixes, and the second one turned out to be a defect rather than
+wording:**
+
+1. The gate said *"no sirve a esta hora"* when the **day** was wrong. Now names
+   both. Found by running TC-016-01 by hand.
+2. **The permit screen called every unusable permit expired.** A single ternary
+   showed *"ya terminó"* for anything that was not revoked — including a permit
+   that had simply been **used**, and one that had **not started yet**. So the
+   Founder's complaint from 2026-09-03 was not a bad sentence, it was the wrong
+   sentence being shown. One message per state now, and the "scheduled" string
+   that already existed is finally reachable.
+3. On an unapproved building, the note about the invitation email sat directly
+   above the notice saying nobody can be invited. Hidden in that state.
+
+**293 backend tests** (was 283), **113 frontend** (was 110), typecheck and
+production build clean. **Not published, and not seen in a browser.**
+
 ## Session close — 2026-09-04
 
 ### The one thing worth carrying forward
@@ -1685,11 +1720,14 @@ works end to end on the server.
 - ✅ ~~A resident's account cannot be linked to their apartment~~ — closed
   2026-08-28 by Decision 006. An administrator creates the person's account,
   and every apartment always has one designated. Entry permits are unblocked.
-- 🟡 **Nothing limits how many permits a customer may issue.** The free plan
-  caps sites and interiors, but permits are uncounted — and they are the record
-  that actually accumulates and costs money to keep. No customer exists, so
-  nothing is being abused. It belongs with D-005, which asks the same kind of
-  question about free organizations.
+- ✅ ~~Nothing limits how many permits a customer may issue~~ — **closed
+  2026-09-04.** 50 per day on the free plan, counted the same way as the
+  invitation limit. Per day rather than "how many may be live", because a permit
+  is never marked expired — the state is worked out from its dates, and nothing
+  in this product runs on a schedule, so a live count could only be kept correct
+  by a job that does not exist. **Revoking does not give the slot back**, or
+  issue-and-revoke would be an unbounded loop. **This was the last of the three
+  preconditions Decision 011 named for billing.**
 - 🟡 **Unresolved contradiction: the delivery rules say one thing, the repository
   does another.** `mantis/delivery-framework.md` §2 requires short-lived
   branches merged by pull request and forbids pushing straight to the main

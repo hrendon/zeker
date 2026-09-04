@@ -114,6 +114,9 @@ describe('POST /orgs', () => {
       // an email with our name on it.
       max_members: 25,
       max_invites_per_day: 15,
+      // Decision 011's third precondition, added 2026-09-04. Permits are the
+      // record that actually accumulates.
+      max_permits_per_day: 50,
     })
     expect(res.body.counts).toEqual({ locations: 0, interiors: 0 })
   })

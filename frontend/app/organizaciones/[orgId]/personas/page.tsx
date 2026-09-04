@@ -251,7 +251,13 @@ function MembersScreen({ org }: { org: Org }) {
             </p>
           ) : null}
 
-          {admin && members && members.length > 0 ? (
+          {/*
+            Hidden while the building is waiting for approval. Seen in a browser
+            on 2026-09-04: this sentence is about the email an invitation sends,
+            sitting directly above a notice saying nobody can be invited yet.
+            Not false — noise at the worst possible moment.
+          */}
+          {admin && members && members.length > 0 && org.approved !== false ? (
             <p className="mt-2 text-sm text-[var(--color-ink-faint)]">
               {es.members.emailDeliveryNote}
             </p>
