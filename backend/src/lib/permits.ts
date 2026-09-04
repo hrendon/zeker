@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto'
 import { toIso } from './users.js'
 import { orgRef } from './orgs.js'
+import { hhMmFromMinutes, localMoment, minutesFromHhMm } from './time.js'
 
 /**
  * Entry permits — the thing the product exists to issue.
@@ -71,6 +72,124 @@ export type PermitPurpose = (typeof PERMIT_PURPOSES)[number]
 export const PERMIT_ENTRY_MODES = ['single', 'multiple'] as const
 export type PermitEntryMode = (typeof PERMIT_ENTRY_MODES)[number]
 
+/**
+ * A weekly schedule on a permit (Decision 016).
+ *
+ * `days` are 0 = Sunday … 6 = Saturday, and `from`/`to` are `"HH:MM"` — all
+ * four read in **the organization's own timezone**, never UTC. The same
+ * instant is Monday morning in Bogotá and Tuesday afternoon elsewhere, so a
+ * schedule means nothing without the building it belongs to (`lib/time.ts`).
+ *
+ * **Absent means no restriction**, and that is what every permit issued before
+ * 2026-09-04 has. Reading a missing schedule as "never" would revoke access
+ * nobody agreed to revoke — the same rule Decision 014 followed for
+ * `entry_mode`.
+ *
+ * **A window never crosses midnight.** `to` must be later than `from`, so
+ * 22:00–06:00 cannot be expressed, and the refusal says so rather than quietly
+ * storing something that behaves differently from how it reads. A night shift
+ * is two permits today. This is a real limitation and is written down as one:
+ * the alternative is a wrap-around window whose "which day is it" question has
+ * to be answered on the gate's hot path, and no customer has asked for it yet.
+ */
+export interface PermitSchedule {
+  /** Sorted, unique, at least one, 0–6. Sunday is 0, as `Date.getDay()` has it. */
+  days: number[]
+  /** `"HH:MM"`, 24-hour, local to the organization. */
+  from: string
+  /** `"HH:MM"`, later than `from` on the same day. */
+  to: string
+}
+
+/** The schedule a permit carries, or null when it has none. */
+export function scheduleOf(stored: Partial<PermitDocument> | undefined): PermitSchedule | null {
+  const raw = stored?.schedule
+  if (!raw || typeof raw !== 'object') return null
+
+  const candidate = raw as Partial<PermitSchedule>
+  const days = Array.isArray(candidate.days)
+    ? [...new Set(candidate.days.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))].sort()
+    : []
+  const from = typeof candidate.from === 'string' ? candidate.from : ''
+  const to = typeof candidate.to === 'string' ? candidate.to : ''
+
+  // A stored schedule that cannot be read is treated as no schedule, not as a
+  // closed door. The only way one exists is a write that got past validation,
+  // and refusing every entry on a permit somebody paid attention to issuing is
+  // the worse of the two failures.
+  if (days.length === 0) return null
+  if (minutesFromHhMm(from) === null || minutesFromHhMm(to) === null) return null
+
+  return { days, from, to }
+}
+
+/**
+ * Whether this permit's schedule lets somebody in at this instant.
+ *
+ * True when there is no schedule at all. The boundaries are inclusive at the
+ * start and exclusive at the end — 16:00 on a window ending at 16:00 is
+ * refused — which is how a person reads "hasta las 4".
+ */
+export function allowsEntryAt(
+  stored: Partial<PermitDocument> | undefined,
+  at: Date,
+  timeZone: string,
+): boolean {
+  const schedule = scheduleOf(stored)
+  if (!schedule) return true
+
+  const here = localMoment(at, timeZone)
+  if (!schedule.days.includes(here.day)) return false
+
+  const from = minutesFromHhMm(schedule.from)
+  const to = minutesFromHhMm(schedule.to)
+  if (from === null || to === null) return true
+
+  return here.minutes >= from && here.minutes < to
+}
+
+/**
+ * A schedule the caller sent, checked and normalized — or a message saying
+ * what is wrong with it.
+ *
+ * Returned rather than thrown so the route decides the shape of the refusal;
+ * this file knows nothing about HTTP.
+ */
+export function readSchedule(
+  input: unknown,
+): { schedule: PermitSchedule | null } | { error: string } {
+  // No schedule is a valid answer, and the common one.
+  if (input === undefined || input === null) return { schedule: null }
+
+  if (typeof input !== 'object') return { error: 'The schedule must be an object.' }
+
+  const candidate = input as Partial<PermitSchedule>
+
+  if (!Array.isArray(candidate.days) || candidate.days.length === 0) {
+    return { error: 'A schedule needs at least one day of the week.' }
+  }
+  if (!candidate.days.every((day) => Number.isInteger(day) && day >= 0 && day <= 6)) {
+    return { error: 'Days of the week are 0 (Sunday) to 6 (Saturday).' }
+  }
+
+  const from = minutesFromHhMm(String(candidate.from ?? ''))
+  const to = minutesFromHhMm(String(candidate.to ?? ''))
+  if (from === null || to === null) {
+    return { error: 'The hours must be written as HH:MM, for example 07:00.' }
+  }
+  if (to <= from) {
+    return { error: 'The schedule must end after it starts, on the same day.' }
+  }
+
+  return {
+    schedule: {
+      days: [...new Set(candidate.days.map(Number))].sort(),
+      from: hhMmFromMinutes(from),
+      to: hhMmFromMinutes(to),
+    },
+  }
+}
+
 /** Stored status. Expiry is not one of these — see `stateOf`. */
 export type PermitStatus = 'active' | 'revoked'
 
@@ -103,6 +222,11 @@ export interface PermitDocument {
    * would let two guards scanning at the same instant both be told yes.
    */
   entry_count?: number
+  /**
+   * Decision 016. Absent on every permit issued before 2026-09-04, and absent
+   * means no restriction — see `PermitSchedule`.
+   */
+  schedule?: PermitSchedule
   /**
    * Decision 015. How many entries a guard gave back with "el visitante no
    * entró". Kept so an administrator can tell a permit nobody ever used from
@@ -293,6 +417,11 @@ export interface PermitResponse {
   entry_count: number
   /** Decision 015. How many entries a guard gave back because nobody came in. */
   entry_returns: number
+  /**
+   * Decision 016. `null` when the permit may be used at any hour of any day,
+   * which is every permit issued before 2026-09-04 and most issued after.
+   */
+  schedule: PermitSchedule | null
   /** When somebody was last let in, or null if nobody ever has. */
   last_entry_at: string | null
   created_by: string
@@ -332,6 +461,7 @@ export function toPermitResponse(
     entry_mode: entryModeOf(stored),
     entry_count: entryCountOf(stored),
     entry_returns: entryReturnsOf(stored),
+    schedule: scheduleOf(stored),
     last_entry_at: toIso(stored.last_entry_at),
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),

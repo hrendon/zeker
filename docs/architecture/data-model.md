@@ -238,6 +238,11 @@ Access permit (core entity). **Built 2026-08-29.**
   "entry_mode": "single",              // "single" | "multiple" — Decision 014
   "entry_count": 0,                    // written by the gate, in the same transaction
   "entry_returns": 0,                  // entries a guard gave back — Decision 015
+  "schedule": {                        // Decision 016 — null when it works at any hour
+    "days": [1, 3, 5],                 // 0 = Sunday … 6 = Saturday, in the ORG's timezone
+    "from": "07:00",                   // "HH:MM", the building's clock
+    "to":   "16:00"                    // later than `from`; never crosses midnight
+  },
   "first_entry_at": null,              // server timestamp on the first entry
   "last_entry_at": null,               // server timestamp on every entry
   "created_by": "user1",
@@ -248,6 +253,17 @@ Access permit (core entity). **Built 2026-08-29.**
 ```
 
 **Constraints:**
+- **A permit stored without `schedule`, or with `schedule: null`, works at any
+  hour of any day.** Every permit issued before 2026-09-04 is in that state.
+  Reading a missing schedule as "never" would close a door nobody agreed to
+  close — the same rule `entry_mode` follows below
+- **A schedule is read in the organization's timezone, never in UTC and never
+  in the reader's.** `orgs/{orgId}.timezone`, an IANA name defaulting to
+  `America/Bogota` (Decision 016). The same instant is Monday 21:00 in Bogotá
+  and Tuesday 02:00 in UTC, so a schedule compared against UTC gets both the
+  day and the hour wrong
+- **The window is inclusive at the start and exclusive at the end.** 16:00 on a
+  window ending at 16:00 is refused, which is how a person reads "hasta las 4"
 - **A permit stored without `entry_mode` is read as `multiple`.** Everything
   issued before 2026-09-02 is in that state: it was created under a rule that
   offered no alternative, and converting it would revoke access nobody agreed

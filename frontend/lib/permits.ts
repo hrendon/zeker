@@ -1,5 +1,11 @@
 import { es } from './strings'
-import type { Permit, PermitEntryMode, PermitPurpose, PermitState } from './api'
+import type {
+  Permit,
+  PermitEntryMode,
+  PermitPurpose,
+  PermitSchedule,
+  PermitState,
+} from './api'
 
 /**
  * The date and text handling behind the permit screens.
@@ -190,4 +196,101 @@ export function useLine(
     return es.permits.notUsedYet
   }
   return null
+}
+
+// ---------------------------------------------------------------------------
+// The days and hours a permit may be used (Decision 016)
+// ---------------------------------------------------------------------------
+
+/**
+ * The week, starting on Monday.
+ *
+ * `value` is the number the API uses (0 = Sunday), and the order here is the
+ * order a Spanish-speaking reader expects to see the week in. The two are
+ * deliberately not the same thing: sorting the API's numbers would put Sunday
+ * first on a screen where nobody looks for it there.
+ */
+export const WEEK_DAYS: ReadonlyArray<{ value: number; short: string; long: string }> = [
+  { value: 1, short: 'lun', long: 'lunes' },
+  { value: 2, short: 'mar', long: 'martes' },
+  { value: 3, short: 'mié', long: 'miércoles' },
+  { value: 4, short: 'jue', long: 'jueves' },
+  { value: 5, short: 'vie', long: 'viernes' },
+  { value: 6, short: 'sáb', long: 'sábado' },
+  { value: 0, short: 'dom', long: 'domingo' },
+]
+
+const WEEKDAYS = [1, 2, 3, 4, 5]
+const WEEKEND = [0, 6]
+
+function sameDays(days: number[], other: number[]): boolean {
+  return days.length === other.length && other.every((day) => days.includes(day))
+}
+
+/** `"07:00"` → `"7:00 a. m."`, the way a time is read aloud in Colombia. */
+export function formatHour(hhmm: string): string {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(hhmm)
+  if (!match) return hhmm
+
+  const hours = Number(match[1])
+  const minutes = match[2]
+  const suffix = hours < 12 ? 'a. m.' : 'p. m.'
+  const shown = hours % 12 === 0 ? 12 : hours % 12
+
+  return `${shown}:${minutes} ${suffix}`
+}
+
+/**
+ * The days, written the way somebody would say them: "de lunes a viernes",
+ * "todos los días", "lunes, miércoles y viernes".
+ *
+ * The named cases are not decoration. "1, 2, 3, 4, 5" is a list a reader has
+ * to assemble in their head; "de lunes a viernes" is the thing they meant.
+ */
+export function formatDays(days: number[]): string {
+  const chosen = WEEK_DAYS.filter((day) => days.includes(day.value))
+  if (chosen.length === 0) return ''
+  if (chosen.length === 7) return es.permits.scheduleEveryDay
+  if (sameDays(days, WEEKDAYS)) return es.permits.scheduleWeekdays
+  if (sameDays(days, WEEKEND)) return es.permits.scheduleWeekend
+
+  const names = chosen.map((day) => day.long)
+  const last = names.pop() ?? ''
+  if (names.length === 0) return last
+
+  return `${names.join(', ')} ${es.permits.scheduleAnd} ${last}`
+}
+
+/** "de lunes a viernes, de 7:00 a. m. a 4:00 p. m." */
+export function formatSchedule(schedule: PermitSchedule | null | undefined): string {
+  if (!schedule || schedule.days.length === 0) return es.permits.scheduleAlways
+
+  const days = formatDays(schedule.days)
+  const from = formatHour(schedule.from)
+  const to = formatHour(schedule.to)
+
+  return `${days}, ${es.permits.scheduleTimeJoin} ${from} ${es.permits.scheduleTimeTo} ${to}`
+}
+
+/**
+ * Checks a schedule the way the server does, so the person is told what is
+ * wrong before the request goes out. Returns Spanish text, or undefined.
+ */
+export function checkSchedule(days: number[], from: string, to: string): string | undefined {
+  if (days.length === 0) return es.validation.scheduleNeedsDay
+
+  const fromMinutes = minutesOf(from)
+  const toMinutes = minutesOf(to)
+  if (fromMinutes === null || toMinutes === null) return es.validation.scheduleOutOfOrder
+  // Both wrong orders read the same to a person filling in a form, but the
+  // midnight one has an action attached: make two permits.
+  if (toMinutes === fromMinutes) return es.validation.scheduleOutOfOrder
+  if (toMinutes < fromMinutes) return es.validation.scheduleNoMidnight
+
+  return undefined
+}
+
+function minutesOf(hhmm: string): number | null {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(hhmm).trim())
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null
 }

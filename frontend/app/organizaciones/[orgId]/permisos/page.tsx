@@ -17,6 +17,8 @@ import {
 import {
   ENTRY_MODE_OPTIONS,
   PURPOSE_OPTIONS,
+  WEEK_DAYS,
+  checkSchedule,
   checkWindow,
   defaultWindow,
   formatWindow,
@@ -57,10 +59,19 @@ function PermitsScreen({ org }: { org: Org }) {
   const [entryMode, setEntryMode] = useState<PermitEntryMode>('single')
   const [validFrom, setValidFrom] = useState(() => defaultWindow().from)
   const [validTo, setValidTo] = useState(() => defaultWindow().to)
+  /**
+   * Decision 016. Off by default: most permits are for one visit, and a
+   * question nobody needs is a question everybody has to read.
+   */
+  const [hasSchedule, setHasSchedule] = useState(false)
+  const [scheduleDays, setScheduleDays] = useState<number[]>([1, 2, 3, 4, 5])
+  const [scheduleFrom, setScheduleFrom] = useState('07:00')
+  const [scheduleTo, setScheduleTo] = useState('16:00')
 
   const [nameError, setNameError] = useState<string | undefined>()
   const [interiorError, setInteriorError] = useState<string | undefined>()
   const [windowError, setWindowError] = useState<string | undefined>()
+  const [scheduleError, setScheduleError] = useState<string | undefined>()
   const [formError, setFormError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -107,11 +118,15 @@ function PermitsScreen({ org }: { org: Org }) {
     const nameProblem = checkRequiredText(visitorName, es.validation.visitorNameRequired, 120)
     const interiorProblem = interiorId === '' ? es.validation.interiorRequired : undefined
     const windowProblem = checkWindow(validFrom, validTo)
+    const scheduleProblem = hasSchedule
+      ? checkSchedule(scheduleDays, scheduleFrom, scheduleTo)
+      : undefined
 
     setNameError(nameProblem)
     setInteriorError(interiorProblem)
     setWindowError(windowProblem)
-    if (nameProblem || interiorProblem || windowProblem) return
+    setScheduleError(scheduleProblem)
+    if (nameProblem || interiorProblem || windowProblem || scheduleProblem) return
 
     const from = toIsoInstant(validFrom)
     const to = toIsoInstant(validTo)
@@ -127,6 +142,11 @@ function PermitsScreen({ org }: { org: Org }) {
         entry_mode: entryMode,
         valid_from: from,
         valid_to: to,
+        // Left out entirely when the permit works at any hour, so the request
+        // says nothing rather than saying "no restriction" in a second way.
+        ...(hasSchedule
+          ? { schedule: { days: scheduleDays, from: scheduleFrom, to: scheduleTo } }
+          : {}),
       })
       // Straight to the code: the reason someone creates a permit is to send
       // it to the person who is coming. Making them find it in a list first
@@ -144,6 +164,8 @@ function PermitsScreen({ org }: { org: Org }) {
     setNameError(undefined)
     setInteriorError(undefined)
     setWindowError(undefined)
+    setScheduleError(undefined)
+    setHasSchedule(false)
     setVisitorName('')
     const fresh = defaultWindow()
     setValidFrom(fresh.from)
@@ -280,6 +302,102 @@ function PermitsScreen({ org }: { org: Org }) {
                     {ENTRY_MODE_OPTIONS.find((option) => option.value === entryMode)?.hint}
                   </p>
                 </div>
+
+                {/*
+                  Decision 016. Asked after "how many times" and before the
+                  dates, because the answer changes what the dates mean: a
+                  year-long permit is a year-long open door until this says
+                  otherwise.
+                */}
+                <div>
+                  <Select
+                    label={es.permits.schedule}
+                    value={hasSchedule ? 'fixed' : 'any'}
+                    disabled={creating}
+                    onChange={(value) => {
+                      setHasSchedule(value === 'fixed')
+                      setScheduleError(undefined)
+                    }}
+                    options={[
+                      { value: 'any', label: es.permits.scheduleAny },
+                      { value: 'fixed', label: es.permits.scheduleFixed },
+                    ]}
+                  />
+                  <p className="mt-1.5 text-sm text-[var(--color-ink-faint)]">
+                    {hasSchedule ? es.permits.scheduleFixedHint : es.permits.scheduleAnyHint}
+                  </p>
+                </div>
+
+                {hasSchedule ? (
+                  <div className="rounded-lg border border-[var(--color-line)] p-4">
+                    <fieldset>
+                      <legend className="text-sm font-medium text-[var(--color-ink)]">
+                        {es.permits.scheduleDays}
+                      </legend>
+                      {/*
+                        Buttons rather than a multi-select: a guard's building
+                        is chosen by a resident on a phone, with a thumb. Each
+                        is a real toggle, so a screen reader says whether the
+                        day is on.
+                      */}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {WEEK_DAYS.map((day) => {
+                          const on = scheduleDays.includes(day.value)
+                          return (
+                            <button
+                              key={day.value}
+                              type="button"
+                              disabled={creating}
+                              aria-pressed={on}
+                              aria-label={day.long}
+                              onClick={() => {
+                                setScheduleError(undefined)
+                                setScheduleDays((current) =>
+                                  current.includes(day.value)
+                                    ? current.filter((one) => one !== day.value)
+                                    : [...current, day.value].sort(),
+                                )
+                              }}
+                              className={[
+                                'h-11 min-w-11 rounded-lg border px-3 text-sm capitalize',
+                                on
+                                  ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white'
+                                  : 'border-[var(--color-line)] bg-white text-[var(--color-ink)]',
+                              ].join(' ')}
+                            >
+                              {day.short}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </fieldset>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <Field
+                        label={es.permits.scheduleFrom}
+                        type="time"
+                        value={scheduleFrom}
+                        disabled={creating}
+                        onChange={(event) => {
+                          setScheduleError(undefined)
+                          setScheduleFrom(event.target.value)
+                        }}
+                      />
+                      <Field
+                        label={es.permits.scheduleTo}
+                        type="time"
+                        value={scheduleTo}
+                        disabled={creating}
+                        error={scheduleError}
+                        hint={es.permits.scheduleZoneNote}
+                        onChange={(event) => {
+                          setScheduleError(undefined)
+                          setScheduleTo(event.target.value)
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field

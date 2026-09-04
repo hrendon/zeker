@@ -26,6 +26,28 @@ import type { OrgRole } from './users.js'
  *    hardcoded "max 100 locations".
  */
 
+/**
+ * The building's own clock (Decision 016).
+ *
+ * An IANA timezone name, not an offset — see `lib/time.ts` for why. It is only
+ * read when a permit carries a weekly schedule, so an organization that never
+ * uses one never depends on this value being right.
+ *
+ * The default is Colombia's, which is where every customer is expected to be
+ * (Decision 010). A default that is wrong for a customer in another country is
+ * a real cost, and the alternative — refusing to create an organization until
+ * somebody picks a timezone — puts a question in front of every new customer
+ * to serve a feature most of them will not use. The field is editable, so a
+ * wrong default is a correction rather than a trap.
+ */
+export const DEFAULT_TIMEZONE = 'America/Bogota'
+
+/** The timezone to reason in for this organization. Never empty. */
+export function timezoneOf(stored: Partial<OrgDocument> | undefined): string {
+  const stated = typeof stored?.timezone === 'string' ? stored.timezone.trim() : ''
+  return stated.length > 0 ? stated : DEFAULT_TIMEZONE
+}
+
 export const ORG_TYPES = ['school', 'residence', 'office', 'other'] as const
 export type OrgType = (typeof ORG_TYPES)[number]
 
@@ -60,6 +82,12 @@ export interface OrgDocument {
   counts: OrgCounts
   city: string | null
   country: string | null
+  /**
+   * IANA timezone (Decision 016). Absent on every organization created before
+   * 2026-09-04, and `timezoneOf` reads those as Colombia — which is what they
+   * were, since the product has only ever been used there.
+   */
+  timezone?: string
   created_by: string
   created_at?: unknown
   updated_at?: unknown
@@ -89,6 +117,8 @@ export interface OrgResponse {
   counts: OrgCounts
   city: string | null
   country: string | null
+  /** Always present in a response, even where the stored document has none. */
+  timezone: string
   created_by: string
   created_at: string | null
   updated_at: string | null
@@ -107,6 +137,7 @@ export function toOrgResponse(stored: Partial<OrgDocument>, role?: OrgRole): Org
     counts: stored.counts ?? { locations: 0, interiors: 0 },
     city: stored.city ?? null,
     country: stored.country ?? null,
+    timezone: timezoneOf(stored),
     created_by: String(stored.created_by ?? ''),
     created_at: toIso(stored.created_at),
     updated_at: toIso(stored.updated_at),

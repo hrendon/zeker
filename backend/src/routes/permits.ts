@@ -17,6 +17,7 @@ import {
   newPermitId,
   permitRef,
   permitsCollection,
+  readSchedule,
   stateOf,
   toPermitResponse,
 } from '../lib/permits.js'
@@ -60,6 +61,12 @@ const CreatePermitSchema = z
     /** ISO 8601. Checked for range and order by `readWindow` below. */
     valid_from: z.string().trim().min(1),
     valid_to: z.string().trim().min(1),
+    /**
+     * Decision 016. Optional, and absent means the permit may be used at any
+     * hour of any day. Shape and rules are checked by `readSchedule`, which
+     * owns them because the gate reads the same structure back.
+     */
+    schedule: z.unknown().optional(),
   })
   .strict()
 
@@ -168,6 +175,13 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
 
   try {
     const window = readWindow(parsed.data, now)
+
+    const schedule = readSchedule(parsed.data.schedule)
+    if ('error' in schedule) {
+      next(invalidRequest(schedule.error, [{ field: 'schedule', message: schedule.error }]))
+      return
+    }
+
     const interior = await interiorForCaller(
       uid,
       req.orgMembership?.role,
@@ -198,6 +212,10 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
             code: candidate,
             status: 'active',
             entry_mode: parsed.data.entry_mode ?? 'single',
+            // Written as `null` rather than left out, so every permit issued
+            // from today has the field and a reader never has to guess whether
+            // its absence means "no schedule" or "issued before Decision 016".
+            schedule: schedule.schedule,
             entry_count: 0,
             entry_returns: 0,
             first_entry_at: null,
@@ -243,6 +261,7 @@ permitsRouter.post('/', requireAuth, requireOrgMember, async (req, res, next) =>
           code,
           status: 'active',
           entry_mode: parsed.data.entry_mode ?? 'single',
+          schedule: schedule.schedule ?? undefined,
           entry_count: 0,
           created_by: uid,
           created_at: { toDate: () => now },

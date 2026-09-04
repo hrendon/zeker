@@ -5,10 +5,12 @@ Single source of truth for current progress. Updated at every checkpoint.
 **Last updated:** 2026-09-04
 
 **Session open 2026-09-04. The document that says who we sell to has been
-rewritten for the market the Founder chose four days ago. It now says, in
-writing, that Zeker has no evidence for that market at all — and two domain
-experts, asked separately, named the same gap in the product before any customer
-did.**
+rewritten for the market the Founder chose four days ago, and it now says in
+writing that Zeker has no evidence for that market at all. Two domain experts,
+asked separately, named the same gap; checking their claim against the code
+showed it was half wrong, and the half that was real — a permit that cannot say
+"only these days and these hours" — was built the same day on the Founder's
+instruction.**
 
 ---
 
@@ -83,8 +85,58 @@ removed it), and a home screen of the responsable's own.
   `docs/context-index.md`.
 * **No code, no data, no deployment.** Nothing shipped today; nothing could break.
 
+## Then, the same day: the days and hours a permit may be used (Decision 016)
+
+The Founder answered D-009 by choosing to **build recurring permits**, against
+the recommendation to talk to administrators first. The recommendation is not
+withdrawn and the decision is recorded as the Founder's.
+
+**The consultants' claim was checked before anything was designed, and it was
+half wrong.** Both had read Decision 007 and neither had seen Decision 014,
+which shipped two days earlier:
+
+* A permit could already run **up to a year** with **free entries**. A resident
+  never had to issue a fresh permit per visit for the domestic worker.
+* What was genuinely missing is narrower — and it is a security hole rather
+  than a convenience gap: **a year-long permit with free entries also opens the
+  door at 03:00 on a Sunday.** A building could not say *"lunes, miércoles y
+  viernes, de 7 a 4"*.
+
+That correction changed the size of the work from "rebuild the permit model" to
+one field, and the Founder chose it knowing so.
+
+### Built and tested
+
+* **A permit may carry a weekly schedule** — days of the week and one range of
+  hours. Off by default; most permits are for one visit.
+* **The organization gained a clock.** An IANA timezone, default Colombia's,
+  because "Monday 7 to 4" means nothing without one. Names rather than an
+  offset: an offset is right in Colombia and silently an hour wrong in Santiago
+  for half the year.
+* **The gate refuses with its own reason**, `outside_schedule`, checked
+  **before** the entrance — a visitor on the wrong day must never be sent to
+  another gate. And the guard is shown *when* the visitor may come back, which
+  is the difference between a refusal and a closed door.
+* **Nothing that already exists changed.** A permit with no schedule works at
+  any hour of any day, and every permit issued before today is in that state.
+* **A window may not cross midnight.** A night shift is two permits, and the
+  refusal says so instead of only saying no.
+
+### Verified
+
+* **268 backend tests** (was 236), **108 frontend tests** (was 98), typecheck
+  and production build: pass.
+* The new tests are built so that **reading the time in UTC fails them** — every
+  case is chosen at an hour where Bogotá and UTC disagree about the day.
+* **Not verified by a person yet.** TC-016-01 and TC-016-02 are written, with
+  their pass/fail lines, and neither has been run. **Nothing here has been seen
+  in a browser.**
+
 ## Open issues
 
+* **Decision 016 is deployed-and-unproven until TC-016-01 and TC-016-02 are run
+  by hand.** This project has had a fully green suite over a broken product
+  three times.
 * **R-29, new and untested:** the gate is staffed by somebody who does not work
   for the buyer, and their employer can close the sale before the product is
   evaluated.
@@ -106,10 +158,11 @@ removed it), and a home screen of the responsable's own.
 
 ## Next
 
-1. **The Founder's decision, raised below:** the product is built and the market
-   has never been spoken to. Whether the next unit is code or conversations is not
-   an AI role's call.
-2. `docs/product/customer-discovery.md`, written before the first call.
+1. **Run TC-016-01 and TC-016-02 by hand against production.** Until then the
+   schedule is code that passes tests, which this project has learned is not
+   the same as a product that works.
+2. `docs/product/customer-discovery.md`, written before the first call. Decision
+   016 now has a prediction that only a conversation can check.
 3. The Founder's hands, with a deadline: the billing report, the budget alert on
    the **billing account**, `zeker.com.co` in Cloudflare.
 4. See the "asignado, sin nombre registrado" fix in a browser.
@@ -1474,7 +1527,19 @@ works end to end on the server.
 Everything waiting on the Founder. One card each. Answering these is all that is
 needed — an answered card becomes a record in `docs/decisions/` and leaves this queue.
 
-### D-009 — The product is built and the market has never been spoken to 🔴 Founder-only
+### ✅ D-009 — ANSWERED 2026-09-04: build the days-and-hours schedule
+
+**The Founder chose option B** — build recurring permits — over talking to
+administrators first. Recorded as `docs/decisions/016-days-and-hours-a-permit-may-be-used.md`,
+which also carries the correction that made the work small: most of "recurrence"
+already existed since Decision 014, and what was missing was the days and hours.
+
+The recommendation below was to talk first, and it is left standing rather than
+edited away. **It was not followed, and that is the Founder's call to make.**
+
+---
+
+### D-009 — the card as it was raised 🔴 Founder-only
 
 **Raised 2026-09-04 by the brief rewrite.** Not a new fact — a fact that now has
 nowhere left to hide.

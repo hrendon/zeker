@@ -20,6 +20,10 @@ These roles are held by humans and carry final decision authority. AI never simu
 **Consulted on:** Product direction changes, pivot decisions, capital allocation
 
 **Decisions taken:**
+- ✅ Build the days-and-hours schedule now rather than talk to administrators
+  first (2026-09-04, D-009 → Decision 016). Taken knowing that the register
+  advises against building recurrence on speculation, and that A5 — whether
+  residents will use the app at all — is untested
 - ✅ Freemium model + GCP stack + Colombia as first market (2026-08-19, Decision 001)
 - ✅ Sign-in happens in the browser; the API never sees a password (2026-08-25, Decision 002)
 - ✅ Interiors as a real level; plan-based limits (2026-08-25, Decision 003)
@@ -36,10 +40,10 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ No data-fetching library — keep it simple (2026-08-27)
 
 **Pending 🟡 approvals:**
-- D-009 🔴 — the product is built and the market has never been spoken to. Talk
-  to administrators first, build recurring permits, or finish billing. Raised
-  2026-09-04 by the brief rewrite, after two domain consultants independently
-  named the same gap. See `PROJECT_STATE.md`.
+- ✅ D-009 — answered 2026-09-04: **build recurring permits**, rather than
+  talking to administrators first or finishing billing. Recorded as
+  Decision 016, together with the correction that narrowed it — most of
+  "recurrence" already existed, and what was missing was days and hours.
 - ✅ D-005 — answered 2026-09-01, one free organization per person
   (Decision 012).
 - D-006 — whether we verify that whoever registers a building actually runs it.

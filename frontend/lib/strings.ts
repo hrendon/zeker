@@ -71,6 +71,11 @@ export const es = {
   },
 
   validation: {
+    // Decision 016
+    scheduleNeedsDay: 'Elija por lo menos un día.',
+    scheduleOutOfOrder: 'La hora de "hasta" tiene que ser más tarde que la de "desde".',
+    scheduleNoMidnight:
+      'Un horario no puede pasar de la medianoche. Si necesita la noche, haga dos permisos.',
     emailRequired: 'Escriba su correo electrónico.',
     emailInvalid: 'Ese correo no parece válido.',
     passwordRequired: 'Escriba su contraseña.',
@@ -307,6 +312,30 @@ export const es = {
     entryModeMultiple: 'Entradas libres hasta que venza',
     entryModeMultipleHint:
       'La persona puede entrar y salir las veces que necesite. Para quien trabaja en el interior o viene varias veces el mismo día.',
+    // Decision 016. The question is asked plainly, and the "no" option comes
+    // first because most permits are for one visit and should cost no thought.
+    schedule: '¿Sirve a cualquier hora?',
+    scheduleAny: 'Sí, a cualquier hora',
+    scheduleAnyHint: 'El permiso sirve todo el tiempo, hasta que se venza.',
+    scheduleFixed: 'No, solo ciertos días y horas',
+    scheduleFixedHint:
+      'Para quien viene siempre: la persona del aseo, el jardinero, un domicilio de todos los días. Haga un permiso largo y déjelo servir solo cuando esa persona trabaja.',
+    scheduleDays: 'Días',
+    scheduleFrom: 'Desde las',
+    scheduleTo: 'Hasta las',
+    // The building's clock, not the reader's. A resident can be in another
+    // country; the door is not.
+    scheduleZoneNote: 'Las horas son las del edificio.',
+    scheduleLabel: 'Días y horas',
+    scheduleAlways: 'Cualquier día, a cualquier hora',
+    // Written the way somebody would say it out loud.
+    scheduleEveryDay: 'todos los días',
+    scheduleWeekdays: 'de lunes a viernes',
+    scheduleWeekend: 'fines de semana',
+    scheduleAnd: 'y',
+    scheduleTimeJoin: 'de',
+    scheduleTimeTo: 'a',
+
     notUsedYet: 'Todavía no se ha usado',
     // Decision 015. The difference an administrator asked for: a permit nobody
     // ever used, and one whose visitor was turned around at the door.
@@ -402,6 +431,11 @@ export const es = {
     reasonNotStarted: 'El permiso todavía no empieza.',
     reasonExpired: 'El permiso ya terminó.',
     reasonWrongLocation: 'Ese permiso no es para esta entrada.',
+    // Decision 016. Like "ya se usó", this one has something the guard can act
+    // on: the visitor is not being turned away for good, only for now.
+    reasonOutsideSchedule: 'Este permiso no sirve a esta hora.',
+    /** Followed by the schedule itself, so the guard can say when to come back. */
+    scheduleAllows: 'Sirve',
     rightEntrance: 'Es para',
 
     goingTo: 'Va a',

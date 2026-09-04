@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
 import { FakeFirestore, FieldValue } from '../test/fakeFirestore.js'
 
@@ -724,5 +724,132 @@ describe('POST /orgs/:orgId/validate/:eventId/nota', () => {
     const written = events().find((one) => one.action === 'note')!
     expect(written.scanned_code).toBeNull()
     expect(JSON.stringify(written)).not.toContain(CODE)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Decision 016 — the days and hours a permit may be used
+// ---------------------------------------------------------------------------
+
+describe('a permit with days and hours', () => {
+  /** Monday 2026-09-07 at 07:00 in Bogotá, which is 12:00 UTC. */
+  const MONDAY_MORNING = new Date('2026-09-07T12:00:00.000Z')
+  const WEEKDAY_MORNINGS = { days: [1, 3, 5], from: '07:00', to: '16:00' }
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function at(instant: Date) {
+    vi.useFakeTimers()
+    vi.setSystemTime(instant)
+  }
+
+  it('lets the visitor in on one of its days, inside its hours', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    at(MONDAY_MORNING)
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.status).toBe(200)
+    expect(res.body.result).toBe('allowed')
+  })
+
+  it('turns the visitor away outside the hours, and says when they may come back', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    // Monday 21:00 UTC is 16:00 in Bogotá — the minute the window closes.
+    at(new Date('2026-09-07T21:00:00.000Z'))
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.status).toBe(200)
+    expect(res.body.result).toBe('denied')
+    expect(res.body.reason).toBe('outside_schedule')
+    // The guard is told the schedule itself, or they can only say "no".
+    expect(res.body.permit.schedule).toEqual(WEEKDAY_MORNINGS)
+  })
+
+  it('turns the visitor away on a day that is not listed', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    // Tuesday, the right hour on the wrong day.
+    at(new Date('2026-09-08T12:00:00.000Z'))
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.body.reason).toBe('outside_schedule')
+  })
+
+  it('reads the hours in the building s own clock, not in UTC', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    // 02:00 UTC on Tuesday is still Monday 21:00 in Bogotá: outside the
+    // window, and on a day UTC would call Tuesday. Reading this in UTC gets
+    // both halves of the question wrong.
+    at(new Date('2026-09-08T02:00:00.000Z'))
+
+    const denied = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(denied.body.reason).toBe('outside_schedule')
+
+    // The same building an hour into the window, on a Wednesday.
+    at(new Date('2026-09-09T13:00:00.000Z'))
+    const allowed = await check(GUARD, { location_id: GATE, code: CODE })
+    expect(allowed.body.result).toBe('allowed')
+  })
+
+  it('uses the organization s timezone when it has one', async () => {
+    store.seed(`orgs/${ORG}`, {
+      ...(store.docs.get(`orgs/${ORG}`) as Record<string, unknown>),
+      timezone: 'Australia/Sydney',
+    })
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    // 12:00 UTC on Monday is 07:00 in Bogotá but 22:00 in Sydney.
+    at(MONDAY_MORNING)
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.body.reason).toBe('outside_schedule')
+  })
+
+  it('says "outside its hours" rather than sending the visitor to another gate', async () => {
+    // Both are wrong at once. Sending somebody to the back gate, where the
+    // answer would be exactly as negative, is the worse of the two messages.
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS })
+    at(new Date('2026-09-08T12:00:00.000Z'))
+
+    const res = await check(GUARD, { location_id: BACK_GATE, code: CODE })
+
+    expect(res.body.reason).toBe('outside_schedule')
+    expect(res.body.expected_location).toBeUndefined()
+  })
+
+  it('never counts an entry that was refused for the schedule', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS, entry_mode: 'single' })
+    at(new Date('2026-09-08T12:00:00.000Z'))
+
+    await check(GUARD, { location_id: GATE, code: CODE })
+
+    const stored = store.docs.get(`orgs/${ORG}/authorizations/${PERMIT}`) as Record<string, unknown>
+    expect(stored.entry_count ?? 0).toBe(0)
+    // And the refusal is in the history, with its own reason.
+    expect(events().at(-1)!.deny_reason).toBe('outside_schedule')
+  })
+
+  it('leaves a permit without a schedule usable at any hour', async () => {
+    seedPermit(ORG, PERMIT)
+    // Sunday, 02:00 in Bogotá. Every permit issued before Decision 016 has to
+    // keep behaving exactly like this.
+    at(new Date('2026-09-06T07:00:00.000Z'))
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.body.result).toBe('allowed')
+  })
+
+  it('still refuses a revoked permit before it ever looks at the hours', async () => {
+    seedPermit(ORG, PERMIT, { schedule: WEEKDAY_MORNINGS, status: 'revoked' })
+    at(MONDAY_MORNING)
+
+    const res = await check(GUARD, { location_id: GATE, code: CODE })
+
+    expect(res.body.reason).toBe('revoked')
   })
 })

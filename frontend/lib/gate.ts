@@ -21,6 +21,7 @@ const DENY_MESSAGES: Record<DenyReason, string> = {
   already_used: es.gate.reasonAlreadyUsed,
   not_started: es.gate.reasonNotStarted,
   expired: es.gate.reasonExpired,
+  outside_schedule: es.gate.reasonOutsideSchedule,
   wrong_location: es.gate.reasonWrongLocation,
 }
 

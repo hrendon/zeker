@@ -9,6 +9,7 @@ import { logger } from '../lib/logger.js'
 import { userRef } from '../lib/users.js'
 import type { OrgMembership, UserDocument } from '../lib/users.js'
 import {
+  DEFAULT_TIMEZONE,
   FREE_PLAN_LIMITS,
   ORG_TYPES,
   newOrgId,
@@ -16,6 +17,7 @@ import {
   toOrgResponse,
 } from '../lib/orgs.js'
 import type { OrgDocument } from '../lib/orgs.js'
+import { isValidTimeZone } from '../lib/time.js'
 import { locationsRouter } from './locations.js'
 import { interiorsRouter } from './interiors.js'
 import { membersRouter } from './members.js'
@@ -43,6 +45,18 @@ const CreateOrgSchema = z
     // City and country only. A street address is never stored — see lib/orgs.ts.
     city: z.string().trim().max(80).optional(),
     country: z.string().trim().length(2).toUpperCase().optional(),
+    /**
+     * IANA timezone (Decision 016). Only read when a permit carries a weekly
+     * schedule; absent means Colombia. Validated against the runtime rather
+     * than a list — see `lib/time.ts`.
+     */
+    timezone: z
+      .string()
+      .trim()
+      .min(1)
+      .max(64)
+      .refine(isValidTimeZone, { message: 'Unknown timezone.' })
+      .optional(),
   })
   .strict()
 
@@ -53,6 +67,18 @@ const UpdateOrgSchema = z
     description: z.string().trim().max(500).optional(),
     city: z.string().trim().max(80).optional(),
     country: z.string().trim().length(2).toUpperCase().optional(),
+    /**
+     * IANA timezone (Decision 016). Only read when a permit carries a weekly
+     * schedule; absent means Colombia. Validated against the runtime rather
+     * than a list — see `lib/time.ts`.
+     */
+    timezone: z
+      .string()
+      .trim()
+      .min(1)
+      .max(64)
+      .refine(isValidTimeZone, { message: 'Unknown timezone.' })
+      .optional(),
   })
   .strict()
   // The plan, its limits and the counters are not customer-editable: they are
@@ -96,6 +122,7 @@ orgsRouter.post('/', requireAuth, async (req, res, next) => {
     counts: { locations: 0, interiors: 0 },
     city: parsed.data.city ?? null,
     country: parsed.data.country ?? null,
+    timezone: parsed.data.timezone ?? DEFAULT_TIMEZONE,
     created_by: uid,
     created_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),

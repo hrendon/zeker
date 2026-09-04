@@ -10,6 +10,10 @@ import {
   useLine,
   toIsoInstant,
   toLocalInput,
+  checkSchedule,
+  formatDays,
+  formatHour,
+  formatSchedule,
 } from './permits'
 import { es } from './strings'
 
@@ -202,3 +206,64 @@ describe('whether anybody has come in on a permit (Decision 014)', () => {
   })
 })
 
+
+// ---------------------------------------------------------------------------
+// The days and hours a permit may be used (Decision 016)
+// ---------------------------------------------------------------------------
+
+describe('writing a schedule the way somebody would say it', () => {
+  it('names the week rather than listing it', () => {
+    expect(formatDays([1, 2, 3, 4, 5])).toBe('de lunes a viernes')
+    expect(formatDays([0, 1, 2, 3, 4, 5, 6])).toBe('todos los días')
+    expect(formatDays([0, 6])).toBe('fines de semana')
+  })
+
+  it('lists the days when they are not a named group', () => {
+    expect(formatDays([1, 3, 5])).toBe('lunes, miércoles y viernes')
+    expect(formatDays([3])).toBe('miércoles')
+  })
+
+  it('puts the week in the order a reader looks for it, not in the API s order', () => {
+    // Sunday is 0 for the API and last for a person. Sorting the numbers would
+    // put it first on the screen.
+    expect(formatDays([0, 1])).toBe('lunes y domingo')
+  })
+
+  it('writes the hours the way they are said out loud', () => {
+    expect(formatHour('07:00')).toBe('7:00 a. m.')
+    expect(formatHour('16:30')).toBe('4:30 p. m.')
+    expect(formatHour('00:15')).toBe('12:15 a. m.')
+    expect(formatHour('12:00')).toBe('12:00 p. m.')
+  })
+
+  it('writes the whole schedule as one sentence', () => {
+    expect(formatSchedule({ days: [1, 2, 3, 4, 5], from: '07:00', to: '16:00' })).toBe(
+      'de lunes a viernes, de 7:00 a. m. a 4:00 p. m.',
+    )
+  })
+
+  it('says a permit with no schedule works at any time', () => {
+    expect(formatSchedule(null)).toBe(es.permits.scheduleAlways)
+    expect(formatSchedule(undefined)).toBe(es.permits.scheduleAlways)
+  })
+})
+
+describe('checking a schedule before it is sent', () => {
+  it('accepts a normal one', () => {
+    expect(checkSchedule([1, 3, 5], '07:00', '16:00')).toBeUndefined()
+  })
+
+  it('asks for at least one day', () => {
+    expect(checkSchedule([], '07:00', '16:00')).toBe(es.validation.scheduleNeedsDay)
+  })
+
+  it('refuses a window that ends when it starts', () => {
+    expect(checkSchedule([1], '07:00', '07:00')).toBe(es.validation.scheduleOutOfOrder)
+  })
+
+  it('says what to do about a night shift instead of just refusing it', () => {
+    // Two permits, and the message says so — the person is trying to express
+    // something real, and "no" on its own leaves them stuck.
+    expect(checkSchedule([1], '22:00', '06:00')).toBe(es.validation.scheduleNoMidnight)
+  })
+})

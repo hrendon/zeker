@@ -383,6 +383,10 @@ describe('POST /orgs/{orgId}/authorizations', () => {
         'purpose',
         'revoked_at',
         'revoked_by',
+        // Decision 016: which days and hours this permit may be used. Days of
+        // the week and two clock times — nothing about the visitor, and no
+        // place a cédula number could be typed.
+        'schedule',
         'status',
         'valid_from',
         'valid_to',
@@ -686,3 +690,58 @@ describe('one entry or many (Decision 014)', () => {
   })
 })
 
+
+// ---------------------------------------------------------------------------
+// Decision 016 — issuing a permit with days and hours
+// ---------------------------------------------------------------------------
+
+describe('the days and hours a permit may be used', () => {
+  const WEEKDAY_MORNINGS = { days: [1, 3, 5], from: '07:00', to: '16:00' }
+
+  function issue(body: Record<string, unknown>) {
+    signedInAs(RESIDENT)
+    return request(app)
+      .post(`/orgs/${ORG}/authorizations`)
+      .set('Authorization', 'Bearer good')
+      .send({ ...NEW_PERMIT, ...body })
+  }
+
+  it('stores the schedule and gives it back', async () => {
+    const res = await issue({ schedule: { days: [5, 1, 3], from: '07:00', to: '16:00' } })
+
+    expect(res.status).toBe(201)
+    // Sorted on the way in, so two permits written the same way read the same.
+    expect(res.body.schedule).toEqual(WEEKDAY_MORNINGS)
+    expect(permit(ORG, res.body.id)!.schedule).toEqual(WEEKDAY_MORNINGS)
+  })
+
+  it('writes no schedule when none was asked for, and says so as null', async () => {
+    const res = await issue({})
+
+    expect(res.status).toBe(201)
+    expect(res.body.schedule).toBeNull()
+    expect(permit(ORG, res.body.id)!.schedule).toBeNull()
+  })
+
+  it('refuses a schedule with no days', async () => {
+    const res = await issue({ schedule: { days: [], from: '07:00', to: '16:00' } })
+    expect(res.status).toBe(400)
+  })
+
+  it('refuses a day that is not a day of the week', async () => {
+    const res = await issue({ schedule: { days: [7], from: '07:00', to: '16:00' } })
+    expect(res.status).toBe(400)
+  })
+
+  it('refuses hours that are not written as HH:MM', async () => {
+    const res = await issue({ schedule: { days: [1], from: '7 am', to: '4 pm' } })
+    expect(res.status).toBe(400)
+  })
+
+  it('refuses a window that crosses midnight, rather than storing something that reads differently', async () => {
+    const res = await issue({ schedule: { days: [1], from: '22:00', to: '06:00' } })
+
+    expect(res.status).toBe(400)
+    expect(res.body.details?.[0]?.field).toBe('schedule')
+  })
+})

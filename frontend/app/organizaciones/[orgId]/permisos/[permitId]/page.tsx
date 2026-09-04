@@ -7,7 +7,7 @@ import { OrgGate, OrgHeader, useOrgId } from '@/components/OrgShell'
 import { ConfirmDialog, Notice, TextLink } from '@/components/ui'
 import { toSpanish } from '@/lib/errors'
 import { permitsApi, type Org, type Permit } from '@/lib/api'
-import { formatMoment, purposeLabel, stateLabel, useLine } from '@/lib/permits'
+import { formatMoment, formatSchedule, purposeLabel, stateLabel, useLine } from '@/lib/permits'
 import { es } from '@/lib/strings'
 
 /**
@@ -155,6 +155,17 @@ function PermitScreen({ org }: { org: Org }) {
                     : es.permits.entryModeMultiple}
                 </dd>
               </div>
+              {/*
+                Decision 016. Shown only when there is one: telling every
+                reader of every permit that it has no schedule is noise on the
+                screen they open to send somebody a code.
+              */}
+              {permit.schedule ? (
+                <div className="flex gap-2">
+                  <dt className="text-[var(--color-ink-faint)]">{es.permits.scheduleLabel}</dt>
+                  <dd>{formatSchedule(permit.schedule)}</dd>
+                </div>
+              ) : null}
             </dl>
 
             {/*

@@ -96,6 +96,23 @@ export type PermitState = 'scheduled' | 'active' | 'expired' | 'revoked' | 'used
  */
 export type PermitEntryMode = 'single' | 'multiple'
 
+/**
+ * The days and hours a permit may be used (Decision 016).
+ *
+ * `days` are 0 = Sunday … 6 = Saturday and the two times are `"HH:MM"` — all
+ * of it read in **the organization's own timezone**, which is a field on the
+ * organization and not the reader's phone. A resident in Madrid issuing a
+ * permit for a building in Bogotá means the building's Monday, not theirs.
+ *
+ * `null` on a permit means no restriction, which is every permit issued before
+ * 2026-09-04.
+ */
+export interface PermitSchedule {
+  days: number[]
+  from: string
+  to: string
+}
+
 /** An entry permit for one visitor, at one interior, between two moments. */
 export interface Permit {
   id: string
@@ -118,6 +135,8 @@ export interface Permit {
   entry_count: number
   /** Decision 015. How many entries a guard gave back because nobody came in. */
   entry_returns: number
+  /** Decision 016. Null when the permit may be used at any hour of any day. */
+  schedule: PermitSchedule | null
   /** When somebody was last let in, or null if nobody ever has. */
   last_entry_at: string | null
   created_by: string
@@ -403,6 +422,8 @@ export const permitsApi = {
       purpose?: PermitPurpose
       /** Decision 014. The server treats an absent value as `single`. */
       entry_mode?: PermitEntryMode
+      /** Decision 016. Absent means the permit works at any hour of any day. */
+      schedule?: PermitSchedule
       /** ISO 8601. `toIsoInstant` in lib/permits.ts builds these. */
       valid_from: string
       valid_to: string
@@ -433,6 +454,8 @@ export type DenyReason =
   | 'already_used'
   | 'not_started'
   | 'expired'
+  /** Decision 016: the permit is live, but not on this day or at this hour. */
+  | 'outside_schedule'
   | 'wrong_location'
 
 /**
@@ -455,6 +478,12 @@ export interface CheckedPermit {
   purpose: PermitPurpose
   valid_from: string
   valid_to: string
+  /**
+   * Decision 016. Null unless the permit has days and hours. The guard needs
+   * it to tell the visitor when they may come back — a refusal that does not
+   * say that is just a closed door.
+   */
+  schedule: PermitSchedule | null
 }
 
 /**

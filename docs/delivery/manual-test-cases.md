@@ -23,6 +23,8 @@ Antes de empezar, anote qué revisión está viva.
 | TC-014-03 | Los permisos viejos no cambiaron de regla | ✅ pasó 2026-09-03 |
 | TC-015-01 | Un permiso quemado por error se devuelve | ✅ pasó 2026-09-03 |
 | TC-HIST-01 | El historial, y sobre todo quién NO lo ve | ✅ pasó 2026-09-03 (el paso D, por prueba y no a mano) |
+| TC-016-01 | Un permiso con días y horas: sirve dentro, no sirve fuera | ⬜ nunca corrido |
+| TC-016-02 | Los permisos sin horario siguen sirviendo a cualquier hora | ⬜ nunca corrido |
 | TC-AUTH-RESET-01 | Recuperar la contraseña, de punta a punta | ✅ pasó 2026-09-02, a mano, por el Fundador |
 | TC-PHONE-01 | El producto en un teléfono real, afuera, con datos | ⬜ nunca corrido |
 
@@ -314,6 +316,152 @@ apartamento.
 Este caso se repite **cada vez que se agregue un filtro nuevo al historial**.
 Cada filtro es un índice más, y un índice de más es otra oportunidad de que
 quede declarado y sin publicar.
+
+---
+
+# TC-016-01 — Un permiso con días y horas sirve solo dentro de ellos
+
+**Qué decisión prueba:** la 016. Un permiso puede llevar días de la semana y una
+franja de horas; la portería lo niega afuera de eso y dice cuándo sí sirve.
+
+**Por qué importa que sea a mano:** hay una prueba automática para cada regla, y
+todas pasan. Lo que ninguna puede ver es si el residente entiende la pregunta, si
+los botones de los días se pueden tocar con un pulgar, y si el vigilante alcanza a
+leer la frase que dice cuándo volver mientras alguien lo espera en la puerta.
+
+**Lo que esta prueba mide con reloj:** hay que correrla en un momento que caiga
+dentro del horario y en otro que caiga afuera. Elija el horario alrededor de la
+hora en que la está corriendo — no al revés.
+
+## Antes de empezar
+
+- Estar dentro como administrador (el administrador también puede verificar en la
+  portería, así que una sola cuenta alcanza).
+- La organización tiene por lo menos una sede y un interior.
+- **Anote la hora exacta a la que empieza.** Todo lo de abajo depende de ella.
+- **Anote qué revisión está viva.** Si es anterior al 2026-09-04, la Decisión 016
+  no está publicada y este caso no aplica todavía.
+
+## Los pasos
+
+**A. La pregunta aparece.** Permisos → crear uno nuevo.
+
+- **Pasa:** la pantalla pregunta **"¿Sirve a cualquier hora?"**, y la respuesta
+  que viene puesta es **"Sí, a cualquier hora"**. Debajo hay una frase corta que
+  explica qué significa.
+- **Falla:** la pregunta no aparece, o viene puesta en "solo ciertos días y
+  horas". Lo segundo sería peor: le pone trabajo a todo el que solo quiere dejar
+  entrar a una visita.
+
+**B. Elegir días y horas.** Cambie la respuesta a *"No, solo ciertos días y
+horas"*.
+
+- **Pasa:** aparecen siete botones (lun, mar, mié, jue, vie, sáb, dom) con lunes
+  primero y domingo último, y dos campos de hora. Vienen puestos de lunes a
+  viernes, de 7:00 a 16:00.
+- **Pasa:** al tocar un día, se ve encendido o apagado. No hay que adivinar
+  cuáles están elegidos.
+- **Falla:** el domingo aparece de primero. Eso sería el orden que usa el
+  servidor, no el que busca una persona.
+
+**C. Un horario imposible se rechaza antes de enviarlo.** Ponga *desde* 22:00 y
+*hasta* 06:00.
+
+- **Pasa:** al crear, la pantalla dice que un horario no puede pasar de la
+  medianoche **y dice qué hacer**: hacer dos permisos. El mensaje aparece sin que
+  la página recargue.
+- **Falla:** el permiso se crea, o el mensaje solo dice "error".
+
+**D. Crear el permiso dentro del horario.** Elija **el día de hoy** y una franja
+que contenga la hora actual (por ejemplo, si son las 2:15 p. m., ponga 2:00 p. m.
+a 5:00 p. m.). Fechas: desde hoy, hasta dentro de una semana. Cree el permiso.
+
+- **Pasa:** el permiso se crea y la pantalla del permiso muestra una línea
+  **"Días y horas"** con el horario escrito como se dice: por ejemplo *"martes, de
+  2:00 p. m. a 5:00 p. m."*.
+- **Falla:** la línea no aparece, o muestra números (`[2]`, `14:00`) en vez de
+  palabras.
+
+**E. La portería lo deja entrar.** Vaya a Portería, elija la entrada del interior
+y escriba el código.
+
+- **Pasa:** dice **"Puede entrar"**.
+- **Falla:** dice que no. Entonces la hora se está leyendo mal — anote la hora
+  exacta, el horario que puso, y pare aquí.
+
+**F. Fuera del horario, no lo deja entrar.** Vuelva al permiso, o cree uno nuevo
+igual pero con una franja que **no** contenga la hora actual (por ejemplo 6:00
+a. m. a 7:00 a. m. si es de tarde). Verifíquelo en la portería.
+
+- **Pasa:** dice **"No puede entrar"** y debajo **"Este permiso no sirve a esta
+  hora"**.
+- **Pasa:** debajo de eso aparece **"Sirve: …"** con el horario en palabras. Esta
+  línea es la razón de ser del caso: sin ella el vigilante solo puede decir "no".
+- **Falla:** dice "El permiso ya terminó" o "no es para esta entrada". Cualquiera
+  de las dos manda al visitante a hacer algo que no lo va a ayudar.
+
+**G. Un día que no está elegido.** Cree un permiso cuyo horario incluya la hora
+actual pero **no** el día de hoy (elija solo el día de mañana). Verifíquelo.
+
+- **Pasa:** *"Este permiso no sirve a esta hora"*, con la línea *"Sirve: …"*.
+- **Falla:** lo deja entrar. Entonces se está mirando la hora y no el día.
+
+**H. El rechazo queda en el historial.** Entre a Historial de entradas.
+
+- **Pasa:** los intentos de F y G aparecen como rechazados, y el motivo dice *"Este
+  permiso no sirve a esta hora"* — no un código en inglés.
+- **Falla:** el motivo sale vacío, o sale en inglés.
+
+## Qué anotar
+
+La hora exacta de cada paso, el horario que puso en cada permiso, y **el texto
+literal** que mostró la portería en E, F y G. Si algo falló, la hora es el primer
+dato que hace falta para entenderlo.
+
+## Lo que esta prueba no puede probar
+
+- **Que la hora sea la del edificio y no la del teléfono.** Solo se ve con un
+  teléfono puesto en otra zona horaria, o con un edificio que no esté en Colombia.
+  Hoy no existe ninguno de los dos. Está cubierto por prueba automática, y eso es
+  todo lo que hay.
+- **El cambio de hora (horario de verano).** Colombia no lo tiene. Aparecerá el
+  día que haya un cliente en Chile o en México.
+
+---
+
+# TC-016-02 — Los permisos de antes no cambiaron de regla
+
+**Qué decisión prueba:** la 016, por el lado que más caro cuesta si falla. Un
+permiso creado antes del 2026-09-04 no tiene horario, y **no tener horario tiene
+que significar "a cualquier hora"**, nunca "a ninguna".
+
+**Por qué importa que sea a mano:** si esto se rompió, se rompió en producción y
+para permisos que ya están en manos de gente. La prueba automática cubre la regla;
+esta cubre que lo publicado la tenga.
+
+## Antes de empezar
+
+- Un permiso creado **antes** del 2026-09-04 que todavía esté activo. Si no hay
+  ninguno, este caso no se puede correr y hay que decirlo así, no inventarlo.
+
+## Los pasos
+
+**A. Abrir el permiso viejo.**
+
+- **Pasa:** la pantalla **no** muestra la línea "Días y horas". Un permiso sin
+  horario no dice nada sobre horarios.
+- **Falla:** aparece la línea con un horario. Alguien le puso uno.
+
+**B. Usarlo en la portería, a la hora que sea.**
+
+- **Pasa:** dice "Puede entrar" (o "ya se usó", si era de una sola entrada y ya se
+  usó — eso también cuenta como pasar: la regla vieja sigue mandando).
+- **Falla:** dice *"Este permiso no sirve a esta hora"*. Eso sería una puerta
+  cerrada que nadie decidió cerrar, y hay que revertir de inmediato.
+
+## Qué anotar
+
+La fecha de creación del permiso que usó, y qué contestó la portería.
 
 ---
 

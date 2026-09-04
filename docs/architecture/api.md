@@ -161,16 +161,21 @@ organization can never exist that nobody can reach.
 **Request:**
 ```json
 {
-  "name": "Colegio Bilingüe X",
-  "type": "school",
-  "description": "Private bilingual school",
+  "name": "Conjunto Los Cedros",
+  "type": "residence",
+  "description": "Conjunto residencial, dos torres",
   "city": "Bogotá",
-  "country": "CO"
+  "country": "CO",
+  "timezone": "America/Bogota"
 }
 ```
 
 `type` is one of `school`, `residence`, `office`, `other`. `country` is a
-two-letter code. `description`, `city` and `country` are optional. Unknown
+two-letter code. `description`, `city`, `country` and `timezone` are optional.
+`timezone` is an IANA name (Decision 016), defaults to `America/Bogota`, and is
+validated against the runtime rather than a list — an unknown name is refused.
+**It is what a permit's weekly schedule is read in**, so on an organization that
+never uses one it changes nothing. Unknown
 fields are rejected — in particular `plan`, `limits` and `counts`, which are
 how the freemium model is enforced and are never set by the customer.
 
@@ -186,6 +191,7 @@ how the freemium model is enforced and are never set by the customer.
   "counts": { "locations": 0, "interiors": 0 },
   "city": "Bogotá",
   "country": "CO",
+  "timezone": "America/Bogota",
   "created_by": "user_xyz789",
   "created_at": "2026-08-25T10:00:00.000Z",
   "updated_at": "2026-08-25T10:00:00.000Z",
@@ -193,6 +199,9 @@ how the freemium model is enforced and are never set by the customer.
   "request_id": "req_abc123xyz"
 }
 ```
+
+`timezone` is always present in a response, including for organizations created
+before Decision 016 that have none stored — those read as `America/Bogota`.
 
 `limits` come from the plan (Decision 003). Free is 1 location and 10 interiors
 in total across the organization.
@@ -808,7 +817,8 @@ Issue a permit. Administrators, and the responsable of the interior.
   "purpose": "visitor",
   "entry_mode": "single",
   "valid_from": "2026-08-29T22:00:00.000Z",
-  "valid_to": "2026-08-30T22:00:00.000Z"
+  "valid_to": "2026-08-30T22:00:00.000Z",
+  "schedule": { "days": [1, 3, 5], "from": "07:00", "to": "16:00" }
 }
 ```
 
@@ -823,6 +833,16 @@ A `single` permit stops working once somebody has been let in on it. **Permits
 stored before 2026-09-02 carry no `entry_mode` and are read as `multiple`** —
 they were issued under a rule that offered no alternative, and converting them
 would revoke access nobody agreed to revoke.
+
+`schedule` is optional (Decision 016). Absent, or `null`, means the permit works
+at **any hour of any day**, which is every permit issued before 2026-09-04.
+`days` are `0` (Sunday) to `6` (Saturday), at least one; `from` and `to` are
+`"HH:MM"` and `to` must be **later than `from` on the same day** — a window
+never crosses midnight, and `22:00`–`06:00` is refused with a message saying to
+make two permits. **All four values are read in the organization's own
+timezone** (`orgs/{orgId}.timezone`, default `America/Bogota`), never in UTC and
+never in the caller's. The days are sorted and de-duplicated on the way in, so
+two permits written the same way read the same.
 
 **Response (201):**
 ```json
@@ -1006,9 +1026,18 @@ request itself was broken.
 ```
 
 `reason` is one of `invalid_code`, `revoked`, `already_used`, `not_started`,
-`expired`, `wrong_location`, **evaluated in that order**. The permit's own state
-is settled before the entrance is considered, so a revoked permit never produces
-"try the other gate".
+`expired`, `outside_schedule`, `wrong_location`, **evaluated in that order**.
+The permit's own state is settled before the entrance is considered, so a
+revoked permit never produces "try the other gate". `outside_schedule`
+(Decision 016) sits on the permit's side of that line for the same reason: a
+visitor arriving on the wrong day must not be sent to a different entrance,
+where the answer would be exactly as negative.
+
+**`outside_schedule` is the only refusal besides `already_used` that a visitor
+can do something about**, so the permit in the response carries its `schedule`
+and the gate screen shows when the visitor may come back. The organization's
+timezone is read **only** when the permit has a schedule — the gate is the one
+path with a person waiting at a door.
 
 **An allowed check and the count are written in one transaction** (Decision
 014). The permit is re-read inside it, because a one-entry permit is spent by
@@ -1025,7 +1054,8 @@ screen only creates another place it can leak.
 
 `expected_location` appears only for `wrong_location`, and holds the name of the
 entrance the permit *is* for, so the guard can redirect the visitor rather than
-turn them away.
+turn them away. It is deliberately absent on `outside_schedule`, even when the
+entrance is also wrong.
 
 **Errors:**
 - `400 invalid_request` — missing `location_id` or `code`, or an unknown field

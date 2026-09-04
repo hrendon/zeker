@@ -15,7 +15,7 @@ import {
   type Org,
 } from '@/lib/api'
 import { cleanCode, denyMessage, groupCode, noteLabel, notesFor } from '@/lib/gate'
-import { formatMoment, purposeLabel } from '@/lib/permits'
+import { formatMoment, formatSchedule, purposeLabel } from '@/lib/permits'
 import { es } from '@/lib/strings'
 
 /**
@@ -310,6 +310,19 @@ function Answer({
         {answer.result === 'denied' && answer.expected_location ? (
           <p className="mt-1 text-base">
             {es.gate.rightEntrance}: <strong>{answer.expected_location}</strong>
+          </p>
+        ) : null}
+        {/*
+          Decision 016. A refusal for the hour is the one refusal where the
+          visitor is not being turned away for good, so the guard is given the
+          sentence that says when to come back — otherwise "no" is all they
+          have, and the person at the door argues with them about it.
+        */}
+        {answer.result === 'denied' &&
+        answer.reason === 'outside_schedule' &&
+        answer.permit?.schedule ? (
+          <p className="mt-1 text-base">
+            {es.gate.scheduleAllows}: <strong>{formatSchedule(answer.permit.schedule)}</strong>
           </p>
         ) : null}
       </div>

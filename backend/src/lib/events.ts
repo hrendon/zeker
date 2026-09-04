@@ -60,6 +60,10 @@ export const DENY_REASONS = [
   'already_used',
   'not_started',
   'expired',
+  // Decision 016: the permit is live, but this is not one of the days or hours
+  // it was issued for. Kept separate from `expired` because the visitor can
+  // come back — the guard's screen says when.
+  'outside_schedule',
   'wrong_location',
 ] as const
 export type DenyReason = (typeof DENY_REASONS)[number]

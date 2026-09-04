@@ -101,6 +101,11 @@ these units, so the product could not deliver what it sells without them.
   - **How many times it works: one entry, or free entries until it expires**
     (Decision 014, 2026-09-02). Defaults to one entry — a permit is for a visit
     unless the person issuing it says otherwise
+  - **Optionally, the days and hours it works** (Decision 016, 2026-09-04):
+    days of the week and one range of hours, read in the **building's** clock.
+    Off by default. It is what makes a long permit for a recurring visitor safe
+    to issue — without it, a year-long permit also opens the door at 03:00 on a
+    Sunday
 - [x] **The permit says whether anybody came in on it**, and when. Discovered by
       the Founder minutes after first using the product for real, on 2026-09-02
 - [x] Authorization assigned unique ID
@@ -109,10 +114,12 @@ these units, so the product could not deliver what it sells without them.
 - [x] The numeric code is stored; **the QR image is not** — it encodes the code,
       so the browser draws it (Decision 007)
 
-> ⚠️ **A daily time window** (`time_from` / `time_to` — valid every day but only
-> between 14:00 and 17:00) is **not built**. Founder's decision, 2026-08-29: it
-> needs each building's local time, which is not stored. A permit runs from one
-> moment to another moment.
+> **Updated 2026-09-04 by Decision 016.** A daily time window was refused on
+> 2026-08-29 because it needs each building's local time, which was not stored.
+> The organization now has a timezone, so a **weekly** schedule exists: days of
+> the week plus one range of hours. What is still not built, and was not asked
+> for: **different hours on different days**, and **a window crossing midnight**
+> (a night shift is two permits, and the refusal says so).
 
 ---
 

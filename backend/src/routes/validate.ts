@@ -18,8 +18,18 @@ import type { InteriorDocument } from '../lib/interiors.js'
 import { locationRef } from '../lib/locations.js'
 import type { LocationDocument } from '../lib/locations.js'
 import { db } from '../lib/firebase.js'
-import { entryCountOf, normalizeCode, permitRef, permitsCollection, stateOf } from '../lib/permits.js'
-import type { PermitDocument } from '../lib/permits.js'
+import {
+  allowsEntryAt,
+  entryCountOf,
+  normalizeCode,
+  permitRef,
+  permitsCollection,
+  scheduleOf,
+  stateOf,
+} from '../lib/permits.js'
+import type { PermitDocument, PermitSchedule } from '../lib/permits.js'
+import { orgRef, timezoneOf } from '../lib/orgs.js'
+import type { OrgDocument } from '../lib/orgs.js'
 import {
   CHECK_NOTES,
   NOTE_WINDOW_MINUTES,
@@ -80,6 +90,12 @@ interface PermitSummary {
   purpose: string
   valid_from: string
   valid_to: string
+  /**
+   * Decision 016. Null unless the permit was issued with days and hours. The
+   * guard needs it to say *when* the visitor may come back, which is the whole
+   * difference between a useful refusal and a closed door.
+   */
+  schedule: PermitSchedule | null
 }
 
 /**
@@ -88,11 +104,14 @@ interface PermitSummary {
  * The order the reasons are evaluated matters, and is not arbitrary:
  *
  *   no such code → revoked → already used → not started → finished →
- *   wrong entrance
+ *   outside its days and hours → wrong entrance
  *
  * The permit's own state is settled before the entrance is considered, so a
  * revoked permit can never produce "try the other gate" — which would send a
- * guard to redirect somebody who must not be let in anywhere.
+ * guard to redirect somebody who must not be let in anywhere. The schedule
+ * (Decision 016) belongs to the permit and so is checked on the same side of
+ * that line: a visitor arriving on the wrong day must not be sent to a
+ * different entrance, where the answer would be exactly as negative.
  *
  * **The answer and the count are written in one transaction** (Decision 014).
  * A one-entry permit is spent by being used, so deciding first and counting
@@ -179,6 +198,7 @@ validateRouter.post(
           else if (state === 'used') reason = 'already_used'
           else if (state === 'scheduled') reason = 'not_started'
           else if (state === 'expired') reason = 'expired'
+          else if (!(await withinSchedule(tx, orgId, permit, now))) reason = 'outside_schedule'
           else if (permit.location_id !== parsed.data.location_id) reason = 'wrong_location'
         }
 
@@ -467,7 +487,36 @@ async function summarize(orgId: string, permit: PermitDocument): Promise<PermitS
     purpose: String(permit.purpose ?? 'visitor'),
     valid_from: String(permit.valid_from ?? ''),
     valid_to: String(permit.valid_to ?? ''),
+    schedule: scheduleOf(permit),
   }
+}
+
+/**
+ * Whether the permit's days and hours allow an entry right now (Decision 016).
+ *
+ * The organization is read **only when the permit carries a schedule**. Most
+ * permits do not, and the gate is the one path in this product where a person
+ * is standing at a door waiting for the answer — so the building's timezone is
+ * not fetched to be ignored.
+ *
+ * The read happens inside the transaction because everything in a Firestore
+ * transaction must, and it is a read of a document that never changes during
+ * one. An organization whose timezone is missing or unreadable is treated as
+ * Colombia (`timezoneOf`), which is what every organization created before
+ * Decision 016 actually was.
+ */
+async function withinSchedule(
+  tx: FirebaseFirestore.Transaction,
+  orgId: string,
+  permit: PermitDocument,
+  at: Date,
+): Promise<boolean> {
+  if (!scheduleOf(permit)) return true
+
+  const org = await tx.get(orgRef(orgId))
+  const timeZone = timezoneOf(org.exists ? (org.data() as Partial<OrgDocument>) : undefined)
+
+  return allowsEntryAt(permit, at, timeZone)
 }
 
 /** Empty when the entrance is gone, which a refusal message handles on its own. */
