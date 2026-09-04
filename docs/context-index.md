@@ -5,7 +5,7 @@ Map of authoritative sources for project knowledge.
 | Domain | File | Purpose | Owner |
 |--------|------|---------|-------|
 | **Product** | | | |
-| Vision & problem | `product/brief.md` | Problem statement, users, MVP scope, what we don't do | Product Owner |
+| Vision & problem | `product/brief.md` | The problem, the buyer, what the product actually does today, what it deliberately does not do and what that costs, and the ten labelled assumptions the whole market case rests on. **Rewritten 2026-09-04 for Decision 010's segment.** Every claim in it is labelled fact, consultant judgement or assumption — there is no customer evidence to label | Product Owner |
 | Requirements | `product/requirements.md` | User stories, acceptance criteria | Product Owner |
 | Roadmap | ⛔ not written | MVP / Phase 2 / Phase 3 currently live in `../PROJECT_STATE.md` under "Next" | Product Owner |
 | **Architecture** | | | |
@@ -107,11 +107,13 @@ looks for them:
 | Document | Owner | Needed by |
 |----------|-------|-----------|
 | `product/roadmap.md` | Product Owner | Not urgent — `PROJECT_STATE.md` carries the ordering |
-| `product/customer-discovery.md` | Customer Discovery & Validation Advisor | **Now.** The hypothesis and evidence log. Nine days of building, zero customer conversations, and nowhere to record what is learned when they start |
+| `product/customer-discovery.md` | Customer Discovery & Validation Advisor | **Now, and it is written before the first call, not after.** The hypothesis and evidence log. `product/brief.md` now names the ten assumptions, the first question, the sample size and what a "no" looks like — this file is where the answers land |
+| `product/segment-residential.md` | Residential Property Administration Consultant | Its first consultation (2026-09-04) is summarised inside `product/brief.md` and exists in no artifact of its own |
+| `product/physical-security-advisory.md` | Physical Security Consultant | Same — consulted 2026-09-04 for the corporate half of Decision 010's segment, summarised in the brief only |
 | `architecture/analytics.md` | Data Analyst | When the first real users arrive. Metric definitions, so "organizations created" is not mistaken for a sign of anything |
 | `security/threat-model.md` | Security Engineer / CISO | Before real customer data arrives |
 | `security/privacy.md` | Security Engineer / CISO (with legal review) | Before launch — legally required (Ley 1581/2016) |
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-09-02
+**Last updated:** 2026-09-04

@@ -2,6 +2,14 @@
 
 User stories and acceptance criteria for MVP implementation.
 
+> **Reframed 2026-09-04.** Every "As:" line in this file used to describe a
+> school director or a parent picking up a child. Decision 010 (2026-08-31)
+> replaced that market with residential and business complexes, and
+> `product/brief.md` was rewritten for it the same day this was. The user
+> stories now name the people who actually use the product. **Only the actors
+> changed — no acceptance criterion was added, removed or altered**, so nothing
+> here silently became a new requirement.
+>
 > **Reading the checkboxes.** A ticked box means "this is a required criterion",
 > not "this is built". Build progress lives in `PROJECT_STATE.md`. US-011 uses
 > unticked boxes because it was written after this convention was noticed; the
@@ -10,13 +18,13 @@ User stories and acceptance criteria for MVP implementation.
 
 ## US-001: Admin Creates Organization
 
-**As:** School director / building administrator
+**As:** Building administrator / facility manager
 **I want to:** Create a new organization in the system
 **So that:** I have a dedicated space to manage access for my organization
 
 ### Acceptance Criteria
 
-- [x] User can fill in: Organization name, organization type (school/residence/office/other)
+- [x] User can fill in: Organization name, organization type. **The stored values are `school`, `residence`, `office`, `other`** (`backend/src/lib/orgs.ts`), unchanged by the 2026-09-04 reframing — `school` is now a value no segment uses, and removing it is a data-model change nobody has decided to make
 - [x] Organization is created and assigned a unique tenant ID
 - [x] User is automatically admin of the new org
 - [x] User can see the org in their org list
@@ -26,7 +34,7 @@ User stories and acceptance criteria for MVP implementation.
 
 ## US-002: Admin Adds Access Points/Locations
 
-**As:** School director
+**As:** Building administrator
 **I want to:** Define locations where access will be controlled (entrance, reception, classroom, etc.)
 **So that:** I can assign authorizations to specific places
 
@@ -45,7 +53,7 @@ User stories and acceptance criteria for MVP implementation.
 
 ## US-011: Admin Manages Interiors
 
-**As:** Building administrator / school director
+**As:** Building administrator
 **I want to:** Register the units inside a location — apartments, warehouse
 bays, zones — each with its number and the person in charge
 **So that:** Each resident or responsable can issue entry permits for their own
@@ -77,8 +85,8 @@ these units, so the product could not deliver what it sells without them.
 
 ## US-003: Responsable Creates Authorization
 
-**As:** Parent / resident
-**I want to:** Create an access permit for another person (e.g., person who will pick up my child)
+**As:** Resident / responsable of an interior
+**I want to:** Create an access permit for a visitor coming to my apartment or office
 **So that:** They can enter the location during the authorized dates/times
 
 ### Acceptance Criteria
@@ -110,7 +118,7 @@ these units, so the product could not deliver what it sells without them.
 
 ## US-004: Responsable Generates & Shares Code
 
-**As:** Parent
+**As:** Responsable of an interior
 **I want to:** Get a QR code or numeric code that the authorized person can scan at entry
 **So that:** They can prove they're authorized
 
@@ -171,7 +179,7 @@ these units, so the product could not deliver what it sells without them.
 
 ## US-006: Responsable Revokes Authorization
 
-**As:** Parent
+**As:** Responsable of an interior
 **I want to:** Cancel an authorization immediately
 **So that:** That person can no longer enter
 
@@ -193,8 +201,9 @@ these units, so the product could not deliver what it sells without them.
 **I want to:** See who entered, when, and what the status was
 **So that:** I have a record and can detect unauthorized entries
 
-> **Rewritten 2026-09-03, when the screen was actually built.** The "Parent"
-> above was the school framing Decision 010 superseded. The criteria themselves
+> **Rewritten 2026-09-03, when the screen was actually built.** The line above
+> used to read "Parent" — the school framing Decision 010 superseded, and the
+> first of these to be corrected. The rest followed on 2026-09-04. The criteria themselves
 > were also thinner than the thing needed to be: they said nothing about a
 > responsable being unable to see another apartment, nothing about a guard being
 > kept out, and nothing about the indexes being deployed rather than declared —
@@ -226,7 +235,7 @@ Each is another index to deploy and prove; Founder chose the smaller set on
 
 ## US-008: Admin Views Organization Reports
 
-**As:** School director
+**As:** Building administrator
 **I want to:** See summary metrics for the org
 **So that:** I understand access patterns
 
@@ -244,7 +253,7 @@ Each is another index to deploy and prove; Founder chose the smaller set on
 
 ## US-009: Multi-Org Admin Pattern
 
-**As:** Manager of multiple buildings/schools
+**As:** Manager of several buildings or complexes
 **I want to:** Switch between orgs I manage
 **So that:** I can see data and make changes in each org
 

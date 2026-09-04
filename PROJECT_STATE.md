@@ -2,12 +2,117 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-09-03
+**Last updated:** 2026-09-04
 
-**Session closed 2026-09-03. Three units closed in one day, each published and
-driven by a person: a permit is used once and says so, one burned by mistake
-comes back, and there is now a history of the doors that the neighbour cannot
-read.**
+**Session open 2026-09-04. The document that says who we sell to has been
+rewritten for the market the Founder chose four days ago. It now says, in
+writing, that Zeker has no evidence for that market at all — and two domain
+experts, asked separately, named the same gap in the product before any customer
+did.**
+
+---
+
+# Session 2026-09-04
+
+## Objective
+
+Rewrite `docs/product/brief.md` for the segment Decision 010 chose on 2026-08-31.
+The brief still argued schools and daycares. A decision that supersedes a document
+does not change the document, and for four days it did not.
+
+## Completed
+
+**The brief is rewritten**, and it is a different kind of document than it was.
+Every claim in it is labelled **fact** (observed in the repository or the running
+product), **consultant judgement** (field knowledge from a domain role — informed
+opinion, not evidence) or **assumption** (believed, untested). There is no fourth
+label, because there is no customer evidence to label.
+
+**Two domain consultations were run, separately, and neither role was shown the
+other's answer:**
+
+* **Residential Property Administration Consultant** — the conjunto residencial
+  half. Named the decision path (administrador executes, consejo approves,
+  asamblea above a threshold), what is actually in use at the portería today
+  (the handwritten *minuta*, the intercom call, the building's WhatsApp group),
+  and the gap below.
+* **Physical Security Consultant** — the office and corporate-park half. Named
+  the visitor logbook, the retained *cédula*, the call upstairs, and what
+  "entries only, never exits" costs a facility manager.
+
+**They reached the same two conclusions independently**, which is the reason
+either is worth recording:
+
+1. **The recurring visitor is the bulk of a building's traffic and the product
+   cannot express it.** The domestic worker three days a week, the daily
+   *domicilio*, the gardener. Without recurrence the resident would issue a fresh
+   permit every visit, and will not — so the building keeps handling those people
+   the way it does today. **The product covers the occasional visitor, not the
+   core.** This is R-08 / assumption A6, raised on 2026-09-01 as a possibility and
+   now stated by two domain roles as their expectation.
+2. **The person who must operate the product at the gate does not work for the
+   customer.** The guard is usually staff of a contracted security firm, rotating,
+   with its own procedures and its own log. New — it was not among the eight
+   assumptions, and it is now A9 / R-29.
+
+**The eight assumptions exist.** They were named in the weekly review of
+2026-09-01 and written down nowhere. A1–A8 are now in the brief, each with what
+would validate it and what happens if it is false. A5 and A6 are kept identical to
+R-07 and R-08 so the trail holds. A9 and A10 were added by the consultants rather
+than renumbering the eight.
+
+**The validation plan is in the brief, decided in advance so it cannot be argued
+away later:** test A1 and A3 first; one opening question phrased so politeness
+cannot answer it; five to eight conversations; and the specific answer pattern that
+means A5 or A6 failed and Decision 010 needs the Founder again.
+
+**`requirements.md` reframed.** Every "As:" line described a school director or a
+parent picking up a child. They now name the people who actually use the product.
+**Only the actors changed — no acceptance criterion was added, removed or
+altered.**
+
+**Four things the old brief claimed that do not exist**, now recorded as not built
+rather than as scope: offline validation / installable app (PWA), the reports
+dashboard with its chart, an email to anyone when a visitor enters (Decision 007
+removed it), and a home screen of the responsable's own.
+
+## Changed
+
+* **Documents** — `docs/product/brief.md` (rewritten), `docs/product/requirements.md`
+  (actors reframed), `docs/business/risks.md` (R-29, R-30, R-31),
+  `docs/context-index.md`.
+* **No code, no data, no deployment.** Nothing shipped today; nothing could break.
+
+## Open issues
+
+* **R-29, new and untested:** the gate is staffed by somebody who does not work
+  for the buyer, and their employer can close the sale before the product is
+  evaluated.
+* **R-30, new:** the building's security contract may already own the entry log.
+* **R-31, new:** "entries only, never exits" — Decision 008 stands, but its cost
+  at the corporate end is now written next to it, and it becomes an explicit
+  question in every corporate conversation.
+* **There is still nowhere to record a customer conversation.**
+  `docs/product/customer-discovery.md` does not exist, and the brief now says it
+  is written *before* the first call, not after.
+* **`data-minimization.md` still frames its examples around a child being picked
+  up.** Security Engineer's artifact, deliberately not touched by a Product Owner
+  unit — the rules in it are right, only the examples belong to the old market,
+  and one field it describes (`purpose`) already has a known contract mismatch
+  with the code.
+* **Nothing from 2026-09-03 was closed today.** The Founder's four items (the
+  billing report, the budget alert on the billing account, `zeker.com.co`, and
+  R-23's five actions) are all untouched and all still the Founder's hands.
+
+## Next
+
+1. **The Founder's decision, raised below:** the product is built and the market
+   has never been spoken to. Whether the next unit is code or conversations is not
+   an AI role's call.
+2. `docs/product/customer-discovery.md`, written before the first call.
+3. The Founder's hands, with a deadline: the billing report, the budget alert on
+   the **billing account**, `zeker.com.co` in Cloudflare.
+4. See the "asignado, sin nombre registrado" fix in a browser.
 
 ---
 
@@ -1368,6 +1473,37 @@ works end to end on the server.
 
 Everything waiting on the Founder. One card each. Answering these is all that is
 needed — an answered card becomes a record in `docs/decisions/` and leaves this queue.
+
+### D-009 — The product is built and the market has never been spoken to 🔴 Founder-only
+
+**Raised 2026-09-04 by the brief rewrite.** Not a new fact — a fact that now has
+nowhere left to hide.
+
+**The situation.** Zeker has a working product, deployed, hand-verified, with a
+market chosen by you on 2026-08-31 and **zero conversations with anyone in it**.
+Two domain experts, asked separately today, both said the same thing before any
+customer did: the product handles the occasional visitor, and the visitor a
+building deals with most is the recurring one — the empleada three days a week,
+the daily domicilio. Decision 007 removed recurrence deliberately, for good
+reasons, when the market was schools.
+
+**What is being decided.** Where the next weeks of work go.
+
+| | What it means | What it costs | What it risks |
+|---|---|---|---|
+| **A. Talk to five to eight administrators first** | The brief already has the opening question, the sample size and what a "no" looks like. Build nothing until A5 and A6 have an answer | Your hours, not code. No infrastructure spend | You find out the product needs recurrence, having built for two weeks without it. **That is the cheap version of finding out** |
+| **B. Build recurring permits now** | Close the gap both consultants named, then go and sell | Real build time, a data-model change, and it reopens Decision 007 | **Building on speculation.** R-08 said not to do this, and it is still right. If A5 fails — residents will not use an app at all — recurrence was the wrong fix for the wrong problem |
+| **C. Finish billing first** | Decision 011 already says billing must exist before going to market | Weeks, and a price nobody has tested against a real buyer | You build a way to charge before knowing whether anyone will pay, or what for |
+
+**Recommendation (Product Owner + Customer Discovery Advisor):** **A.** It is the
+only option that can be wrong cheaply. Both B and C spend weeks defending a market
+case that currently consists of one decision of yours and ten labelled
+assumptions.
+
+**Not urgent for the product; urgent for the money.** The US$300 credit expires
+**2026-11-17**, which is the real clock on all three options.
+
+**This is yours alone.** Market and direction are Founder-held; no AI role decides it.
 
 ### ✅ D-005 — ANSWERED 2026-09-01: one free organization per person
 

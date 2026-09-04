@@ -2,7 +2,7 @@
 
 Active roles for this project and their current holders.
 
-**Last updated:** 2026-08-31
+**Last updated:** 2026-09-04
 **Status:** ✅ INITIALIZED (MVP phase)
 
 ---
@@ -36,8 +36,12 @@ These roles are held by humans and carry final decision authority. AI never simu
 - ✅ No data-fetching library — keep it simple (2026-08-27)
 
 **Pending 🟡 approvals:**
-- D-005 — how many free organizations one person may create. Not blocking
-  today; blocks launching paid plans. See `PROJECT_STATE.md`.
+- D-009 🔴 — the product is built and the market has never been spoken to. Talk
+  to administrators first, build recurring permits, or finish billing. Raised
+  2026-09-04 by the brief rewrite, after two domain consultants independently
+  named the same gap. See `PROJECT_STATE.md`.
+- ✅ D-005 — answered 2026-09-01, one free organization per person
+  (Decision 012).
 - D-006 — whether we verify that whoever registers a building actually runs it.
   Raised by the security review on 2026-08-27. Not blocking today; blocks
   opening signup to the public.
