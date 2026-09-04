@@ -1768,6 +1768,50 @@ edited away. **It was not followed, and that is the Founder's call to make.**
 
 ---
 
+### ✅ D-011 — ANSWERED 2026-09-04: payment is the proof of identity
+
+The Founder chose, over asking for a document and over approving with no
+document at all: **nobody pays the administration fee of a building they do not
+administer.** A payment made with a company card or a NIT proves identity and
+intent at once, verifies itself, and produces revenue instead of work.
+
+**It also settles the sequencing question that Decision 011 left open**: billing
+stops being "the thing after the product" and becomes a security control.
+
+**What it does not cover, and will be the next question:** a building on the free
+plan pays nothing, so it leaves no proof. Only two answers are coherent — there
+is no real free tier at market (everyone pays something), or the free tier keeps
+the manual approval built today. Not decided, and not urgent yet.
+
+### ✅ D-012 — ANSWERED 2026-09-04: start the billing machinery, quote first
+
+Before any code, the Colombian payment providers are compared with their real
+costs against the 20,000 COP ceiling, and the comparison goes to the Founder as
+a spend decision. **Not mine to adopt.**
+
+**First finding, from Wompi's own page:** on the Gateway plan Wompi charges no
+commission of its own — you pay *"la tarifa negociada con el banco para cada
+medio de pago"*. **So the price is not a published table, it is a negotiation
+with a bank**, and every rate quoted in a blog is a reference rather than a
+price. The official pricing table could not be read: the site answers 403 to
+automated requests, and the pricing block renders empty in a real browser.
+
+**The FP&A point that does not depend on any rate, and that reframes the whole
+comparison:** a per-transaction fee **does not consume the ceiling**. The ceiling
+exists for what the company pays whether or not revenue exists; a percentage of a
+sale comes out of that sale, and costs nothing when nobody pays. **Only a fixed
+monthly fee or a monthly minimum can breach it.** So the question to each
+provider is not "what is your rate" but:
+
+1. Is there a monthly fee, a monthly minimum, or a signup cost? ← the only one
+   that can break the budget
+2. Is recurring charging supported — a stored card charged each month without
+   the customer returning? Without it there is no subscription, only a manual
+   invoice every month
+3. How many days to disbursement?
+4. What does affiliation require? **If it needs a NIT and a chamber-of-commerce
+   certificate, that is exactly the identity check D-011 just chose.**
+
 ### ✅ D-006 — ANSWERED 2026-09-04: a person approves each building
 
 Open since 2026-08-27, and the oldest question in this queue. The Founder chose
