@@ -569,6 +569,164 @@ Personas.
 
 ---
 
+# TC-NOMBRE-01 — Una persona corrige su propio nombre
+
+**Qué prueba:** que un error de tipeo al registrarse deje de ser permanente. Hasta
+hoy no había ningún sitio en todo el producto para cambiar un nombre, y un interior
+cuyo responsable no tenía nombre se leía *"asignado, sin nombre registrado"* sin
+salida.
+
+**Por qué a mano:** el nombre no se guarda solo para quien lo escribe. Lo ve el
+administrador del edificio en la lista de personas, y ahí es donde importa que el
+cambio llegue de verdad.
+
+## Antes de empezar
+
+- Una sesión iniciada en el producto publicado.
+- Saber cómo se llama usted hoy en la lista de Personas de un edificio suyo.
+
+## Los pasos
+
+**A. Abrir la pantalla de inicio.**
+
+- **Pasa:** debajo del correo aparece el enlace **"Cambiar mi nombre"**.
+- **Falla:** no está. Entonces la corrección no se publicó.
+
+**B. Tocarlo.**
+
+- **Pasa:** se abre un formulario con el nombre y el apellido **ya llenos** con lo
+  que usted tiene hoy. Dice que así lo ven los administradores y que el correo no
+  se cambia ahí.
+- **Falla:** los campos salen vacíos. Eso convierte una corrección en volver a
+  escribir todo, y quien solo quería arreglar una letra pierde el apellido.
+
+**C. Borrar el nombre y guardar sin escribir nada.**
+
+- **Pasa:** el formulario se queda y señala que el nombre es obligatorio.
+- **Falla:** guarda un nombre vacío. Eso es exactamente el estado del que veníamos.
+
+**D. Cambiar el nombre por otro reconocible y guardar.**
+
+- **Pasa:** el saludo de arriba cambia **sin recargar la página**, y aparece
+  "Listo, su nombre quedó cambiado".
+- **Falla:** hay que recargar para verlo, o no cambia.
+
+**E. Entrar a Personas en un edificio suyo.**
+
+- **Pasa:** su fila muestra el nombre nuevo.
+- **Falla:** muestra el viejo. El cambio se quedó en una sola pantalla.
+
+**F. Dejarlo como estaba.** Volver a poner su nombre real, para no dejar datos de
+prueba en producción.
+
+## Qué anotar
+
+Qué nombre puso, y si el paso E lo mostró.
+
+---
+
+# TC-TEXTO-01 — Cada estado de un permiso dice lo suyo
+
+**Qué prueba:** el defecto que estaba escondido detrás de una queja de texto del
+Fundador (2026-09-03). La pantalla decía *"Este permiso ya terminó"* para
+**cualquier** estado que no fuera anulado — incluido uno que simplemente se usó y
+uno que todavía no empieza. No era una frase mal escrita: era la frase equivocada.
+
+**Por qué a mano:** la prueba automática comprueba la regla. Esta comprueba que lo
+que está publicado la tenga, y que las cuatro frases se lean distintas para una
+persona de afán.
+
+## Antes de empezar
+
+Cuatro permisos en el mismo edificio, uno por estado. Los tres primeros se arman en
+minutos; si alguno no se puede armar, se dice, no se inventa:
+
+- uno **anulado**,
+- uno **de una sola entrada, ya usado** en la portería,
+- uno **que empieza mañana**,
+- uno **vencido** (fecha final ya pasada).
+
+## Los pasos
+
+**A. Abrir el anulado.**
+
+- **Pasa:** "Este permiso está anulado. Su código ya no sirve."
+- **Falla:** cualquier otra.
+
+**B. Abrir el que ya se usó.**
+
+- **Pasa:** dice que **era para una sola entrada y ya se usó**, y ofrece hacer uno
+  nuevo si la persona tiene que volver.
+- **Falla:** dice "ya se venció" o "ya terminó". Ese es el defecto que se arregló;
+  si vuelve, no se publicó.
+
+**C. Abrir el que empieza mañana.**
+
+- **Pasa:** dice que **todavía no empieza** y que el código va a servir desde la
+  fecha de inicio.
+- **Falla:** dice que se venció. Al revés del reloj.
+
+**D. Abrir el vencido.**
+
+- **Pasa:** dice que **ya se venció** y nombra la fecha hasta la que servía.
+- **Falla:** cualquiera de las otras tres.
+
+**E. En la portería, con un permiso con horario, en un día que no le toca.**
+
+- **Pasa:** *"Este permiso no sirve en este día ni a esta hora."* — nombra el día,
+  no solo la hora.
+- **Falla:** dice solo "a esta hora". Un vigilante de afán mira el reloj y no el
+  calendario, y le dice al visitante que vuelva más tarde el mismo día.
+
+## Qué anotar
+
+Las cuatro frases, tal como salieron.
+
+---
+
+# TC-CUPO-01 — El tope de permisos del día
+
+**Qué prueba:** la última de las tres condiciones que el Fundador puso para poder
+cobrar. Nada limitaba cuántos permisos podía crear un cliente, y el permiso es el
+registro que de verdad se acumula. Ahora son **50 por día** en el plan gratis.
+
+**Lo que esta prueba NO puede hacer a mano, y hay que decirlo:** llegar a 50
+permisos a mano no es razonable, y crear 50 permisos de prueba en producción deja
+basura que después hay que borrar. **La negación en el permiso 51 la cubre la
+prueba automática**, no esta. Lo que esta prueba cubre es lo que la automática no
+puede ver: que la cuenta del día se mueva en la base de datos publicada, y que si
+alguien llega al tope lea una frase que le sirva.
+
+## Los pasos
+
+**A. Crear un permiso cualquiera.**
+
+- **Pasa:** se crea como siempre. El tope no estorba a nadie normal — ese es el
+  requisito principal.
+- **Falla:** lo niega. Revertir de inmediato.
+
+**B. Leer la organización en la base de datos** (`organizations/{id}`).
+
+- **Pasa:** tiene `permits_day` con la fecha de hoy en UTC y `permits_today` con un
+  número que subió en uno.
+- **Falla:** los campos no están, o `permits_today` no se movió. Entonces el tope
+  no cuenta nada y no existe.
+
+**C. La frase del tope, sin llegar a 50.** Se comprueba en el código, no en la
+pantalla: el mensaje `permit_limit_reached` tiene su propia frase en español
+("Ya creó todos los permisos que se pueden crear hoy... Puede seguir mañana").
+
+- **Pasa:** la prueba automática de mensajes lo confirma.
+- **Falla:** si cae en "algo salió mal, intente de nuevo", la persona reintenta
+  contra un límite que solo se abre mañana. **Así estaba el 2026-09-04 por la
+  mañana, y se arregló antes de publicar.**
+
+## Qué anotar
+
+El número que tenía `permits_today` antes y después.
+
+---
+
 # TC-AUTH-RESET-01 — Recuperar la contraseña, de punta a punta
 
 ✅ **Pasó el 2026-09-02**, a mano, por el Fundador, en un teléfono: llegó el

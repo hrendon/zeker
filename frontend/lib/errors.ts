@@ -86,6 +86,10 @@ const API_MESSAGES: Record<string, string> = {
   // when what happened is that the day's allowance is used up and tomorrow
   // works.
   invite_limit_reached: es.errors.inviteLimitReached,
+  // El tope diario de permisos, por la misma razón: sin esta línea cae en
+  // "algo salió mal, intente de nuevo", que manda a la persona a reintentar
+  // contra un límite que solo se abre mañana.
+  permit_limit_reached: es.errors.permitLimitReached,
   rate_limited: es.errors.tooManyAttempts,
   internal_server_error: es.errors.serverError,
 }

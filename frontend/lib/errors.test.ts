@@ -126,6 +126,18 @@ describe('the limits on adding people (R-02)', () => {
     expect(message).not.toBe(es.errors.tooManyAttempts)
   })
 
+  it('says the same about the day s permits, and not "algo salio mal"', () => {
+    // Sin su propia linea, permit_limit_reached cae en es.errors.unknown y la
+    // persona reintenta contra un limite que solo se abre manana.
+    const message = toSpanish(
+      new ApiError(429, { error: 'permit_limit_reached', message: 'x', request_id: 'req_1' }),
+    )
+
+    expect(message).toBe(es.errors.permitLimitReached)
+    expect(message).not.toBe(es.errors.unknown)
+    expect(message).not.toBe(es.errors.inviteLimitReached)
+  })
+
   it('keeps the plan limit and the daily limit as different sentences', () => {
     const planLimit = toSpanish(
       new ApiError(403, { error: 'quota_exceeded', message: 'x', request_id: 'req_1' }),

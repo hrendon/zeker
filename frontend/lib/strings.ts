@@ -547,6 +547,11 @@ export const es = {
     // límite del plan: aquí no hay que cambiar de plan, hay que esperar.
     inviteLimitReached:
       'Ya agregó todas las personas que se pueden agregar hoy en esta organización. Puede seguir mañana.',
+    // El tope de permisos del día. Mismo caso que el de arriba y por eso mismo
+    // tiene su propia frase: quien lo alcanza no tiene que cambiar de plan ni
+    // revisar qué hizo mal, tiene que esperar a mañana.
+    permitLimitReached:
+      'Ya creó todos los permisos que se pueden crear hoy en esta organización. Puede seguir mañana.',
     quotaExceeded:
       'Alcanzó el límite de su plan. Mejore su plan para agregar más.',
     conflict: 'Esa acción choca con algo que ya existe.',
