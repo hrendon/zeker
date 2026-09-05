@@ -1,6 +1,6 @@
 # Decision 020: The surname stops being required
 
-**Date:** 2026-09-05
+**Date:** 2026-09-04
 **Status:** ✅ Approved — built
 **Deciders:** Founder + Security Engineer / CISO
 **Extends:** the data minimization rules (Decisions 005 and 007)

@@ -86,7 +86,7 @@ beforeEach(() => {
 })
 
 describe('POST /orgs/:orgId/members', () => {
-  // 2026-09-05. The surname stopped being required: a name beside an apartment
+  // 2026-09-04. The surname stopped being required: a name beside an apartment
   // number is the half worth something to somebody who should not have it.
   it('adds a person with no surname at all', async () => {
     accountDoesNotExist()

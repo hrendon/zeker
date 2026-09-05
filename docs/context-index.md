@@ -121,4 +121,4 @@ looks for them:
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-04

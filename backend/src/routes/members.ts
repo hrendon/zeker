@@ -42,7 +42,7 @@ const AddMemberSchema = z
     email: z.string().trim().toLowerCase().email().max(254),
     first_name: NameSchema,
     /**
-     * Optional since 2026-09-05. The product stores as little about a person as
+     * Optional since 2026-09-04. The product stores as little about a person as
      * it can, and a surname next to an apartment number is the half of the pair
      * that is worth something to somebody who should not have it. What the
      * administrator needs to tell two residents apart is a name, not a legal

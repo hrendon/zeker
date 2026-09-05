@@ -52,7 +52,7 @@ export function checkName(
 }
 
 /**
- * Un apellido, que desde el 2026-09-05 puede no existir (Decisión 020).
+ * Un apellido, que desde el 2026-09-04 puede no existir (Decisión 020).
  *
  * En blanco está bien; lo único que se revisa es que no sea más largo de lo
  * que el servidor acepta. Quien no quiera dejar su apellido guardado no tiene

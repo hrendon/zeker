@@ -289,7 +289,7 @@ describe('every /auth route requires a verified token', () => {
 // ---------------------------------------------------------------------------
 
 describe('PUT /auth/me', () => {
-  // 2026-09-05. Somebody added without a surname must be able to save a
+  // 2026-09-04. Somebody added without a surname must be able to save a
   // correction to their first name without inventing one, and somebody who
   // does not want their surname stored must be able to take it away.
   it('saves a first name with no surname, and clears one that was there', async () => {

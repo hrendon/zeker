@@ -51,7 +51,7 @@ export interface Org {
   counts: { locations: number; interiors: number; members?: number }
   city: string | null
   country: string | null
-  /** Decision 019. `null` for every building created before 2026-09-05. */
+  /** Decision 019. `null` for every building created before 2026-09-04. */
   tax_id: string | null
   /** IANA timezone (Decision 016). A permit's schedule is read in it. */
   timezone: string

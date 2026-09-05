@@ -190,7 +190,7 @@ export interface OrgDocument {
   permits_today?: number
   /**
    * The building's NIT — the tax number of the propiedad horizontal itself
-   * (Decision 019). Absent on every organization created before 2026-09-05.
+   * (Decision 019). Absent on every organization created before 2026-09-04.
    *
    * **It is the building's number, never a person's.** For a natural person in
    * Colombia the NIT *is* their cédula, and a cédula is on the never-store list
@@ -250,7 +250,7 @@ export interface OrgResponse {
   country: string | null
   /** Always present in a response, even where the stored document has none. */
   timezone: string
-  /** Decision 019. `null` for every organization created before 2026-09-05. */
+  /** Decision 019. `null` for every organization created before 2026-09-04. */
   tax_id: string | null
   /**
    * Decision 018. `true` for everything created before 2026-09-04, and for

@@ -1,6 +1,6 @@
 # Decision 019: A building registers with its NIT
 
-**Date:** 2026-09-05
+**Date:** 2026-09-04
 **Status:** ✅ Approved — built
 **Deciders:** Founder (D-013) + Residential Property Administration Consultant + Security Engineer / CISO
 **Answers:** D-013. **Amends:** Decision 018, which left the approval with nothing to check
@@ -74,7 +74,7 @@ otherwise would be worse than naming it.
 
 ## Consequences
 
-* `orgs/{orgId}` gains `tax_id`. **Absent means created before 2026-09-05** —
+* `orgs/{orgId}` gains `tax_id`. **Absent means created before 2026-09-04** —
   the Founder's own buildings are in that state and keep working, exactly as
   Decision 018's approval flag did.
 * `POST /orgs` refuses a building without it, and writes nothing when it does.

@@ -2,7 +2,19 @@
 
 Single source of truth for current progress. Updated at every checkpoint.
 
-**Last updated:** 2026-09-04
+**Last updated:** 2026-09-04 (cierre de la sesión de la noche)
+
+**Sesión cerrada 2026-09-04 (noche). Se publicó lo que llevaba un día esperando y
+se condujo a mano contra producción: tres pruebas, todas pasan. Después el
+Fundador señaló una contradicción real entre dos decisiones suyas del mismo día y
+quedó resuelta: el pago no reemplaza la aprobación, le agrega un dato que
+comparar — y el plan gratis, que no deja pago, se queda dependiendo entera y
+únicamente de la aprobación a mano. Cinco roles contestaron tres preguntas del
+Fundador y dos de sus afirmaciones se descartaron por contradecir al producto.
+Se construyó el NIT del edificio y el apellido opcional. Eso último está
+commiteado y SIN PUBLICAR, igual que ayer: lo primero de mañana es publicar.**
+
+---
 
 **Sesión abierta 2026-09-04 (noche). Lo que estaba hecho y sin publicar ya está
 publicado y comprobado a mano contra producción: el tope de permisos del día, la
@@ -26,6 +38,141 @@ asked separately, named the same gap; checking their claim against the code
 showed it was half wrong, and the half that was real — a permit that cannot say
 "only these days and these hours" — was built the same day on the Founder's
 instruction.**
+
+---
+
+## Session close — 2026-09-04 (noche)
+
+### Objetivo
+
+Publicar lo que la sesión anterior dejó hecho y sin publicar, comprobarlo a mano,
+y seguir con la forma de contacto de un administrador sin aprobar. **El objetivo
+cambió dos veces, las dos por preguntas del Fundador**, y las dos veces la
+pregunta era mejor que el plan.
+
+### Completado
+
+* **Publicado y comprobado a mano.** `zeker-api-00012-m9b` y `zeker-web-00012-gpx`.
+  TC-NOMBRE-01, TC-TEXTO-01 y TC-CUPO-01, corridos contra producción.
+* **Un defecto encontrado antes de publicar**, escribiendo las pruebas: el tope
+  de permisos del día no tenía frase en español y habría dicho "algo salió mal".
+* **La contradicción del Fundador, resuelta.** Ver abajo.
+* **Cinco roles consultados** sobre tres preguntas suyas, cada uno por separado.
+* **Decisión 019 — el NIT del edificio.** Construida, probada, **sin publicar**.
+* **Decisión 020 — el apellido opcional.** Construida, probada, **sin publicar**.
+
+### Cambios
+
+* **Código** — `POST /orgs` exige el NIT; `POST /orgs/{orgId}/members` y
+  `PUT /auth/me` aceptan a alguien sin apellido; `lib/orgs.ts` normaliza el NIT;
+  el diccionario de mensajes de la aplicación mapea el tope de permisos; las
+  pantallas de crear organización, personas, crear cuenta e inicio.
+* **Datos** — `orgs` gana `tax_id`. **Ausente significa creada antes de hoy**,
+  la misma convención de la Decisión 018.
+* **Operación** — `npm run aprobar` muestra el NIT.
+* **Documentación** — decisiones 019 y 020; `api.md`; `data-model.md`;
+  `data-minimization.md` (dos reglas nuevas); `manual-test-cases.md` (cinco casos
+  nuevos y uno corregido); `context-index.md`; el registro de roles.
+
+### Decisiones
+
+Aceptadas por el Fundador: **D-013 = el NIT** (Decisión 019), **el apellido
+opcional** (Decisión 020), y **dejar el saludo quieto** hasta hablar con
+administradores. **Ratificada implícitamente:** la lectura de que el pago
+complementa la aprobación y no la reemplaza.
+
+**No decididas, y no confundir con decididas:** el abogado (D-014), qué trae un
+plan pagado, el precio, el proveedor de pagos.
+
+### Verificación
+
+* **299 pruebas del servidor** (eran 293), **115 de la aplicación** (eran 113),
+  tipos y compilación de producción limpios.
+* **A mano contra producción:** las tres pruebas de la primera unidad, paso por
+  paso, con el Fundador dentro de su propia sesión.
+* **Leído en vivo, no supuesto:** `CORS_ORIGINS` en la revisión corriendo, la
+  salud de los dos servicios, y el contador de permisos directo en la base.
+* **Sin verificar:** todo lo construido después de `zeker-web-00012-gpx` — el
+  NIT y el apellido opcional. **TC-019-01 y TC-020-01 están escritos y sin
+  correr.**
+
+### Problemas
+
+* **Otra vez queda trabajo commiteado y sin publicar.** Segunda sesión seguida.
+  **Lo primero de mañana es `bash scripts/desplegar.sh`, antes de construir nada.**
+* **El NIT es una segunda pared delante del mercado**, encima de la aprobación.
+  Quien no tenga el número no crea el edificio. Deshacerlo es una hora.
+* **La trampa del NIT:** para una persona natural el NIT es la cédula. Solo lo
+  separa el texto de la pantalla.
+* **El documento de amenazas no existe**, y hoy el Fundador hizo justo las dos
+  preguntas que contesta.
+* **El rol de privacidad y cumplimiento sigue inactivo. Cuarta sesión.** La
+  política de privacidad es obligatoria por ley antes del primer cliente real.
+* **La comprobación de la limpieza del almacén de imágenes no se pudo hacer**:
+  la regla se aplicó el mismo día. Es para mañana.
+* **Datos de prueba en producción:** el permiso "Prueba Programado" (anulado) y
+  el nombre "Prueba Nombre Prueba Apellido" en la cuenta del Fundador. **El
+  Fundador no dio su nombre real**, así que sigue así.
+* **La revisión semanal se debe otra vez.** La Decisión 013 dice que corre cada
+  vez que se cierra una unidad; hoy se cerraron dos después de la revisión de la
+  tarde. **Queda registrado como saltada, no como olvidada** — es la segunda vez
+  seguida que se anota lo mismo, y un patrón de saltos es un hallazgo, no un
+  descuido.
+* Sin tocar: el informe de facturación, la alerta de presupuesto — **cuyo plazo,
+  puesto por el comité de gasto, es mañana 2026-09-05** —, `zeker.com.co`, y las
+  cinco acciones de seguridad de esta máquina.
+
+### Chequeo de contradicciones
+
+* **Resuelta:** la Decisión 018 decía que un pago no prueba nada y D-011, una
+  hora después, que el pago es la prueba de identidad. Hablan de objetos
+  distintos; queda escrito que se complementan.
+* **Resuelta:** el mensaje del commit del 2026-09-04 afirmaba que la frase "este
+  permiso todavía no empieza" ya se alcanzaba desde la pantalla. **Es falso** y
+  quedó corregido en el caso de prueba.
+* **Corregida:** las decisiones 019 y 020 se escribieron fechadas 2026-09-05 —
+  la fecha en Londres, no la de aquí. Arreglado en quince archivos.
+* **Registrada, sin resolver:** `data-minimization.md` sigue con ejemplos de
+  colegio. Es de Seguridad.
+* **Registrada, sin resolver:** `delivery-framework.md` sigue exigiendo pull
+  requests y todo commit sigue yendo directo a `master`.
+
+### Chequeo de continuidad
+
+**Una sesión nueva puede continuar con `PROJECT_STATE.md`, `docs/` y el historial
+de cambios.** Lo de hoy vive en las decisiones 019 y 020, en las tarjetas D-013,
+D-014 y D-015, en `manual-test-cases.md`, en `data-minimization.md` y en el
+registro de roles. **Las tres cosas que mañana no debe volver a descubrir:** que
+hay trabajo sin publicar, que el NIT puede estar recibiendo cédulas, y que la
+alerta de presupuesto vence mañana.
+
+### Lo que vale la pena llevarse
+
+**El Fundador encontró una contradicción que ningún rol había visto**, entre dos
+decisiones suyas tomadas con una hora de diferencia. Y su pregunta *"¿cómo usaría
+un desconocido a Zeker para averiguar dónde vive alguien?"* mostró que el riesgo
+más viejo del registro está mal descrito: **Zeker no es un buscador; el peligro
+es que alguien use el producto como disfraz para que los residentes le entreguen
+sus propios datos, y el historial de entradas vale más que la dirección.** La
+regla general: **las preguntas del Fundador sobre su propio producto valen más
+que la mitad de los insumos de rol**, y se verifican contra el código igual que
+todo lo demás.
+
+### Siguiente
+
+1. **Publicar.** `bash scripts/desplegar.sh`, antes de cualquier cosa.
+2. **Correr TC-019-01 y TC-020-01**, y anotar cuánto se demora el Fundador en el
+   paso del NIT: es el costo de mercado de la Decisión 019.
+3. **La alerta de presupuesto vence hoy** (2026-09-05, puesta por el comité de
+   gasto el 2026-09-01), con el informe de facturación. Manos del Fundador.
+4. **Comprobar que la limpieza del almacén de imágenes borró de verdad**, contra
+   su línea escrita: cerca de 150 MB y seis imágenes pasa; 300 MB y catorce falla.
+5. **El documento de amenazas**, corto y en español. Sirve además para el abogado.
+6. **D-014 — el abogado.** Y con él, la política de privacidad.
+7. **D-008 — cómo nos escribe un administrador sin aprobar.** Quedó sin empezar
+   hoy; sigue siendo prerrequisito de que la Decisión 018 sea humana.
+8. **Cinco a ocho conversaciones con administradores.** Dieciocho días, cero
+   conversaciones. Nada de lo anterior sustituye esto.
 
 ---
 

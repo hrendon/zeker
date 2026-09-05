@@ -36,7 +36,7 @@ describe('form checks', () => {
     expect(checkName('a'.repeat(61), 'last')).toBe(es.validation.nameTooLong)
   })
 
-  // 2026-09-05. El apellido dejó de ser obligatorio: un apellido al lado de un
+  // 2026-09-04. El apellido dejó de ser obligatorio: un apellido al lado de un
   // número de apartamento es la mitad que le sirve a quien no debería tenerla.
   it('acepta un apellido en blanco y sigue midiendo el largo', () => {
     expect(checkOptionalName('')).toBeUndefined()

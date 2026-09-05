@@ -108,7 +108,7 @@ const ProfileBodySchema = z
   .object({
     first_name: NameSchema,
     /**
-     * Optional since 2026-09-05, and it must stay optional here for a reason
+     * Optional since 2026-09-04, and it must stay optional here for a reason
      * that is not symmetry: a person who was added without a surname would
      * otherwise be unable to save a correction to their own first name without
      * inventing one.

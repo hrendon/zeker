@@ -766,7 +766,7 @@ se devuelve.
 **D. Abrir un edificio creado antes de hoy** (`compartir`).
 
 - **Pasa:** funciona igual que siempre. En la herramienta de aprobación su NIT
-  se lee como "creada antes del 2026-09-05", no como un error.
+  se lee como "creada antes del 2026-09-04", no como un error.
 - **Falla:** lo rompe, o lo marca como incompleto. Eso sería castigar a los
   edificios que existían por una regla que no existía cuando se crearon.
 
@@ -884,7 +884,7 @@ funciona.
 | Paso | Resultado |
 |---|---|
 | A. Crear un permiso normal | ✅ se creó sin estorbo |
-| B. La cuenta del día en la base | ✅ antes: los dos campos **no existían**. Después: `permits_day: "2026-09-05"`, `permits_today: 1` |
+| B. La cuenta del día en la base | ✅ antes: los dos campos **no existían**. Después: `permits_day: "2026-09-04"`, `permits_today: 1` |
 | C. La frase del tope | ✅ tiene la suya desde hoy — y no la tenía cuando se escribió este caso |
 
 **Hallazgo, y hay que escribirlo antes de que alguien lo dé por hecho:** el día
