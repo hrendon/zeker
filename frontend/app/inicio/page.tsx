@@ -6,7 +6,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { Field, FullPageMessage, Notice, SubmitButton, TextLink } from '@/components/ui'
 import { toSpanish } from '@/lib/errors'
 import { authApi, orgsApi, type Org } from '@/lib/api'
-import { checkRequiredText } from '@/lib/validate'
+import { checkOptionalName, checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
 
 /**
@@ -84,7 +84,7 @@ export default function HomePage() {
     event.preventDefault()
 
     const first = checkRequiredText(firstName, es.validation.firstNameRequired, 100)
-    const last = checkRequiredText(lastName, es.validation.lastNameRequired, 100)
+    const last = checkOptionalName(lastName)
     setNameErrors({ first, last })
     if (first || last) return
 

@@ -86,6 +86,24 @@ beforeEach(() => {
 })
 
 describe('POST /orgs/:orgId/members', () => {
+  // 2026-09-05. The surname stopped being required: a name beside an apartment
+  // number is the half worth something to somebody who should not have it.
+  it('adds a person with no surname at all', async () => {
+    accountDoesNotExist()
+    createUser.mockResolvedValueOnce({ uid: RESIDENT })
+    signedInAs(ADMIN)
+
+    const response = await request(app)
+      .post(`/orgs/${ORG}/members`)
+      .set('Authorization', 'Bearer token')
+      .send({ email: 'maria@example.com', first_name: 'María', role: 'responsable' })
+
+    expect(response.status).toBe(201)
+    // Absent, not an empty string: the two read the same on a screen and only
+    // one of them is true.
+    expect(store.docs.get(`users/${RESIDENT}`)).not.toHaveProperty('last_name')
+  })
+
   it('creates the account when the person has none, and makes them a member', async () => {
     accountDoesNotExist()
     createUser.mockResolvedValueOnce({ uid: RESIDENT })

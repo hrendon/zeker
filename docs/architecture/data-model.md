@@ -96,6 +96,12 @@ Organization (tenant) data.
 >   consequence is bounded and deliberate: an old organization gets a slightly
 >   larger allowance than a new one, never a smaller one.
 >
+> - **Added (Decision 019):** `tax_id` — the building's NIT, digits only.
+>   Required when creating; **absent means created before 2026-09-05**, the same
+>   convention `approved` uses. It is the building's number, **never a person's**:
+>   for a natural person in Colombia the NIT is their cédula, which is on the
+>   never-store list, and nothing in the code can tell the two apart. The screen's
+>   wording is the only guard, and that is written down in the decision.
 > - **Added (Decision 018):** `approved`, `approved_at`, `approved_by`. A new
 >   organization is written with `approved: false` and cannot add a member or
 >   issue a permit until a person flips it. **Absent means approved** — every

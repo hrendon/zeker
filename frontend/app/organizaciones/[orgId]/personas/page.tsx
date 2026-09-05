@@ -7,7 +7,7 @@ import { OrgGate, OrgHeader, isAdmin, useOrgId } from '@/components/OrgShell'
 import { ConfirmDialog, Field, ListRow, Notice, SubmitButton } from '@/components/ui'
 import { ApiError, toSpanish } from '@/lib/errors'
 import { membersApi, type AssignableRole, type Member, type Org } from '@/lib/api'
-import { checkEmail, checkRequiredText } from '@/lib/validate'
+import { checkEmail, checkOptionalName, checkRequiredText } from '@/lib/validate'
 import { es } from '@/lib/strings'
 import { canResendInvite, invitePending, memberLabel } from '@/lib/members'
 
@@ -70,7 +70,7 @@ function MembersScreen({ org }: { org: Org }) {
 
     const errors = {
       firstName: checkRequiredText(firstName, es.validation.firstNameRequired, 100),
-      lastName: checkRequiredText(lastName, es.validation.lastNameRequired, 100),
+      lastName: checkOptionalName(lastName),
       email: checkEmail(email),
     }
     setFieldErrors(errors)

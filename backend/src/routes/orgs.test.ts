@@ -78,7 +78,13 @@ describe('POST /orgs', () => {
     const res = await request(app)
       .post('/orgs')
       .set('Authorization', 'Bearer good')
-      .send({ name: 'Colegio Bilingüe X', type: 'school', city: 'Bogotá', country: 'co' })
+      .send({
+        name: 'Colegio Bilingüe X',
+        type: 'school',
+        city: 'Bogotá',
+        country: 'co',
+        tax_id: '901.234.567-8',
+      })
 
     expect(res.status).toBe(201)
     expect(res.body).toMatchObject({
@@ -86,6 +92,9 @@ describe('POST /orgs', () => {
       type: 'school',
       city: 'Bogotá',
       country: 'CO',
+      // Decision 019. Stored as digits: one building is one number, not three
+      // spellings of it.
+      tax_id: '9012345678',
       created_by: ALICE,
       role: 'admin',
     })
@@ -103,7 +112,7 @@ describe('POST /orgs', () => {
     const res = await request(app)
       .post('/orgs')
       .set('Authorization', 'Bearer good')
-      .send({ name: 'Unidad Residencial Y', type: 'residence' })
+      .send({ name: 'Unidad Residencial Y', type: 'residence', tax_id: '901234567' })
 
     expect(res.body.plan).toBe('free')
     expect(res.body.limits).toEqual({
@@ -119,6 +128,64 @@ describe('POST /orgs', () => {
       max_permits_per_day: 50,
     })
     expect(res.body.counts).toEqual({ locations: 0, interiors: 0 })
+  })
+
+  // Decision 019 — the building's NIT.
+  it('refuses to create a building with no NIT', async () => {
+    signedInAs(ALICE)
+
+    const res = await request(app)
+      .post('/orgs')
+      .set('Authorization', 'Bearer good')
+      .send({ name: 'Conjunto Sin NIT', type: 'residence' })
+
+    expect(res.status).toBe(400)
+    // Nothing was written: a refused creation must not leave an organization
+    // that nobody can see and nobody approved.
+    expect(store.writes).toHaveLength(0)
+  })
+
+  it('stores the same building as one number however it was typed', async () => {
+    for (const typed of ['901.234.567-8', '901234567-8', '901 234 567 8']) {
+      signedInAs(ALICE)
+      const res = await request(app)
+        .post('/orgs')
+        .set('Authorization', 'Bearer good')
+        .send({ name: 'Conjunto X', type: 'residence', tax_id: typed })
+
+      expect(res.status).toBe(201)
+      expect(res.body.tax_id).toBe('9012345678')
+    }
+  })
+
+  it('refuses something that is not a NIT', async () => {
+    for (const typed of ['', 'no tengo', '123', '9012345678901234']) {
+      signedInAs(ALICE)
+      const res = await request(app)
+        .post('/orgs')
+        .set('Authorization', 'Bearer good')
+        .send({ name: 'Conjunto X', type: 'residence', tax_id: typed })
+
+      expect(res.status).toBe(400)
+    }
+  })
+
+  it('reads an organization created before the NIT was asked for', async () => {
+    // The Founder's own buildings are in this state, and they must keep working.
+    signedInAs(ALICE)
+    const created = await request(app)
+      .post('/orgs')
+      .set('Authorization', 'Bearer good')
+      .send({ name: 'Conjunto Viejo', type: 'residence', tax_id: '901234567' })
+
+    const orgId = created.body.id as string
+    delete store.docs.get(`orgs/${orgId}`)!.tax_id
+
+    signedInAs(ALICE)
+    const res = await request(app).get(`/orgs/${orgId}`).set('Authorization', 'Bearer good')
+
+    expect(res.status).toBe(200)
+    expect(res.body.tax_id).toBeNull()
   })
 
   it('never stores a street address', async () => {

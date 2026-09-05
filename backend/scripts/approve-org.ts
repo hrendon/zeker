@@ -79,6 +79,10 @@ async function pending(): Promise<void> {
     console.log(`  ${org.id}`)
     console.log(`    Nombre:     ${org.name ?? '—'}`)
     console.log(`    Tipo:       ${org.type ?? '—'}   Ciudad: ${org.city ?? '—'}`)
+    // Decision 019. The number is what the Founder checks against the building
+    // the person says they administer. "—" means the organization was created
+    // before this was asked for, not that somebody skipped it.
+    console.log(`    NIT:        ${org.tax_id ?? '—  (creada antes del 2026-09-05)'}`)
     console.log(`    Creado:     ${when(org.created_at)}  por ${email}`)
     console.log(
       `    Armado:     ${org.counts?.locations ?? 0} sede(s), ${org.counts?.interiors ?? 0} interior(es)`,

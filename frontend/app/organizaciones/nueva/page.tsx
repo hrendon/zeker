@@ -32,9 +32,11 @@ export default function NewOrgPage() {
   const [name, setName] = useState('')
   const [type, setType] = useState<OrgType>('residence')
   const [description, setDescription] = useState('')
+  const [taxId, setTaxId] = useState('')
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('')
   const [nameError, setNameError] = useState<string | undefined>()
+  const [taxIdError, setTaxIdError] = useState<string | undefined>()
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -47,12 +49,19 @@ export default function NewOrgPage() {
 
     const error = checkRequiredText(name, es.validation.orgNameRequired, 120)
     setNameError(error)
-    if (error) return
+    // Decisión 019. Se revisa la forma, no el dígito de verificación: un
+    // algoritmo mal recordado rechazaría a un edificio real, que cuesta más
+    // que el error de tipeo que atraparía.
+    const digits = taxId.replace(/[^0-9]/g, '')
+    const taxError =
+      digits.length >= 8 && digits.length <= 11 ? undefined : es.orgs.taxIdInvalid
+    setTaxIdError(taxError)
+    if (error || taxError) return
 
     setBusy(true)
     setFormError(null)
     try {
-      const org = await orgsApi.create({ name, type, description, city, country })
+      const org = await orgsApi.create({ name, type, tax_id: taxId, description, city, country })
       router.replace(`/organizaciones/${org.id}/sedes`)
     } catch (cause) {
       setFormError(toSpanish(cause))
@@ -100,6 +109,17 @@ export default function NewOrgPage() {
             ))}
           </select>
         </div>
+
+        <Field
+          label={es.orgs.taxId}
+          placeholder={es.orgs.taxIdPlaceholder}
+          hint={es.orgs.taxIdHint}
+          inputMode="numeric"
+          value={taxId}
+          disabled={busy}
+          error={taxIdError}
+          onChange={(event) => setTaxId(event.target.value)}
+        />
 
         <Field
           label={es.orgs.description}

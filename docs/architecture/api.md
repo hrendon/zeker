@@ -199,12 +199,17 @@ organization can never exist that nobody can reach.
   "description": "Conjunto residencial, dos torres",
   "city": "Bogotá",
   "country": "CO",
+  "tax_id": "9012345678",
   "timezone": "America/Bogota"
 }
 ```
 
 `type` is one of `school`, `residence`, `office`, `other`. `country` is a
 two-letter code. `description`, `city`, `country` and `timezone` are optional.
+**`tax_id` is required (Decision 019)** — the building's NIT, sent however the
+person typed it and stored as digits only, 8 to 11 of them. Its check digit is
+not verified, deliberately. In a response it is `null` for any organization
+created before 2026-09-05.
 `timezone` is an IANA name (Decision 016), defaults to `America/Bogota`, and is
 validated against the runtime rather than a list — an unknown name is refused.
 **It is what a permit's weekly schedule is read in**, so on an organization that

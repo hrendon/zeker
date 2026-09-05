@@ -17,7 +17,7 @@ export const es = {
     email: 'Correo electrónico',
     password: 'Contraseña',
     firstName: 'Nombre',
-    lastName: 'Apellido',
+    lastName: 'Apellido (opcional)',
     back: 'Volver',
     signOut: 'Cerrar sesión',
     signingOut: 'Cerrando sesión…',
@@ -132,6 +132,14 @@ export const es = {
     city: 'Ciudad (opcional)',
     country: 'País (opcional)',
     countryHint: 'Dos letras. Por ejemplo: CO',
+    // Decisión 019. La advertencia de que es el NIT del conjunto y no el suyo
+    // no es un detalle de redacción: para una persona natural el NIT ES la
+    // cédula, y una cédula es de lo que este producto no guarda nunca.
+    taxId: 'NIT del conjunto o del edificio',
+    taxIdPlaceholder: '901.234.567-8',
+    taxIdHint:
+      'El NIT de la copropiedad, no el suyo. Es el número que aparece en la cuenta de la administración. Sirve para confirmar que el edificio existe antes de activarlo.',
+    taxIdInvalid: 'Ese NIT no parece completo. Son entre 8 y 11 números.',
     noAddressNote:
       'No pedimos la dirección. La ciudad y el país son suficientes, y guardar menos datos protege a los residentes.',
     typeSchool: 'Colegio',
@@ -243,7 +251,7 @@ export const es = {
     addFirst: 'Agregar la primera persona',
     adding: 'Agregando…',
     firstName: 'Nombre',
-    lastName: 'Apellido',
+    lastName: 'Apellido (opcional)',
     email: 'Correo electrónico',
     emailHint:
       'Le enviamos un correo para que cree su propia contraseña. Nosotros nunca vemos ni guardamos esa contraseña.',

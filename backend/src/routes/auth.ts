@@ -107,7 +107,17 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
 const ProfileBodySchema = z
   .object({
     first_name: NameSchema,
-    last_name: NameSchema,
+    /**
+     * Optional since 2026-09-05, and it must stay optional here for a reason
+     * that is not symmetry: a person who was added without a surname would
+     * otherwise be unable to save a correction to their own first name without
+     * inventing one.
+     *
+     * An empty string is accepted and clears it. That is deliberate — somebody
+     * who does not want their surname stored must be able to remove it, or the
+     * product only ever collects more.
+     */
+    last_name: z.string().trim().max(100).optional(),
   })
   .strict()
 
@@ -159,7 +169,7 @@ authRouter.put('/me', requireAuth, async (req, res, next) => {
         id: user.uid,
         deleted: false,
         first_name: parsed.data.first_name,
-        last_name: parsed.data.last_name,
+        last_name: parsed.data.last_name ?? '',
       },
       { merge: true },
     )

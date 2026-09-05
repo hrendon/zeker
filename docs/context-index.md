@@ -57,6 +57,8 @@ Map of authoritative sources for project knowledge.
 | — 016 | `decisions/016-days-and-hours-a-permit-may-be-used.md` | A permit may carry days of the week and a range of hours, read in the building's own clock; the organization gains a timezone | Founder + Product Owner + Architect |
 | — 017 | `decisions/017-how-the-domain-attaches-to-the-product.md` | The domain attaches by Cloud Run domain mapping, not a load balancer that would cost 3.6×–5× the whole ceiling; and the verification step nobody had written down | Architect + FP&A |
 | — 018 | `decisions/018-a-person-approves-each-new-building.md` | A person approves each new building before anybody else's data can enter it. Closes D-006 and R-01, open since 2026-08-27 | Founder + Security |
+| — 019 | `decisions/019-the-buildings-nit.md` | Un edificio se registra con el NIT de la copropiedad. Responde D-013 y le da a la aprobación algo que comparar. Trae escrita la trampa: para una persona natural el NIT es la cédula | Fundador + Consultor de PH + Seguridad |
+| — 020 | `decisions/020-the-surname-is-optional.md` | El apellido deja de ser obligatorio. Baja el daño de una fuga y **no** cambia R-01, y esa diferencia está escrita | Fundador + Seguridad |
 | **Roles** | | | |
 | Active roles | `roles/role-registry.md` | Which roles are active, who holds each | All |
 | **Lifecycle** | | | |
@@ -119,4 +121,4 @@ looks for them:
 
 `architecture/design.md` was written on 2026-08-26 and is no longer missing.
 
-**Last updated:** 2026-09-04 (segunda vez)
+**Last updated:** 2026-09-05

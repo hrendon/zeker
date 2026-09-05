@@ -161,9 +161,31 @@ control that holds.
 
 **Identity Documents:**
 - ❌ Cédula number (Colombian ID)
+  - **The one place this rule can be broken by accident (Decision 019).** A
+    building registers with its NIT, and **for a natural person in Colombia the
+    NIT *is* their cédula.** Nothing in the code can tell one from the other.
+    The only guard is the wording on the screen — *"El NIT de la copropiedad, no
+    el suyo"* — so if the field turns out to be collecting cédulas, the field
+    goes, not the rule.
+  - **And a document shown is a document stored.** If somebody sends proof by
+    WhatsApp or email "just to show it", the file is on Meta's or Google's
+    servers and on the receiving phone, with no retention and no deletion. Any
+    future verification that involves looking at a document must be synchronous
+    and leave nothing behind: what may be kept is the trace of the approval —
+    who approved, when, what they say they saw — never the document.
 - ❌ Passport number
 - ❌ Driver's license
 - ❌ Any government ID full details
+
+**Names, and how much of one:**
+- ✅ A first name is enough, everywhere (Decision 020). A surname is optional
+  when adding a person, when creating an account and when correcting your own
+  name, and an existing one can be removed.
+  - What that buys: if the list leaks, *"302 = María"* is worth much less
+    outside the building than *"302 = María García"*.
+  - What it does not buy, and must not be claimed: **the email is required and
+    sits right beside the name**, and inside the building the apartment number
+    identifies the household regardless of how much name is stored.
 
 **Biometric Data:**
 - ❌ Fingerprints

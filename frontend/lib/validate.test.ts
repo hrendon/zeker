@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { checkEmail, checkName, checkNewPassword, checkPasswordPresent } from './validate'
+import {
+  checkEmail,
+  checkName,
+  checkNewPassword,
+  checkOptionalName,
+  checkPasswordPresent,
+} from './validate'
 import { es } from './strings'
 
 describe('form checks', () => {
@@ -28,5 +34,14 @@ describe('form checks', () => {
     expect(checkName('   ', 'first')).toBe(es.validation.firstNameRequired)
     expect(checkName('   ', 'last')).toBe(es.validation.lastNameRequired)
     expect(checkName('a'.repeat(61), 'last')).toBe(es.validation.nameTooLong)
+  })
+
+  // 2026-09-05. El apellido dejó de ser obligatorio: un apellido al lado de un
+  // número de apartamento es la mitad que le sirve a quien no debería tenerla.
+  it('acepta un apellido en blanco y sigue midiendo el largo', () => {
+    expect(checkOptionalName('')).toBeUndefined()
+    expect(checkOptionalName('   ')).toBeUndefined()
+    expect(checkOptionalName('García')).toBeUndefined()
+    expect(checkOptionalName('x'.repeat(101))).toBe(es.validation.nameTooLong)
   })
 })

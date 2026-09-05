@@ -289,6 +289,26 @@ describe('every /auth route requires a verified token', () => {
 // ---------------------------------------------------------------------------
 
 describe('PUT /auth/me', () => {
+  // 2026-09-05. Somebody added without a surname must be able to save a
+  // correction to their first name without inventing one, and somebody who
+  // does not want their surname stored must be able to take it away.
+  it('saves a first name with no surname, and clears one that was there', async () => {
+    store.set(UID, {
+      exists: true,
+      data: { id: UID, deleted: false, first_name: 'Maria', last_name: 'Garcia' },
+    })
+    signedIn()
+
+    const response = await request(app)
+      .put('/auth/me')
+      .set('Authorization', 'Bearer token')
+      .send({ first_name: 'María' })
+
+    expect(response.status).toBe(200)
+    expect(store.get(UID)!.data!.first_name).toBe('María')
+    expect(store.get(UID)!.data!.last_name).toBe('')
+  })
+
   it('changes only the caller s own name', async () => {
     store.set(UID, {
       exists: true,

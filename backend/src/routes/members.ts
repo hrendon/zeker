@@ -41,7 +41,14 @@ const AddMemberSchema = z
   .object({
     email: z.string().trim().toLowerCase().email().max(254),
     first_name: NameSchema,
-    last_name: NameSchema,
+    /**
+     * Optional since 2026-09-05. The product stores as little about a person as
+     * it can, and a surname next to an apartment number is the half of the pair
+     * that is worth something to somebody who should not have it. What the
+     * administrator needs to tell two residents apart is a name, not a legal
+     * identity — and the email beside it already does the identifying.
+     */
+    last_name: NameSchema.optional(),
     role: z.enum(ASSIGNABLE_ROLES),
   })
   .strict()
@@ -230,7 +237,10 @@ membersRouter.post('/', requireAuth, requireOrgAdmin, requireApprovedOrg, async 
       // The name the administrator typed only opens the account. Someone who
       // already has a profile owns how their own name is spelled.
       if (!current?.first_name) document.first_name = firstName
-      if (!current?.last_name) document.last_name = lastName
+      // A surname that was not given is not written at all, rather than written
+      // as an empty string: absent and empty read the same everywhere that
+      // displays a name, and only one of them is the truth.
+      if (!current?.last_name && lastName) document.last_name = lastName
       if (!snapshot.exists) document.created_at = FieldValue.serverTimestamp()
 
       tx.set(ref, document, { merge: true })

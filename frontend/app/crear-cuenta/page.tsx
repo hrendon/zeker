@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { toSpanish } from '@/lib/errors'
-import { checkEmail, checkName, checkNewPassword } from '@/lib/validate'
+import { checkEmail, checkName, checkNewPassword, checkOptionalName } from '@/lib/validate'
 import { es } from '@/lib/strings'
 import { useAuth } from '@/components/AuthProvider'
 import { AuthCard, Field, Notice, SubmitButton, TextLink } from '@/components/ui'
@@ -31,7 +31,7 @@ export default function SignUpPage() {
 
     const errors = {
       firstName: checkName(firstName, 'first'),
-      lastName: checkName(lastName, 'last'),
+      lastName: checkOptionalName(lastName),
       email: checkEmail(email),
       password: checkNewPassword(password),
     }

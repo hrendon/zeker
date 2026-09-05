@@ -735,6 +735,77 @@ El número que tenía `permits_today` antes y después.
 
 ---
 
+# TC-019-01 — Un edificio nuevo pide el NIT
+
+**Qué decisión prueba:** la 019. Hasta hoy la aprobación no pedía nada: quien
+aprobaba miraba el nombre del edificio y levantaba la mano.
+
+**Por qué a mano:** el costo de esta decisión no es técnico, es de mercado. Lo
+que hay que ver con los ojos es **cuánto estorba**, porque si estorba demasiado
+se devuelve.
+
+## Los pasos
+
+**A. Crear una organización sin tocar el campo del NIT.**
+
+- **Pasa:** no deja, y dice que son entre 8 y 11 números. **No se creó nada** —
+  compruébelo volviendo a la lista de organizaciones.
+- **Falla:** la crea igual. Entonces el campo es decorativo.
+
+**B. Escribir un NIT con puntos y guion: `901.234.567-8`.**
+
+- **Pasa:** lo acepta.
+- **Falla:** lo rechaza por los puntos. Nadie escribe un NIT sin puntos.
+
+**C. Abrir la herramienta de aprobación** (`npm run aprobar`).
+
+- **Pasa:** el edificio nuevo aparece con su NIT, en números, listo para
+  comparar contra el edificio que la persona dice administrar.
+- **Falla:** no lo muestra. Entonces se pidió un dato que el que aprueba no ve.
+
+**D. Abrir un edificio creado antes de hoy** (`compartir`).
+
+- **Pasa:** funciona igual que siempre. En la herramienta de aprobación su NIT
+  se lee como "creada antes del 2026-09-05", no como un error.
+- **Falla:** lo rompe, o lo marca como incompleto. Eso sería castigar a los
+  edificios que existían por una regla que no existía cuando se crearon.
+
+## Qué anotar
+
+**Cuánto se demoró usted en el paso B**, y si tuvo que ir a buscar el número.
+Ese dato vale más que el resto de la prueba: es el costo de mercado de la
+decisión, medido en la única persona disponible.
+
+---
+
+# TC-020-01 — Una persona sin apellido
+
+**Qué decisión prueba:** la 020. El apellido dejó de ser obligatorio.
+
+## Los pasos
+
+**A. Agregar una persona escribiendo solo el nombre.**
+
+- **Pasa:** la crea. En la lista de Personas aparece con su nombre solo, sin un
+  espacio raro ni una coma colgando.
+- **Falla:** exige el apellido, o muestra "María " con basura al final.
+
+**B. En su propia cuenta, borrar el apellido y guardar.**
+
+- **Pasa:** guarda. El saludo queda con el nombre solo.
+- **Falla:** no deja borrarlo. Entonces el producto solo sabe acumular datos.
+
+**C. Mirar un interior cuyo responsable no tiene apellido.**
+
+- **Pasa:** dice el nombre, y no "sin nombre registrado".
+- **Falla:** lo trata como si no tuviera nombre.
+
+## Qué anotar
+
+Si algún sitio del producto muestra el nombre con un espacio de más.
+
+---
+
 # TC-AUTH-RESET-01 — Recuperar la contraseña, de punta a punta
 
 ✅ **Pasó el 2026-09-02**, a mano, por el Fundador, en un teléfono: llegó el

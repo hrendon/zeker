@@ -52,6 +52,18 @@ export function checkName(
 }
 
 /**
+ * Un apellido, que desde el 2026-09-05 puede no existir (Decisión 020).
+ *
+ * En blanco está bien; lo único que se revisa es que no sea más largo de lo
+ * que el servidor acepta. Quien no quiera dejar su apellido guardado no tiene
+ * por qué inventarse uno.
+ */
+export function checkOptionalName(value: string): string | undefined {
+  if (value.trim().length > MAX_NAME_LENGTH) return es.validation.nameTooLong
+  return undefined
+}
+
+/**
  * A required free-text field: present, and not longer than the API accepts.
  * `missing` is the Spanish sentence shown when it is blank.
  */

@@ -189,6 +189,21 @@ export interface OrgDocument {
   /** How many permits this organization has issued on `permits_day`. */
   permits_today?: number
   /**
+   * The building's NIT — the tax number of the propiedad horizontal itself
+   * (Decision 019). Absent on every organization created before 2026-09-05.
+   *
+   * **It is the building's number, never a person's.** For a natural person in
+   * Colombia the NIT *is* their cédula, and a cédula is on the never-store list
+   * in `docs/security/data-minimization.md`. Nothing here can tell the two
+   * apart, so the wording on the screen carries that weight — and the risk is
+   * written down in the decision rather than pretended away.
+   *
+   * Stored as digits only. What is checked is the shape, not the check digit:
+   * a wrong checksum algorithm would refuse a real building, which costs more
+   * than the typo it would catch.
+   */
+  tax_id?: string
+  /**
    * Whether a person has approved this building (Decision 018, closing R-01).
    *
    * **Absent means approved.** Every organization that existed before
@@ -235,6 +250,8 @@ export interface OrgResponse {
   country: string | null
   /** Always present in a response, even where the stored document has none. */
   timezone: string
+  /** Decision 019. `null` for every organization created before 2026-09-05. */
+  tax_id: string | null
   /**
    * Decision 018. `true` for everything created before 2026-09-04, and for
    * anything a person has since approved. The screens read this to explain why
@@ -259,6 +276,7 @@ export function toOrgResponse(stored: Partial<OrgDocument>, role?: OrgRole): Org
     counts: stored.counts ?? { locations: 0, interiors: 0 },
     city: stored.city ?? null,
     country: stored.country ?? null,
+    tax_id: stored.tax_id ?? null,
     timezone: timezoneOf(stored),
     approved: isApproved(stored),
     created_by: String(stored.created_by ?? ''),
@@ -266,4 +284,25 @@ export function toOrgResponse(stored: Partial<OrgDocument>, role?: OrgRole): Org
     updated_at: toIso(stored.updated_at),
     ...(role ? { role } : {}),
   }
+}
+
+/**
+ * A Colombian NIT as the product stores it: digits only, no dots, no dash, no
+ * check digit separated out (Decision 019).
+ *
+ * People type `901.234.567-8`, `901234567-8` and `901 234 567` for the same
+ * building, and three spellings of one number is three buildings to whoever
+ * reads the list. Returns `undefined` when what is left is not a plausible NIT,
+ * and the caller turns that into a refusal.
+ *
+ * **The check digit is deliberately not verified.** The algorithm is easy to
+ * get subtly wrong, and getting it wrong refuses a real customer at the door —
+ * a cost far larger than the mistyped digit it would have caught.
+ */
+export function normalizeTaxId(raw: string): string | undefined {
+  const digits = raw.replace(/[^0-9]/g, '')
+  // Nine digits is the common shape, ten with the check digit appended. Below
+  // eight is a typo; above eleven is not a NIT.
+  if (digits.length < 8 || digits.length > 11) return undefined
+  return digits
 }

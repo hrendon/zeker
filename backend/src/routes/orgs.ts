@@ -13,6 +13,7 @@ import {
   FREE_PLAN_LIMITS,
   ORG_TYPES,
   newOrgId,
+  normalizeTaxId,
   orgRef,
   toOrgResponse,
 } from '../lib/orgs.js'
@@ -42,6 +43,26 @@ const CreateOrgSchema = z
     name: z.string().trim().min(1).max(120),
     type: z.enum(ORG_TYPES),
     description: z.string().trim().max(500).optional(),
+    /**
+     * The building's NIT (Decision 019). **Required**, and required for a
+     * reason that is not verification: it is the one number an administrator
+     * already has on their phone, and it is the same attribute a payment will
+     * carry when billing exists — so the two ways of checking who this is ask
+     * for the same thing.
+     *
+     * It does not prove this person administers this building. Nothing
+     * automatic does. It proves a real propiedad horizontal exists behind the
+     * name, and it gives the person approving something to check.
+     */
+    tax_id: z
+      .string()
+      .trim()
+      .min(1)
+      .max(30)
+      .transform((value) => normalizeTaxId(value))
+      .refine((value): value is string => value !== undefined, {
+        message: 'The NIT must be 8 to 11 digits.',
+      }),
     // City and country only. A street address is never stored — see lib/orgs.ts.
     city: z.string().trim().max(80).optional(),
     country: z.string().trim().length(2).toUpperCase().optional(),
@@ -122,6 +143,7 @@ orgsRouter.post('/', requireAuth, async (req, res, next) => {
     counts: { locations: 0, interiors: 0 },
     city: parsed.data.city ?? null,
     country: parsed.data.country ?? null,
+    tax_id: parsed.data.tax_id,
     timezone: parsed.data.timezone ?? DEFAULT_TIMEZONE,
     // Decision 018. Written explicitly false, because absent means approved —
     // that is what keeps every organization created before today working.
