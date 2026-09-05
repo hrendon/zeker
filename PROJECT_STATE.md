@@ -81,6 +81,77 @@ TC-CUPO-01 dice con todas las letras lo que no puede hacer a mano.
 El permiso "Prueba Programado" (anulado) y el nombre "Prueba Nombre Prueba
 Apellido" en la cuenta del Fundador, hasta que ponga el suyo.
 
+## Unidad 2 — consulta de cinco roles, sin construir nada
+
+El Fundador preguntó tres cosas: qué documentos pide la aprobación, si una
+declaración en los términos y condiciones la reemplaza, y cómo debe saludar el
+producto — esto último calificado por él como decisión estratégica de mercado.
+Se consultaron cinco roles por separado, ninguno vio la respuesta del otro.
+
+**Hecho de partida, verificado en el código:** hoy la aprobación **no pide ningún
+documento**. La herramienta muestra nombre del edificio, ciudad, fecha y avance
+de armado, y nada de terceros. No hay requisito documental escrito en ninguna
+parte del repositorio.
+
+### La contradicción de las 15:54 y las 16:57, resuelta
+
+La Decisión 018 (15:54) dice que un pago "no prueba nada sobre quién administra
+un edificio". D-011 (16:57, una hora después) dice que el pago **es** la prueba de
+identidad. **Seguridad las reconcilia y la reconciliación es útil:** hablan de
+objetos distintos. Un pago genérico no prueba nada; **un pago que trae un NIT o un
+titular de tarjeta cotejable contra la administración del edificio sí es una
+señal**, y de terceros. Bajo esa lectura **D-011 no reemplaza la aprobación
+manual: le da al aprobador un dato más que cotejar.** Queda pendiente de que el
+Fundador lo ratifique como lectura oficial.
+
+**Y el plan gratis queda al descubierto:** sin pago no existe la señal que D-011
+aporta, así que **para el plan gratis la aprobación manual es la única mitigación
+de R-01 que queda**. No es opcional mientras exista plan gratis.
+
+### Lo que cada rol aportó
+
+* **Administración de propiedad horizontal** — el documento que un administrador
+  manda por WhatsApp en dos minutos **es el que ya tiene guardado**: el RUT del
+  conjunto o su cédula. El acta de nombramiento y el certificado de Cámara de
+  Comercio son los que hacen abandonar el registro: hay que ir a buscarlos. **El
+  caso que rompe el esquema es la firma administradora**: una empresa administra
+  veinte conjuntos y la persona que los registraría **no figura por su nombre en
+  ninguno de los veinte documentos**; solo la vincula una carta interna, que no
+  se puede verificar contra nadie. Marcó como no verificado el artículo exacto de
+  la Ley 675 y si hay licencia obligatoria para administradores.
+* **Seguridad / CISO** — tres cosas. (1) Recibir un documento por WhatsApp o
+  correo **ya es almacenarlo**: queda en los servidores de Meta o Google y en el
+  celular del Fundador. Eso no está escrito en ninguna parte y hoy la regla de
+  minimización prohíbe guardar documentos de identidad. (2) Una declaración en
+  los términos **no cambia el riesgo R-01**, porque el actor que R-01 describe es
+  exactamente alguien dispuesto a mentir — pero no vale cero: deja rastro
+  atribuible y estorba al descuidado, no al fraude. (3) **La mitad jurídica no la
+  contesta**: pertenece al rol de privacidad y cumplimiento, que no está activo, y
+  el vacío lleva tres sesiones.
+* **Contenido** — el producto trata de **usted** en el 100% de sus textos, sin una
+  sola mezcla, y es deliberado. Sobre el saludo: **es decoración en el lugar más
+  caro de la pantalla**, y el caso sin nombre lo delata.
+* **Diseño** — coincide: el saludo no merece ese sitio, y "Cambiar mi nombre"
+  como enlace permanente es ruido para quien abre la pantalla veinte veces por
+  semana y corrige su nombre una vez.
+* **Product Owner** — **no es una decisión de mercado**, es una decisión pequeña
+  que se agrandó. La decisión de mercado que sí está pendiente es si estas tres
+  personas van a usar el producto o lo van a rechazar, y eso no se decide
+  escribiendo un saludo. Recomienda que la pregunta se le haga a los primeros
+  administradores.
+
+### Dos errores de rol, corregidos aquí y no pasados adelante
+
+* **Diseño escribió el ejemplo tuteando** ("Agrega tu nombre") en un producto que
+  trata de usted en el 100% de sus textos, como comprobó Contenido leyendo el
+  archivo entero. Se descarta el ejemplo, se conserva la jerarquía.
+* **Diseño mencionó "la foto (cuando exista)"** como identificador de una cuenta.
+  **Zeker no guarda fotos, y eso es una no-negociable del proyecto**, no una
+  funcionalidad pendiente. Se descarta.
+
+**Los cinco insumos son material de trabajo; ninguno decide.** Las tres preguntas
+son del Fundador y quedan como tarjetas en la cola.
+
 ---
 
 # Session 2026-09-04
@@ -2108,6 +2179,87 @@ control.** Nothing checks `email_verified`, so a second account costs eight seco
 **Enforcement ships with the billing unit, not before.** The two limits parked
 against this card are *not* closed by it, and are now more attractive: permits per
 organization and accounts per organization are both still uncounted.
+
+---
+
+### D-013 — ¿Qué pide la aprobación de un edificio? 🔴 Solo el Fundador
+
+**Levantada 2026-09-04 (noche)** por la pregunta del Fundador, después de
+consultar a administración de propiedad horizontal y a seguridad por separado.
+
+**Hoy no pide nada.** Se levanta una bandera mirando el nombre del edificio, la
+ciudad y qué tan armado está. Funciona con cero clientes y con usted mirando; no
+funciona el día que alguien quiera engañarlo.
+
+| | Qué pide | Qué cuesta al que se registra | Qué prueba |
+|---|---|---|---|
+| **A. Nada más que hoy** | Su criterio mirando el edificio | Cero | Nada comprobable. Es lo que hay |
+| **B. El NIT del conjunto** | Un número que el administrador ya tiene guardado | Segundos, sin ir a buscar nada | Que existe una propiedad horizontal real con ese NIT. **No** que esta persona la administre. **Es el mismo dato que traería un pago (D-011)** |
+| **C. El acta que lo nombra, o el certificado de Cámara** | Ir a buscar, escanear, mandar | **Es lo que hace abandonar el registro** | Es lo único que prueba el vínculo persona–edificio |
+
+**Lo que hay que saber antes de elegir C, y vale para B también:** si el documento
+llega por WhatsApp o por correo, **ya quedó guardado** — en Meta o en Google y en
+su celular. La regla de minimización del proyecto prohíbe guardar documentos de
+identidad. Si se pide un documento, hay que escribir primero cómo se mira sin
+guardarlo: en vivo, sin descargar, y dejando solo el rastro de que usted lo vio.
+
+**Y el caso que rompe todo esquema documental:** una firma que administra veinte
+conjuntos. La persona que los registra **no aparece en ninguno de los veinte
+documentos**.
+
+**Recomendación (administración de PH + seguridad): B**, y por una razón que no es
+la verificación: es el único que no espanta a nadie, y es exactamente el dato que
+el pago va a traer cuando exista. **A y C son defendibles; C tiene un costo de
+mercado que hoy no se puede pagar.**
+
+**Costo:** A = 0 · B ≈ medio día de trabajo · C = medio día más la regla de
+manejo del documento · **Reversibilidad:** alta
+**Esperando desde:** 2026-09-04
+
+---
+
+### D-014 — La declaración en términos y condiciones 🔴 Solo el Fundador, y necesita abogado
+
+**La pregunta del Fundador:** ¿sirve que la persona declare en el reglamento de
+uso o en los términos que ella es la administradora, en vez de aprobar a mano?
+
+**Lo que sí se puede contestar hoy, desde seguridad:** **no reemplaza la
+aprobación**, porque el riesgo que se quiere evitar es alguien dispuesto a mentir,
+y una casilla marcada le cuesta cero a quien miente. **Pero no vale cero**: deja
+un rastro atribuible a una cuenta y estorba al descuidado.
+
+**Lo que NO se puede contestar aquí, y no se va a improvisar:** si esa declaración
+cambia la posición de Zeker frente a la Ley 1581/2016. Eso es derecho. **El rol de
+privacidad y cumplimiento no está activo y el vacío lleva tres sesiones**, y la
+política de privacidad es legalmente obligatoria antes del primer cliente real.
+
+**Lo que se decide aquí no es la declaración, es el abogado.** Opciones: activar
+el rol y que prepare la consulta concreta para un abogado humano; buscar el
+abogado ya; o seguir sin él y que quede escrito que se siguió sin él.
+
+**Esperando desde:** 2026-09-04
+
+---
+
+### D-015 — El saludo: los tres roles dicen que la pregunta es otra 🟢 pequeña
+
+El Fundador la planteó como decisión estratégica de mercado. **Producto contesta
+que no lo es**, y que la decisión de mercado que sí está pendiente es si el
+administrador, el residente y el vigilante van a usar el producto o lo van a
+rechazar — que son las conversaciones que llevan diecisiete días sin ocurrir.
+
+**Contenido y Diseño coinciden en algo más incómodo:** el saludo es decoración en
+el lugar más caro de la pantalla, y el caso sin nombre lo dejó a la vista.
+
+**Tres caminos:** dejarlo como está y preguntarle a los primeros administradores;
+volverlo accionable cuando falta el nombre ("Hola, complete su nombre"); o
+quitarlo y empezar por lo que la gente vino a hacer.
+
+**Y una cosa aparte, que no es estratégica ni espera a nadie:** su cuenta dice
+"Prueba Nombre Prueba Apellido" porque la sesión probó el editor. **Falta su
+nombre real.**
+
+**Esperando desde:** 2026-09-04
 
 ---
 
