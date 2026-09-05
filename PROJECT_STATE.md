@@ -4,6 +4,17 @@ Single source of truth for current progress. Updated at every checkpoint.
 
 **Last updated:** 2026-09-04
 
+**Sesión abierta 2026-09-04 (noche). Lo que estaba hecho y sin publicar ya está
+publicado y comprobado a mano contra producción: el tope de permisos del día, la
+pantalla donde una persona corrige su propio nombre y los mensajes de un permiso.
+Escribiendo las pruebas apareció un defecto antes de publicarlo — el tope del día
+no tenía frase en español y habría dicho "algo salió mal" — y se arregló primero.
+Dos hallazgos quedaron escritos: una frase del producto que no alcanza ninguna
+pantalla, y que el tope del día se cuenta en UTC, o sea que en Colombia se
+reinicia a las 7 de la noche.**
+
+---
+
 **Session closed 2026-09-04. Six units, four published and driven by hand. The
 oldest risk in the register is closed, the published application can no longer be
 used as a mail relay, and all three preconditions the Founder named for billing
@@ -15,6 +26,60 @@ asked separately, named the same gap; checking their claim against the code
 showed it was half wrong, and the half that was real — a permit that cannot say
 "only these days and these hours" — was built the same day on the Founder's
 instruction.**
+
+---
+
+# Session 2026-09-04 (noche)
+
+## Objetivo
+
+Publicar lo que la sesión anterior dejó hecho y sin publicar, comprobarlo a mano,
+y seguir con la forma de contacto para un administrador sin aprobar (D-008).
+
+## Unidad 1 — publicar y comprobar ✅
+
+**Publicado:** `zeker-api-00012-m9b` y `zeker-web-00012-gpx`. La publicación la
+corrió el Fundador; la sesión no tiene permiso para cambiar producción.
+
+**Antes de publicar, un defecto encontrado escribiendo las pruebas.** El código
+`permit_limit_reached` no estaba en el diccionario de mensajes de la aplicación,
+así que quien llegara al permiso 51 del día habría leído *"algo salió mal, intente
+de nuevo"* y habría reintentado contra un límite que solo abre mañana. **Tercera
+vez que aparece la misma forma** (R-02 con las invitaciones, la Decisión 018 con
+los edificios sin aprobar). Arreglado con su propia frase y una prueba que falla
+si vuelve a caer en la genérica.
+
+**Leído en vivo, no supuesto:** `CORS_ORIGINS` en la revisión que está corriendo
+—lo que se borró solo el 2026-09-03— quedó correcto. Las dos partes contestan 200.
+
+**Tres casos de prueba escritos ANTES de publicar** (`delivery/manual-test-cases.md`):
+TC-NOMBRE-01, TC-TEXTO-01 y TC-CUPO-01, cada uno con su línea de pasa/falla.
+TC-CUPO-01 dice con todas las letras lo que no puede hacer a mano.
+
+**Corridos contra producción, con el Fundador dentro de su sesión:**
+
+* **TC-NOMBRE-01** — pasa cinco de seis. El sexto es devolver el nombre a como
+  estaba, y "como estaba" era **en blanco**: la cuenta del Fundador saludaba
+  "Hola" a secas desde que existe, porque no había dónde arreglarlo.
+* **TC-TEXTO-01** — pasa. El defecto de "ya terminó" no volvió, y la portería ya
+  nombra el día además de la hora.
+* **TC-CUPO-01** — pasa. La cuenta del día pasó de no existir a `permits_today: 1`.
+
+## Hallazgos
+
+* **Una frase del producto no la alcanza ninguna pantalla.** "Este permiso todavía
+  no empieza" no se muestra nunca: un permiso programado cuenta como utilizable —
+  a propósito, para poder mandar el QR por adelantado— y entonces la pantalla
+  enseña el código. **El mensaje del commit anterior dijo que esa frase "por fin se
+  alcanza"; no es cierto.** En la portería sí hay un rechazo propio y ese funciona.
+* **El tope de permisos cuenta el día en UTC**, así que en Colombia se reinicia a
+  las 7:00 p. m. hora local. A 50 por día no hace daño, pero desde la Decisión 016
+  el producto ya sabe en qué reloj vive cada edificio y este contador no lo usa.
+
+## Datos de prueba en producción
+
+El permiso "Prueba Programado" (anulado) y el nombre "Prueba Nombre Prueba
+Apellido" en la cuenta del Fundador, hasta que ponga el suyo.
 
 ---
 

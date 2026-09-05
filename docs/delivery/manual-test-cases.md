@@ -662,9 +662,17 @@ minutos; si alguno no se puede armar, se dice, no se inventa:
 
 **C. Abrir el que empieza mañana.**
 
-- **Pasa:** dice que **todavía no empieza** y que el código va a servir desde la
-  fecha de inicio.
-- **Falla:** dice que se venció. Al revés del reloj.
+⚠️ **Corregido el 2026-09-04 después de correrlo.** Este paso estaba escrito
+sobre una frase que la pantalla no muestra. Un permiso programado **sí es
+utilizable** — se manda el QR antes de que empiece, a propósito — así que la
+pantalla enseña el código, la etiqueta "Programado" y la fecha desde la que
+sirve, y **nunca** el mensaje de "todavía no empieza". Esa frase existe en el
+producto y no la alcanza nadie.
+
+- **Pasa:** etiqueta "Programado", la fecha de inicio a la vista, y el código
+  entregable.
+- **Falla:** dice que se venció, o esconde el código. Cualquiera de las dos deja
+  al residente sin poder mandar el QR por adelantado.
 
 **D. Abrir el vencido.**
 
@@ -761,6 +769,67 @@ Las cuatro preguntas y sus líneas de pasa/falla están pendientes de escribir a
 ---
 
 # Registro de corridas
+
+## 2026-09-04 (noche) — TC-NOMBRE-01, TC-TEXTO-01 y TC-CUPO-01
+
+Contra producción, revisiones `zeker-api-00012-m9b` y `zeker-web-00012-gpx`,
+publicadas esta noche. El Fundador entró; los pasos los condujo la sesión en su
+navegador. Organización `compartir`, hora local Colombia ~21:00.
+
+### TC-NOMBRE-01 — pasa, cinco pasos de seis
+
+| Paso | Resultado |
+|---|---|
+| A. El enlace existe | ✅ "Cambiar mi nombre", debajo del correo |
+| B. Campos con lo de hoy | ✅ vacíos, **y eso era lo correcto**: esta cuenta no tenía nombre |
+| C. Guardar en blanco | ✅ "Escriba su nombre." / "Escriba su apellido.", el formulario se queda |
+| D. Guardar un nombre | ✅ el saludo pasó de "Hola" a "Hola, Prueba Nombre" **sin recargar** |
+| E. Lo ve el administrador | ✅ en Personas la fila dice "Prueba Nombre Prueba Apellido" |
+| F. Dejarlo como estaba | ⬜ **pendiente**: la cuenta no tenía nombre, así que "como estaba" es en blanco. Queda esperando el nombre real del Fundador |
+
+**Lo que la prueba mostró y no era el objeto de la prueba:** la cuenta del
+Fundador saludaba con un "Hola" pelado desde que existe. No había ningún sitio
+donde arreglarlo, y por eso nadie lo arregló.
+
+### TC-TEXTO-01 — pasa, con un paso corregido
+
+| Paso | Resultado |
+|---|---|
+| A. Anulado | ✅ "Este permiso está anulado. Su código ya no sirve." |
+| B. Usado | ✅ "era para una sola entrada y ya se usó. Haga uno nuevo si la persona tiene que volver." — **el defecto que decía "ya terminó" no volvió** |
+| C. Programado | ⚠️ **el paso estaba mal escrito, no el producto.** Ver la corrección arriba |
+| D. Vencido | ✅ "Este permiso ya se venció. Ya pasó la fecha hasta la que servía." |
+| E. Portería, día equivocado | ✅ "Este permiso no sirve en este día ni a esta hora." y debajo "Sirve: sábado, de 12:00 p. m. a 3:00 p. m." |
+
+**Hallazgo:** la frase `permits.scheduled` ("Este permiso todavía no empieza")
+**sigue sin poder verse desde ninguna pantalla**, porque un permiso programado
+cuenta como utilizable y por eso enseña el código. El mensaje del commit del
+2026-09-04 dijo que esa frase "por fin se alcanza". **No es cierto.** En la
+portería sí hay un rechazo propio para un permiso que no ha empezado, y ese sí
+funciona.
+
+### TC-CUPO-01 — pasa
+
+| Paso | Resultado |
+|---|---|
+| A. Crear un permiso normal | ✅ se creó sin estorbo |
+| B. La cuenta del día en la base | ✅ antes: los dos campos **no existían**. Después: `permits_day: "2026-09-05"`, `permits_today: 1` |
+| C. La frase del tope | ✅ tiene la suya desde hoy — y no la tenía cuando se escribió este caso |
+
+**Hallazgo, y hay que escribirlo antes de que alguien lo dé por hecho:** el día
+del tope se cuenta en **UTC**. En Colombia eso significa que la cuenta se
+reinicia a las **7:00 p. m. hora local**, no a medianoche. A 50 permisos por día
+no le hace daño a nadie, pero desde la Decisión 016 el producto ya sabe en qué
+reloj vive cada edificio, y este contador no lo usa.
+
+### Datos de prueba que quedaron en producción
+
+- El permiso **"Prueba Programado"** (anulado) en `compartir`.
+- El nombre **"Prueba Nombre Prueba Apellido"** en la cuenta del Fundador,
+  hasta que ponga el suyo.
+
+---
+
 
 ## 2026-09-03 — TC-014-01, TC-014-02, TC-014-03
 
